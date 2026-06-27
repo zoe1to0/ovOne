@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-27: Behavior Specification phase begins
+
+Decision: ovOne enters the Behavior Specification phase before behavior refactoring.
+
+Rules:
+
+- `docs/behavior-spec.md` defines the target Behavior Registry contract.
+- Every UI event must map to exactly one explicit action in the target model.
+- Generic `MENU_ACTION` is forbidden in the target model and must be replaced by explicit actions.
+- Views must dispatch actions only; Behavior Registry owns action execution in the target model.
+- No product feature implementation is included in this decision.
+- Product rules remain unchanged.
+
 ## 2026-06-27: v0.1 freeze review accepts documented foundation state
 
 Decision: ovOne v0.1 is accepted as a documented foundation baseline for the next Behavior Registry phase.

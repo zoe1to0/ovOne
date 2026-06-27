@@ -19,6 +19,8 @@ Last audited: 2026-06-27.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
 - `renderShellPage` falls back to Me for unknown view values instead of failing explicitly.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
+- Behavior Registry does not exist in code yet; `docs/behavior-spec.md` is currently a target contract only.
+- Current action names do not yet follow the explicit Behavior Registry naming model.
 
 ## Current Warning
 
@@ -35,6 +37,10 @@ Last audited: 2026-06-27.
 ## Freeze Review Result
 
 2026-06-27 freeze review found no undocumented implementation mismatch that blocks the Behavior Registry phase. Existing issues remain unresolved and intentionally documented above.
+
+## Behavior Specification Warning
+
+Behavior Registry principles are documented but not implemented. Until implementation begins, `MENU_ACTION` remains a placeholder sink in code.
 
 ## Maintenance Rule
 

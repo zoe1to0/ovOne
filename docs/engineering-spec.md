@@ -290,11 +290,18 @@ The `v0.1-foundation` tag is an additional foundation marker for the same audite
 - No product rules were changed during freeze review.
 - The repo is ready for Behavior Registry phase as a documented foundation, with unresolved UI behavior gaps intentionally carried forward.
 
+## Behavior Specification
+
+Behavior Registry planning has started in `docs/behavior-spec.md`.
+
+Current code has not been refactored yet. `src/platform/mobile-mvp-adapter.ts` still owns the current `InteractionController`, action union, inline action execution, and DOM bindings. The Behavior Specification is the target contract for the next phase, not a statement of implemented runtime behavior.
+
 ## Maintenance Rule
 
 After every Codex implementation task, update:
 
 - `docs/engineering-spec.md`
+- `docs/behavior-spec.md` when behavior actions or execution ownership change
 - `docs/known-issues.md`
 - `docs/decision-log.md` if a product or engineering decision changed
 
