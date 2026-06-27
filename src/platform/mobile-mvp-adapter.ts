@@ -4,6 +4,7 @@ import {
   createBehaviorRegistry,
   tabForView
 } from "./behavior-registry.js";
+import { createFlowExecutor } from "./flow-executor.js";
 import type {
   InteractionAction,
   MobileMvpTab,
@@ -89,15 +90,12 @@ function createInteractionController(
   render: () => void
 ): InteractionController {
   const registry = createBehaviorRegistry();
+  const flowExecutor = createFlowExecutor();
 
   const dispatch = (action: InteractionAction): void => {
-    const result = registry.execute(action, state);
-    if (result.runtimeEffect?.type === "SEND_MESSAGE") {
-      state.view = shell.sendMessage(result.runtimeEffect.text);
-      state.activeChatId = state.view.product.snapshot.chatState.activeChatId;
-      state.activeView = "CHAT_VIEW";
-    }
-    if (!result.shouldRender) {
+    const stateTransition = registry.execute(action, state);
+    const flowResult = flowExecutor.run(action, { shell, state });
+    if (!stateTransition.shouldRender && !flowResult.shouldRender) {
       return;
     }
     commitStateTransition(state, render);

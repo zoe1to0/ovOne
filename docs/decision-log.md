@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-27: Flow Executor handles submit-message runtime effect
+
+Decision: ovOne now separates UI state transitions from runtime side effects for `SUBMIT_MESSAGE`.
+
+Rules:
+
+- No product rules changed.
+- Behavior Registry remains UI state-transition only.
+- Flow Executor owns runtime effects.
+- For now, Flow Executor handles only `SUBMIT_MESSAGE`.
+- `SUBMIT_MESSAGE` preserves existing behavior by calling `shell.sendMessage(text)`, syncing `state.view`, `activeChatId`, and `activeView`.
+- `TEXT_INPUT` remains renderless.
+- Disabled explicit actions remain no-op and do not execute runtime effects.
+
 ## 2026-06-27: ViewRouter owns activeView fallback
 
 Decision: Unknown `activeView` fallback now belongs to ViewRouter route resolution, not `renderShellPage`.

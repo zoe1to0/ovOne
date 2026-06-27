@@ -16,7 +16,7 @@ Last audited: 2026-06-27.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has no dedicated world-switch/edit control flow beyond opening the control overlay.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` is the only UI action that currently requests a shell runtime operation from the mobile UI controller.
+- `SUBMIT_MESSAGE` is the only UI action currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning
@@ -48,7 +48,9 @@ Disabled explicit actions:
 - ViewRouter route resolution returns `{ route, fallbackApplied, issue? }`.
 - Unknown active views resolve to `CHAT_LIST` before the view layer renders.
 - Runtime effects and autosave are out of scope for Behavior Registry.
-- `SUBMIT_MESSAGE` currently returns a `SEND_MESSAGE` runtime effect request that the controller executes through the existing shell flow.
+- Flow Executor exists in `src/platform/flow-executor.ts`.
+- Flow Executor currently handles only `SUBMIT_MESSAGE`.
+- Disabled explicit actions do not execute runtime effects.
 
 ## Freeze Review Result
 

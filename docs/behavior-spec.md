@@ -37,7 +37,8 @@ UI event
   -> InteractionController.dispatch(action)
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
-  -> optional runtime effect request
+  -> FlowExecutor.run(action, context)
+  -> optional runtime effect for SUBMIT_MESSAGE
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -120,7 +121,7 @@ UI event
 | File button | `OPEN_FILE_PICKER` | Opens file picker overlay. |
 | Close overlay | `CLOSE_OVERLAY` | Clears current overlay. |
 | Text input | `TEXT_INPUT` | Updates `inputDraft` and skips render. |
-| Send message | `SUBMIT_MESSAGE` | Trims text, clears draft/overlay, and emits a `SEND_MESSAGE` runtime effect request. |
+| Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the send-message runtime effect. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | Open contact | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
@@ -149,13 +150,13 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE` returns a runtime effect request that `InteractionController` executes by calling the existing shell message flow.
+- `SUBMIT_MESSAGE` is the only action currently handled by Flow Executor.
 - Emoji and file picker panel items remain decorative after the overlay opens.
 
 ## Remaining Behavior Questions
 
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
-- Should send-message runtime effect execution move out of `InteractionController` into a dedicated flow executor?
+- Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world switch and world edit?
 - What are the concrete product flows for the disabled creation/settings actions?
 

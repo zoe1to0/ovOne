@@ -55,6 +55,7 @@ Browser
   -> createChatShell(shell, state, render)
   -> createInteractionController(shell, state, render)
   -> createBehaviorRegistry()
+  -> createFlowExecutor()
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, snapshot, state, controller)
   -> createShellPageFrame(...)
@@ -70,7 +71,8 @@ UI action
   -> InteractionController.dispatch(action)
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
-  -> optional shell operation when a runtime effect is returned
+  -> FlowExecutor.run(action, { shell, state })
+  -> optional shell operation for SUBMIT_MESSAGE
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -82,6 +84,7 @@ UI action
 - Public platform export: `src/platform/index.ts` exports only `mountChatShell`.
 - Active UI implementation: `src/platform/mobile-mvp-adapter.ts`.
 - Behavior Registry scaffold: `src/platform/behavior-registry.ts`.
+- Flow Executor scaffold: `src/platform/flow-executor.ts`.
 - Runtime bootstrap used by UI: `createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell`.
 - Initial UI state:
   - `splashVisible: true`
@@ -199,7 +202,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_FILE_PICKER` | Opens `file-picker` overlay. |
 | `CLOSE_OVERLAY` | Clears overlay. |
 | `TEXT_INPUT` | Updates `inputDraft` only and does not call render. |
-| `SUBMIT_MESSAGE` | Trims text, clears draft/overlay, and returns a `SEND_MESSAGE` runtime effect request. |
+| `SUBMIT_MESSAGE` | Behavior Registry trims text, clears draft/overlay, and Flow Executor calls `shell.sendMessage(text)`. |
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
@@ -234,6 +237,17 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
 
+## Current Flow Executor Behavior
+
+`FlowExecutor` owns runtime effects after Behavior Registry has applied local UI state transitions.
+
+| Action | Runtime effect |
+| --- | --- |
+| `SUBMIT_MESSAGE` with non-empty trimmed text | Calls `shell.sendMessage(text)`, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. |
+| `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
+| Disabled explicit actions | No runtime effect. |
+| All other actions | No runtime effect. |
+
 ## Current View Derivation
 
 View helpers still derive presentation data from `WorldSnapshot`:
@@ -255,7 +269,8 @@ UI event
   -> InteractionController.dispatch(action)
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
-  -> optional runtime effect handling
+  -> FlowExecutor.run(action, { shell, state })
+  -> optional runtime effect handling for SUBMIT_MESSAGE
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -268,6 +283,7 @@ Exceptions:
 - `TEXT_INPUT` mutates `inputDraft` and returns without rendering.
 - Empty `SUBMIT_MESSAGE` returns without rendering.
 - Disabled explicit actions close overlay but do not implement product behavior.
+- Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 
 ## Current Test/Verification Surface
@@ -299,7 +315,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has no dedicated world-switch/edit control flow beyond opening the control overlay.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` is the only UI action that currently requests a shell runtime operation from the mobile UI controller.
+- `SUBMIT_MESSAGE` is the only UI action with a Flow Executor runtime effect.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

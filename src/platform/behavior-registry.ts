@@ -47,10 +47,6 @@ export type SemanticMobileState = {
 
 export type BehaviorRegistryResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly runtimeEffect?: Readonly<{
-    readonly type: "SEND_MESSAGE";
-    readonly text: string;
-  }>;
   readonly disabledAction?: DisabledInteractionAction;
 }>;
 
@@ -180,10 +176,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         }
         state.inputDraft = "";
         closeOverlay(state);
-        return Object.freeze({
-          shouldRender: true,
-          runtimeEffect: Object.freeze({ type: "SEND_MESSAGE", text })
-        });
+        return RENDER;
       }
 
       case "OPEN_SETTINGS":

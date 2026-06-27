@@ -44,7 +44,7 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(adapter, /state\.splashVisible = false;[\s\S]*state\.activeView = "CHAT_LIST";[\s\S]*state\.activeChatId = null;/);
     assert.match(adapter, /const routeState = ViewRouter\.resolve\(state\.activeView\)/);
-    assert.match(adapter, /state\.activeView = "CHAT_VIEW"/);
+    assert.match(adapter, /const flowResult = flowExecutor\.run\(action, \{ shell, state \}\)/);
   });
 
   it("routes every page through the unified UI shell layout", () => {
@@ -268,7 +268,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /bindControllerAction\(back, controller, \{ type: "CLOSE_SETTINGS" \}\)/);
     assert.match(adapter, /bindComposerSubmit\(form, input, controller\)/);
     assert.match(adapter, /bindTextInput\(input, controller\)/);
-    assert.match(adapter, /const result = registry\.execute\(action, state\)/);
+    assert.match(adapter, /const stateTransition = registry\.execute\(action, state\)/);
+    assert.match(adapter, /const flowResult = flowExecutor\.run\(action, \{ shell, state \}\)/);
     assert.match(adapter, /createMenuButton\("添加 AI 好友", controller, \{ type: "CREATE_AI_FRIEND" \}\)/);
     assert.match(adapter, /createMenuButton\("创建群聊", controller, \{ type: "CREATE_GROUP" \}\)/);
     assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
