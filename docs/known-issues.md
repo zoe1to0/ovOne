@@ -10,6 +10,11 @@ Last audited: 2026-06-27.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
+- World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.
+- `SWITCH_WORLD` exists as an explicit action scaffold, but no dedicated world-switch UI is bound yet.
+- The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
+- Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
+- Real AI provider integration is not implemented; `GlobalAIModel` and `GlobalAILink` are foundation types.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.

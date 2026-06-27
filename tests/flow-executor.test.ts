@@ -75,6 +75,7 @@ describe("FlowExecutor", () => {
 function createState(view: MinimalProductShellView): SemanticMobileState {
   return {
     activeView: "CHAT_LIST",
+    currentWorldId: view.product.snapshot.worldMeta.id,
     activeChatId: view.product.snapshot.chatState.activeChatId,
     overlay: "add-menu",
     selectedContactActorId: null,
@@ -104,7 +105,7 @@ function createView(activeChatId: string): MinimalProductShellView {
     product: {
       snapshot: {
         worldMeta: {
-          worldId: "world",
+          id: "world",
           title: "Reality",
           type: "reality",
           lifecycle: "active",
@@ -145,7 +146,7 @@ function createView(activeChatId: string): MinimalProductShellView {
       },
       world: {
         worldMeta: {
-          worldId: "world",
+          id: "world",
           title: "Reality",
           type: "reality",
           lifecycle: "active",

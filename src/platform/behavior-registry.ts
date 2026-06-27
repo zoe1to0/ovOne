@@ -1,4 +1,5 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
+import type { WorldId } from "../world-domain/index.js";
 
 export type MobileMvpTab = "chats" | "contacts" | "me";
 export type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
@@ -13,6 +14,7 @@ export type InteractionAction =
   | { readonly type: "NAV_OPEN_CHAT_LIST" }
   | { readonly type: "NAV_OPEN_CONTACTS" }
   | { readonly type: "NAV_OPEN_ME" }
+  | { readonly type: "SWITCH_WORLD"; readonly worldId: WorldId }
   | { readonly type: "OPEN_CHAT"; readonly chatId: string }
   | { readonly type: "NAV_BACK" }
   | { readonly type: "OPEN_ADD_MENU" }
@@ -36,6 +38,7 @@ export type InteractionAction =
 
 export type SemanticMobileState = {
   activeView: ViewState;
+  currentWorldId: WorldId;
   activeChatId: string | null;
   overlay: MobileOverlay;
   selectedContactActorId: string | null;
@@ -55,6 +58,7 @@ type DisabledInteractionAction = Exclude<
   | "NAV_OPEN_CHAT_LIST"
   | "NAV_OPEN_CONTACTS"
   | "NAV_OPEN_ME"
+  | "SWITCH_WORLD"
   | "OPEN_CHAT"
   | "NAV_BACK"
   | "OPEN_ADD_MENU"
@@ -120,6 +124,15 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "NAV_OPEN_ME":
         state.activeView = "ME";
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+
+      case "SWITCH_WORLD":
+        state.currentWorldId = action.worldId;
+        state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
         closeOverlay(state);

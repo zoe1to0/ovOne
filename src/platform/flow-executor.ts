@@ -29,6 +29,7 @@ export function createFlowExecutor(): FlowExecutor {
     }
 
     context.state.view = context.shell.sendMessage(text);
+    context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
     context.state.activeChatId = context.state.view.product.snapshot.chatState.activeChatId;
     context.state.activeView = "CHAT_VIEW";
     return Object.freeze({ shouldRender: true, executedFlow: "SEND_MESSAGE" });

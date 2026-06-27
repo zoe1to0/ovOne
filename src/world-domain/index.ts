@@ -20,6 +20,7 @@ export type {
   WorldGroup,
   WorldId,
   WorldIdentity,
+  WorldLifecycleState,
   RuntimeState,
   WorldSnapshot,
   WorldState

@@ -10,7 +10,7 @@ Last updated: 2026-06-27.
 
 The Behavior Specification defines how UI intent becomes deterministic product behavior.
 
-The current implementation introduces `src/platform/behavior-registry.ts` as the central action execution scaffold for the mobile ChatShell. It does not add new product features or modify WorldDomain, ChatKernel, Snapshot, AI Adapter, Persistence, or the world data model.
+The current implementation uses `src/platform/behavior-registry.ts` as the central action execution scaffold for the mobile ChatShell. It does not add new product features or modify WorldDomain, ChatKernel, Snapshot, AI Adapter, or Persistence.
 
 ## Behavior Registry Principle
 
@@ -53,6 +53,7 @@ UI event
 - Unknown `activeView` falls back to `CHAT_LIST`. This is a temporary fallback, not a final invariant.
 - ovO click opens the ovO control overlay only. World switch/edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
+- `SWITCH_WORLD` is an explicit scaffold action. It changes `currentWorldId`, lands on `CHAT_LIST`, and clears active chat/contact selection; no world-switch UI is implemented yet.
 
 ## Action Categories
 
@@ -61,6 +62,7 @@ UI event
 - `NAV_OPEN_CHAT_LIST`
 - `NAV_OPEN_CONTACTS`
 - `NAV_OPEN_ME`
+- `SWITCH_WORLD`
 - `OPEN_CHAT`
 - `NAV_BACK`
 
@@ -87,6 +89,7 @@ UI event
 
 ### World Actions
 
+- `SWITCH_WORLD`
 - `CREATE_WORLD`
 
 ### ovO Actions
@@ -112,6 +115,7 @@ UI event
 | Open Chats tab | `NAV_OPEN_CHAT_LIST` | Sets `activeView` to `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | Open Contacts tab | `NAV_OPEN_CONTACTS` | Sets `activeView` to `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | Open Me tab | `NAV_OPEN_ME` | Sets `activeView` to `ME`, clears active chat/contact, closes overlay. |
+| Switch world | `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | Open chat row | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
 | Back | `NAV_BACK` | From contact detail returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
 | ovO click | `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens ovO control overlay. |
@@ -158,6 +162,7 @@ These actions are named and routed but intentionally do not implement product be
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world switch and world edit?
+- Where should `SWITCH_WORLD` be bound once ovO world controls are implemented?
 - What are the concrete product flows for the disabled creation/settings actions?
 
 ## Maintenance Rule

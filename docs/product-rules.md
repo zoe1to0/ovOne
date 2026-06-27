@@ -38,3 +38,13 @@
 - `Memory` is per-world.
 - Me is global.
 - World switching lands on the active world's Chats list.
+
+## Current Terminology
+
+- `GlobalAIModel` describes an app-level base model identity.
+- `GlobalAILink` describes the user's app-level connection to a base AI model.
+- `World` describes an isolated data scope.
+- `WorldContact` describes a per-world contact instance backed by a base AI model.
+- `WorldChat` describes a per-world chat instance.
+- `WorldMemoryScope` describes a per-world memory namespace placeholder.
+- `WorldScopedSnapshot` is the current foundation read model for resolving world-specific contacts/chats without exposing world UI.

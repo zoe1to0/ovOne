@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-06-27: World-scoped data model foundation added
+
+Decision: ovOne now has a typed world-scoped data model foundation and read-only resolver layer.
+
+Rules:
+
+- No product rules changed.
+- `src/domain/world-model.ts` defines `GlobalAIModel`, `GlobalAILink`, `World`, `WorldContact`, `WorldChat`, `WorldMemoryScope`, and `WorldScopedSnapshot`.
+- `src/domain/world-scope-resolver.ts` resolves current world, world contacts, and world chats without mutating runtime state.
+- `SemanticMobileState` now stores `currentWorldId`.
+- Chats and Contacts read through the current world resolver.
+- Me remains global and does not read through the world resolver.
+- `SWITCH_WORLD` is an explicit action scaffold that lands on `CHAT_LIST` and clears active chat/contact state.
+- No create world UI, real memory engine, real AI provider integration, or world persistence migration is included in this decision.
+
 ## 2026-06-27: Flow Executor handles submit-message runtime effect
 
 Decision: ovOne now separates UI state transitions from runtime side effects for `SUBMIT_MESSAGE`.

@@ -67,9 +67,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /readonly route: ViewState;/);
     assert.match(registry, /readonly fallbackApplied: boolean;/);
     assert.match(registry, /readonly issue\?: string;/);
-    assert.match(adapter, /return createChatList\(snapshot, controller\)/);
+    assert.match(adapter, /return createChatList\(snapshot, state, controller\)/);
     assert.match(adapter, /return createChatView\(snapshot, state\.activeChatId, controller\)/);
-    assert.match(adapter, /return createContactsView\(snapshot, controller\)/);
+    assert.match(adapter, /return createContactsView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
     assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
@@ -167,7 +167,7 @@ describe("Mobile MVP Product Shell", () => {
     const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /screen\.append\(header, messages, createComposer\(snapshot, controller\)\)/);
-    assert.match(adapter, /function createContactsView\(snapshot: WorldSnapshot, controller: InteractionController\): HTMLElement/);
+    assert.match(adapter, /function createContactsView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\): HTMLElement/);
     assert.match(adapter, /screen\.append\(list\)/);
     assert.match(adapter, /screen\.append\(createProfileHeader\(\), createFeatureMenu\(snapshot, controller\)\)/);
     assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\): HTMLElement/);
@@ -193,9 +193,9 @@ describe("Mobile MVP Product Shell", () => {
   it("generates Chats from WorldSnapshot.chatState instead of static template entries", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
 
-    assert.match(adapter, /function chatsFromSnapshot\(snapshot: WorldSnapshot\)/);
-    assert.match(adapter, /Array\.from\(snapshot\.chatState\.chats\.values\(\)\)/);
-    assert.match(adapter, /for \(const chat of chatsFromSnapshot\(snapshot\)\)/);
+    assert.match(adapter, /function chatsFromSnapshot\(snapshot: WorldSnapshot, worldId = snapshot\.worldMeta\.id\)/);
+    assert.match(adapter, /return resolveWorldChats\(worldId, snapshot\) as WorldChatSession\[\]/);
+    assert.match(adapter, /for \(const chat of chatsFromSnapshot\(snapshot, state\.currentWorldId\)\)/);
     assert.equal(adapter.includes("contactIds: ["), false);
     assert.equal(adapter.includes("conversations:"), false);
     assert.equal(adapter.includes("messages: ["), false);
@@ -284,8 +284,8 @@ describe("Mobile MVP Product Shell", () => {
   it("derives Contacts from world-scoped snapshot contacts", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
 
-    assert.match(adapter, /for \(const contact of contactsFromSnapshot\(snapshot\)\)/);
-    assert.match(adapter, /snapshot\.contacts\.filter\(\(contact\) => contact\.kind === "assistant"\)/);
+    assert.match(adapter, /for \(const contact of contactsFromSnapshot\(snapshot, state\.currentWorldId\)\)/);
+    assert.match(adapter, /resolveWorldContacts\(worldId, snapshot\) as WorldContact\[\]/);
     assert.match(adapter, /filter\(\(contact\) => !isOvoContact\(snapshot, contact\)\)/);
     assert.equal(adapter.includes("const contacts:"), false);
     assert.equal(adapter.includes("nickname: \"Nara\""), false);
@@ -320,6 +320,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /aria-label", "编辑账号绑定"/);
     assert.match(adapter, /function createFeatureMenu/);
     assert.match(adapter, /createFeatureRow\("收藏"/);
+    assert.match(adapter, /createFeatureRow\("收藏", assistantContacts\(snapshot\)\.filter/);
+    assert.doesNotMatch(adapter, /createFeatureRow\("收藏", contactsFromSnapshot\(snapshot/);
     assert.match(adapter, /createFeatureRow\("胶囊", "即将开放"\)/);
     assert.match(adapter, /createFeatureRow\("聊天容量", "最多 25 个聊天"\)/);
     assert.match(adapter, /createFeatureRow\("会员", "未开通"\)/);

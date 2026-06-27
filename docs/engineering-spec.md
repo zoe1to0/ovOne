@@ -56,6 +56,7 @@ Browser
   -> createInteractionController(shell, state, render)
   -> createBehaviorRegistry()
   -> createFlowExecutor()
+  -> currentWorldId + world-scope resolver for Chats/Contacts reads
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, snapshot, state, controller)
   -> createShellPageFrame(...)
@@ -85,10 +86,13 @@ UI action
 - Active UI implementation: `src/platform/mobile-mvp-adapter.ts`.
 - Behavior Registry scaffold: `src/platform/behavior-registry.ts`.
 - Flow Executor scaffold: `src/platform/flow-executor.ts`.
+- World-scoped data model foundation: `src/domain/world-model.ts`.
+- Read-only world scope resolver: `src/domain/world-scope-resolver.ts`.
 - Runtime bootstrap used by UI: `createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell`.
 - Initial UI state:
   - `splashVisible: true`
   - `activeView: "CHAT_LIST"`
+  - `currentWorldId: initialView.product.snapshot.worldMeta.id`
   - `activeChatId: null`
   - `overlay: null`
   - `selectedContactActorId: null`
@@ -104,6 +108,8 @@ UI action
   - re-renders
 - Render root is replaced with `mountRoot.replaceChildren(...)` on each render.
 - Snapshot used by UI is `state.view.product.snapshot`.
+- Chats and Contacts read through `currentWorldId` and the world scope resolver.
+- Me remains global and reads account-level snapshot data directly instead of routing through the world resolver.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -131,6 +137,7 @@ UI action
 ## Current State Fields
 
 - `activeView`
+- `currentWorldId`
 - `activeChatId`
 - `overlay`
 - `selectedContactActorId`
@@ -165,6 +172,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `NAV_OPEN_CHAT_LIST`
 - `NAV_OPEN_CONTACTS`
 - `NAV_OPEN_ME`
+- `SWITCH_WORLD`
 - `OPEN_CHAT`
 - `NAV_BACK`
 - `OPEN_ADD_MENU`
@@ -193,6 +201,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `NAV_OPEN_CHAT_LIST` | Sets `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | `NAV_OPEN_CONTACTS` | Sets `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | `NAV_OPEN_ME` | Sets `ME`, clears active chat/contact, closes overlay. |
+| `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
 | `NAV_BACK` | From `CONTACT_DETAIL` returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
 | `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens `ovo-control` overlay. |
@@ -231,9 +240,9 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 
 | Resolved route | Rendered view |
 | --- | --- |
-| `CHAT_LIST` | `createChatList(snapshot, controller)` |
+| `CHAT_LIST` | `createChatList(snapshot, state, controller)` |
 | `CHAT_VIEW` | `createChatView(snapshot, state.activeChatId, controller)` |
-| `CONTACTS` | `createContactsView(snapshot, controller)` |
+| `CONTACTS` | `createContactsView(snapshot, state, controller)` |
 | `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
 
@@ -252,8 +261,9 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 
 View helpers still derive presentation data from `WorldSnapshot`:
 
-- `chatsFromSnapshot(snapshot)` reads `snapshot.chatState.chats`.
-- `contactsFromSnapshot(snapshot)` filters assistant contacts and removes ovO.
+- `chatsFromSnapshot(snapshot, worldId)` reads through `resolveWorldChats(worldId, snapshot)`.
+- `contactsFromSnapshot(snapshot, worldId)` reads through `resolveWorldContacts(worldId, snapshot)`, filters assistant contacts, and removes ovO.
+- Me settings/favorites read direct account-level assistant contacts and do not use `currentWorldId`.
 - `chatTitle(snapshot, chat)` infers a title by matching chats to contacts.
 - `contactForChat(snapshot, chat)` uses heuristic matching by contact display name or actor id.
 - `contactRelationshipLine(snapshot, contact)` shows model names in Reality and persona labels in custom worlds.
@@ -309,6 +319,9 @@ Current package version: `0.1.0`.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
+- World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
+- `SWITCH_WORLD` is scaffolded as an explicit action, but no dedicated world-switch UI flow is implemented yet.
+- No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.

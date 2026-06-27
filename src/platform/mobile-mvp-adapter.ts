@@ -1,6 +1,10 @@
 import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
+  resolveWorldChats,
+  resolveWorldContacts
+} from "../domain/index.js";
+import {
   createBehaviorRegistry,
   tabForView
 } from "./behavior-registry.js";
@@ -40,15 +44,17 @@ export function mountChatShell(
     ? shellOrRoot
     : createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell;
   const mountRoot = isShellRuntime(shellOrRoot) ? root ?? document.body : shellOrRoot;
+  const initialView = enterRealityContext(shell);
   const state: SemanticMobileState = {
     activeView: "CHAT_LIST",
+    currentWorldId: initialView.product.snapshot.worldMeta.id,
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
     inputDraft: "",
     settingsOpen: false,
     splashVisible: true,
-    view: enterRealityContext(shell)
+    view: initialView
   };
 
   const render = (): void => {
@@ -60,6 +66,7 @@ export function mountChatShell(
     state.splashVisible = false;
     state.activeView = "CHAT_LIST";
     state.view = refreshView(shell);
+    state.currentWorldId = state.view.product.snapshot.worldMeta.id;
     state.activeChatId = null;
     commitStateTransition(state, render);
   }, 900);
@@ -158,11 +165,11 @@ function renderShellPage(
 ): HTMLElement {
   switch (routeState.route) {
     case "CHAT_LIST":
-      return createChatList(snapshot, controller);
+      return createChatList(snapshot, state, controller);
     case "CHAT_VIEW":
       return createChatView(snapshot, state.activeChatId, controller);
     case "CONTACTS":
-      return createContactsView(snapshot, controller);
+      return createContactsView(snapshot, state, controller);
     case "CONTACT_DETAIL":
       return createContactDetailView(snapshot, state.selectedContactActorId, controller);
     case "ME":
@@ -208,7 +215,11 @@ function actionForTab(tab: MobileMvpTab): InteractionAction {
   return { type: "NAV_OPEN_CHAT_LIST" };
 }
 
-function createChatList(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
+function createChatList(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-list-screen";
 
@@ -217,7 +228,7 @@ function createChatList(snapshot: WorldSnapshot, controller: InteractionControll
   const list = document.createElement("ol");
   list.className = "mvp-chat-list";
 
-  for (const chat of chatsFromSnapshot(snapshot)) {
+  for (const chat of chatsFromSnapshot(snapshot, state.currentWorldId)) {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
@@ -322,7 +333,11 @@ function createComposer(
   return form;
 }
 
-function createContactsView(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
+function createContactsView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
   const screen = document.createElement("section");
   screen.className = "mvp-screen";
   screen.append(createScreenHeader("联系人", null), createOvoIndicator(snapshot));
@@ -330,7 +345,7 @@ function createContactsView(snapshot: WorldSnapshot, controller: InteractionCont
   const list = document.createElement("ol");
   list.className = "mvp-contact-list";
 
-  for (const contact of contactsFromSnapshot(snapshot)) {
+  for (const contact of contactsFromSnapshot(snapshot, state.currentWorldId)) {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
@@ -443,7 +458,7 @@ function createFeatureMenu(snapshot: WorldSnapshot, controller: InteractionContr
   const menu = document.createElement("section");
   menu.className = "mvp-feature-menu";
   menu.append(
-    createFeatureRow("收藏", contactsFromSnapshot(snapshot).map(contactDisplayName).join("、") || "暂无"),
+    createFeatureRow("收藏", assistantContacts(snapshot).filter((contact) => !isOvoContact(snapshot, contact)).map(contactDisplayName).join("、") || "暂无"),
     createFeatureRow("胶囊", "即将开放"),
     createFeatureRow("聊天容量", "最多 25 个聊天"),
     createFeatureRow("会员", "未开通"),
@@ -775,8 +790,8 @@ function createOnlineDot(online: boolean): HTMLElement {
   return dot;
 }
 
-function chatsFromSnapshot(snapshot: WorldSnapshot): WorldChatSession[] {
-  return Array.from(snapshot.chatState.chats.values());
+function chatsFromSnapshot(snapshot: WorldSnapshot, worldId = snapshot.worldMeta.id): WorldChatSession[] {
+  return resolveWorldChats(worldId, snapshot) as WorldChatSession[];
 }
 
 function chatById(snapshot: WorldSnapshot, chatId: string | null): WorldChatSession | null {
@@ -792,8 +807,10 @@ function chatPreview(chat: WorldChatSession): string {
   return chat.messages.at(-1)?.text ?? "开始聊天";
 }
 
-function contactsFromSnapshot(snapshot: WorldSnapshot): WorldContact[] {
-  return assistantContacts(snapshot).filter((contact) => !isOvoContact(snapshot, contact));
+function contactsFromSnapshot(snapshot: WorldSnapshot, worldId = snapshot.worldMeta.id): WorldContact[] {
+  return (resolveWorldContacts(worldId, snapshot) as WorldContact[])
+    .filter((contact) => contact.kind === "assistant")
+    .filter((contact) => !isOvoContact(snapshot, contact));
 }
 
 function assistantContacts(snapshot: WorldSnapshot): WorldContact[] {
