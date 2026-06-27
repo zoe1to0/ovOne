@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-27: Create World validation hardened
+
+Decision: Existing Create World confirmation now uses an explicit validation and sanitization gate before runtime creation.
+
+Rules:
+
+- Missing world name sets local `createWorldDraft.validationError = "请输入世界名称"`.
+- Missing world name does not create a world and keeps the user on the current create route.
+- Registry confirm actions sanitize random role slots and clear invalid `selectedUserRoleSlotId` values.
+- Flow Executor repeats validation/sanitization before calling the create-world service.
+- Successful create behavior is unchanged.
+- Broader validation, real role generation, loading animation, AI initial messages, and auto group creation remain out of scope.
+
 ## 2026-06-27: Random Role detail scaffold corrected
 
 Decision: Detailed Edit Random Role mode now collects explicit role slots instead of the earlier flat notes scaffold.

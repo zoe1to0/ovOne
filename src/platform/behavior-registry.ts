@@ -51,6 +51,7 @@ export type CreateWorldDraft = {
   randomRoleSlots: readonly RandomRoleSlotDraft[];
   selectedUserRoleSlotId: string | null;
   fixedRoles: readonly FixedRoleDraft[];
+  validationError: string | null;
 };
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -174,6 +175,51 @@ export type BehaviorRegistry = Readonly<{
 
 const RENDER: BehaviorRegistryResult = Object.freeze({ shouldRender: true });
 const SKIP_RENDER: BehaviorRegistryResult = Object.freeze({ shouldRender: false });
+export const CREATE_WORLD_NAME_REQUIRED_MESSAGE = "请输入世界名称";
+
+export function sanitizeCreateWorldDraft(draft: CreateWorldDraft): CreateWorldDraft {
+  const randomRoleSlots = syncRandomRoleSlotsForDraft(draft);
+  return Object.freeze({
+    ...draft,
+    randomRoleSlots,
+    selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(draft.selectedUserRoleSlotId, randomRoleSlots),
+    fixedRoles: syncFixedRolesForDraft(draft)
+  });
+}
+
+export function validateCreateWorldDraft(draft: CreateWorldDraft): string | null {
+  return draft.worldName.trim() ? null : CREATE_WORLD_NAME_REQUIRED_MESSAGE;
+}
+
+function createEmptyRandomRoleSlot(index: number): RandomRoleSlotDraft {
+  return Object.freeze({
+    id: `role-slot:${index + 1}`,
+    roleName: "",
+    personaNotes: ""
+  });
+}
+
+function syncRandomRoleSlotsForDraft(draft: CreateWorldDraft): readonly RandomRoleSlotDraft[] {
+  const slotCount = 1 + draft.selectedAIModelIds.length;
+  return Object.freeze(Array.from({ length: slotCount }, (_, index) => draft.randomRoleSlots[index] ?? createEmptyRandomRoleSlot(index)));
+}
+
+function syncSelectedUserRoleSlotIdForSlots(
+  selectedUserRoleSlotId: string | null,
+  randomRoleSlots: readonly RandomRoleSlotDraft[]
+): string | null {
+  return randomRoleSlots.some((slot) => slot.id === selectedUserRoleSlotId) ? selectedUserRoleSlotId : null;
+}
+
+function syncFixedRolesForDraft(draft: CreateWorldDraft): readonly FixedRoleDraft[] {
+  const actorIds = ["user", ...draft.selectedAIModelIds];
+  const existing = new Map(draft.fixedRoles.map((role) => [role.actorId, role]));
+  return Object.freeze(actorIds.map((actorId) => existing.get(actorId) ?? Object.freeze({
+    actorId,
+    roleName: "",
+    notes: ""
+  })));
+}
 
 export function createBehaviorRegistry(): BehaviorRegistry {
   const closeOverlay = (state: SemanticMobileState): void => {
@@ -193,38 +239,13 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     detailRoleMode: "random-role",
     randomRoleSlots: [createEmptyRandomRoleSlot(0)],
     selectedUserRoleSlotId: null,
-    fixedRoles: []
+    fixedRoles: [],
+    validationError: null
   });
 
   const ensureCreateWorldDraft = (state: SemanticMobileState): CreateWorldDraft => {
     state.createWorldDraft ??= createEmptyWorldDraft();
     return state.createWorldDraft;
-  };
-
-  const createEmptyRandomRoleSlot = (index: number): RandomRoleSlotDraft => Object.freeze({
-    id: `role-slot:${index + 1}`,
-    roleName: "",
-    personaNotes: ""
-  });
-
-  const syncRandomRoleSlots = (draft: CreateWorldDraft): readonly RandomRoleSlotDraft[] => {
-    const slotCount = 1 + draft.selectedAIModelIds.length;
-    return Object.freeze(Array.from({ length: slotCount }, (_, index) => draft.randomRoleSlots[index] ?? createEmptyRandomRoleSlot(index)));
-  };
-
-  const syncSelectedUserRoleSlotId = (
-    selectedUserRoleSlotId: string | null,
-    randomRoleSlots: readonly RandomRoleSlotDraft[]
-  ): string | null => randomRoleSlots.some((slot) => slot.id === selectedUserRoleSlotId) ? selectedUserRoleSlotId : null;
-
-  const syncFixedRoles = (draft: CreateWorldDraft): readonly FixedRoleDraft[] => {
-    const actorIds = ["user", ...draft.selectedAIModelIds];
-    const existing = new Map(draft.fixedRoles.map((role) => [role.actorId, role]));
-    return Object.freeze(actorIds.map((actorId) => existing.get(actorId) ?? Object.freeze({
-      actorId,
-      roleName: "",
-      notes: ""
-    })));
   };
 
   const disabled = (
@@ -393,9 +414,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           nextMode: "detailed-edit",
-          randomRoleSlots: syncRandomRoleSlots(draft),
-          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(draft.selectedUserRoleSlotId, syncRandomRoleSlots(draft)),
-          fixedRoles: syncFixedRoles(draft)
+          validationError: null,
+          randomRoleSlots: syncRandomRoleSlotsForDraft(draft),
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(draft.selectedUserRoleSlotId, syncRandomRoleSlotsForDraft(draft)),
+          fixedRoles: syncFixedRolesForDraft(draft)
         });
         state.activeView = "CREATE_WORLD_DETAIL_EDIT";
         state.activeChatId = null;
@@ -409,7 +431,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         const draft = ensureCreateWorldDraft(state);
         state.createWorldDraft = Object.freeze({
           ...draft,
-          [action.field]: action.value
+          [action.field]: action.value,
+          validationError: action.field === "worldName" && action.value.trim() ? null : draft.validationError
         });
         return RENDER;
       }
@@ -418,39 +441,43 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         const draft = ensureCreateWorldDraft(state);
         state.createWorldDraft = Object.freeze({
           ...draft,
-          [action.field]: action.value
+          [action.field]: action.value,
+          validationError: action.field === "worldName" && action.value.trim() ? null : draft.validationError
         });
         return RENDER;
       }
 
       case "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT": {
         const draft = ensureCreateWorldDraft(state);
-        const randomRoleSlots = syncRandomRoleSlots(draft).map((slot) =>
+        const syncedSlots = syncRandomRoleSlotsForDraft(draft);
+        const randomRoleSlots = syncedSlots.map((slot) =>
           slot.id === action.slotId
             ? Object.freeze({ ...slot, [action.field]: action.value })
             : slot
         );
         state.createWorldDraft = Object.freeze({
           ...draft,
-          randomRoleSlots
+          randomRoleSlots,
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(draft.selectedUserRoleSlotId, randomRoleSlots)
         });
         return RENDER;
       }
 
       case "TOGGLE_RANDOM_ROLE_USER_SLOT": {
         const draft = ensureCreateWorldDraft(state);
-        const randomRoleSlots = syncRandomRoleSlots(draft);
+        const randomRoleSlots = syncRandomRoleSlotsForDraft(draft);
+        const slotExists = randomRoleSlots.some((slot) => slot.id === action.slotId);
         state.createWorldDraft = Object.freeze({
           ...draft,
           randomRoleSlots,
-          selectedUserRoleSlotId: draft.selectedUserRoleSlotId === action.slotId ? null : action.slotId
+          selectedUserRoleSlotId: !slotExists || draft.selectedUserRoleSlotId === action.slotId ? null : action.slotId
         });
         return RENDER;
       }
 
       case "UPDATE_CREATE_WORLD_FIXED_ROLE": {
         const draft = ensureCreateWorldDraft(state);
-        const fixedRoles = syncFixedRoles(draft).map((role) =>
+        const fixedRoles = syncFixedRolesForDraft(draft).map((role) =>
           role.actorId === action.actorId
             ? Object.freeze({ ...role, [action.field]: action.value })
             : role
@@ -480,11 +507,11 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           ...draft,
           selectedAIModelIds: selected
         });
-        const randomRoleSlots = syncRandomRoleSlots(nextDraft);
+        const randomRoleSlots = syncRandomRoleSlotsForDraft(nextDraft);
         state.createWorldDraft = Object.freeze({
           ...nextDraft,
           randomRoleSlots,
-          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(nextDraft.selectedUserRoleSlotId, randomRoleSlots)
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(nextDraft.selectedUserRoleSlotId, randomRoleSlots)
         });
         return RENDER;
       }
@@ -504,19 +531,28 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           ...draft,
           detailRoleMode: action.roleMode,
           nextMode: "detailed-edit",
-          randomRoleSlots: syncRandomRoleSlots(draft),
-          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(draft.selectedUserRoleSlotId, syncRandomRoleSlots(draft)),
-          fixedRoles: syncFixedRoles(draft)
+          randomRoleSlots: syncRandomRoleSlotsForDraft(draft),
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(draft.selectedUserRoleSlotId, syncRandomRoleSlotsForDraft(draft)),
+          fixedRoles: syncFixedRolesForDraft(draft)
         });
         return RENDER;
       }
 
       case "CONFIRM_CREATE_WORLD_DRAFT":
-      case "CONFIRM_CREATE_WORLD_DETAIL":
-        state.createWorldDraft = state.createWorldDraft
-          ? Object.freeze({ ...state.createWorldDraft })
-          : null;
+      case "CONFIRM_CREATE_WORLD_DETAIL": {
+        const draft = state.createWorldDraft;
+        if (!draft) {
+          state.createWorldDraft = null;
+          return RENDER;
+        }
+        const sanitized = sanitizeCreateWorldDraft(draft);
+        const validationError = validateCreateWorldDraft(sanitized);
+        state.createWorldDraft = Object.freeze({
+          ...sanitized,
+          validationError
+        });
         return RENDER;
+      }
 
       case "CANCEL_CREATE_WORLD_DRAFT":
       case "CANCEL_CREATE_WORLD_DETAIL":

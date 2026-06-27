@@ -135,7 +135,8 @@ describe("FlowExecutor", () => {
       detailRoleMode: "random-role",
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
-      fixedRoles: []
+      fixedRoles: [],
+      validationError: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -148,6 +149,7 @@ describe("FlowExecutor", () => {
     assert.equal(flow.shouldRender, true);
     assert.equal(calls.length, 1);
     assert.equal(state.view, nextView);
+    assert.equal("validationError" in (calls[0] as Record<string, unknown>), false);
     assert.equal(state.currentWorldId, targetWorldId);
     assert.equal(state.activeView, "CHAT_LIST");
     assert.equal(state.activeChatId, null);
@@ -179,7 +181,8 @@ describe("FlowExecutor", () => {
       detailRoleMode: "random-role",
       randomRoleSlots: [{ id: "role-slot:1", roleName: "", personaNotes: "" }],
       selectedUserRoleSlotId: null,
-      fixedRoles: []
+      fixedRoles: [],
+      validationError: null
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: detailedEdit }).shouldRender, false);
 
@@ -193,9 +196,11 @@ describe("FlowExecutor", () => {
       detailRoleMode: "random-role",
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
-      fixedRoles: []
+      fixedRoles: [],
+      validationError: null
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: missingName }).shouldRender, false);
+    assert.equal(missingName.createWorldDraft.validationError, "请输入世界名称");
     assert.deepEqual(calls, []);
   });
 
@@ -223,7 +228,8 @@ describe("FlowExecutor", () => {
       detailRoleMode: "empty-role",
       randomRoleSlots: [{ id: "role-slot:1", roleName: "Watcher", personaNotes: "quiet" }],
       selectedUserRoleSlotId: "role-slot:1",
-      fixedRoles: []
+      fixedRoles: [],
+      validationError: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -235,10 +241,69 @@ describe("FlowExecutor", () => {
     assert.equal(flow.executedFlow, "CREATE_WORLD");
     assert.equal(flow.shouldRender, true);
     assert.equal(calls.length, 1);
+    assert.equal((calls[0] as unknown as { selectedUserRoleSlotId: string | null }).selectedUserRoleSlotId, "role-slot:1");
+    assert.equal("validationError" in (calls[0] as Record<string, unknown>), false);
     assert.equal(state.currentWorldId, targetWorldId);
     assert.equal(state.activeView, "CHAT_LIST");
     assert.equal(state.activeChatId, null);
     assert.equal(state.createWorldDraft, null);
+  });
+
+  it("validates detail confirmation and sanitizes invalid random user role slots", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      (draft) => {
+        calls.push(draft);
+        return createView(null, toWorldId("custom:sanitized-world"));
+      }
+    );
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const missingName = createState(createView("chat-before-detail-create"));
+    missingName.activeView = "CREATE_WORLD_DETAIL_EDIT";
+    missingName.createWorldDraft = {
+      worldName: "",
+      worldviewSourceType: "text",
+      worldviewText: "expanded",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "detailed-edit",
+      detailRoleMode: "random-role",
+      randomRoleSlots: [{ id: "role-slot:1", roleName: "Lead", personaNotes: "" }],
+      selectedUserRoleSlotId: "role-slot:missing",
+      fixedRoles: [],
+      validationError: null
+    };
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, missingName);
+    const missingFlow = executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state: missingName });
+
+    assert.equal(missingFlow.shouldRender, false);
+    assert.equal(missingName.activeView, "CREATE_WORLD_DETAIL_EDIT");
+    assert.equal(missingName.createWorldDraft?.validationError, "请输入世界名称");
+    assert.equal(missingName.createWorldDraft?.selectedUserRoleSlotId, null);
+    assert.deepEqual(calls, []);
+
+    const valid = createState(createView("chat-before-detail-create"));
+    valid.activeView = "CREATE_WORLD_DETAIL_EDIT";
+    valid.createWorldDraft = {
+      worldName: "Sanitized World",
+      worldviewSourceType: "text",
+      worldviewText: "expanded",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "detailed-edit",
+      detailRoleMode: "random-role",
+      randomRoleSlots: [{ id: "role-slot:1", roleName: "Lead", personaNotes: "" }],
+      selectedUserRoleSlotId: "role-slot:missing",
+      fixedRoles: [],
+      validationError: null
+    };
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, valid);
+    const validFlow = executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state: valid });
+
+    assert.equal(validFlow.executedFlow, "CREATE_WORLD");
+    assert.equal((calls[calls.length - 1] as unknown as { selectedUserRoleSlotId: string | null }).selectedUserRoleSlotId, null);
   });
 });
 

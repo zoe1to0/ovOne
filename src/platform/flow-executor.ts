@@ -1,4 +1,5 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
+import { sanitizeCreateWorldDraft, validateCreateWorldDraft } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 
 export type FlowExecutorContext = Readonly<{
@@ -27,7 +28,16 @@ export function createFlowExecutor(): FlowExecutor {
       }
       if (action.type === "CONFIRM_CREATE_WORLD_DRAFT" || action.type === "CONFIRM_CREATE_WORLD_DETAIL") {
         const draft = context.state.createWorldDraft;
-        if (!draft || !draft.worldName.trim()) {
+        if (!draft) {
+          return NO_FLOW;
+        }
+        const sanitized = sanitizeCreateWorldDraft(draft);
+        const validationError = validateCreateWorldDraft(sanitized);
+        context.state.createWorldDraft = Object.freeze({
+          ...sanitized,
+          validationError
+        });
+        if (validationError) {
           return NO_FLOW;
         }
         if (action.type === "CONFIRM_CREATE_WORLD_DRAFT" && draft.nextMode !== "random-role") {
@@ -39,7 +49,8 @@ export function createFlowExecutor(): FlowExecutor {
         ) {
           return NO_FLOW;
         }
-        context.state.view = context.shell.createWorldFromDraft(draft);
+        const { validationError: _validationError, ...draftForCreate } = sanitized;
+        context.state.view = context.shell.createWorldFromDraft(draftForCreate);
         context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
         context.state.activeView = "CHAT_LIST";
         context.state.activeChatId = null;

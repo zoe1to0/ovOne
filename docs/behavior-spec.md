@@ -72,6 +72,7 @@ UI event
 - The draft view is staged vertically: world name, worldview area, attached source controls, official quick-world chips, AI selection, and next mode.
 - Official quick worlds render as small chips.
 - Create World draft state is stored in `SemanticMobileState.createWorldDraft`, not in `WorldScopedSnapshot`.
+- Create World draft validation state is stored locally as `validationError`.
 - `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a scaffold page for world text review and role assignment mode selection.
 - Confirming the Create World draft with `nextMode = "random-role"` and a non-empty name creates a custom world through Flow Executor and the shell runtime boundary.
 - Confirming the Create World draft with `nextMode = "detailed-edit"` does not create a world yet.
@@ -81,8 +82,9 @@ UI event
 - In Detailed Edit, `random-role` generates scaffold role slots equal to the user plus selected AI count.
 - Each random-role slot stores `roleName` and `personaNotes`.
 - `selectedUserRoleSlotId` may mark exactly one random-role slot as the user's role; selecting the same slot again clears it so all participants can be randomly assigned later.
+- Invalid `selectedUserRoleSlotId` values are cleared during registry state transitions and again before Flow Executor calls the create-world service.
 - `random-role` and `fixed-role` store placeholder role assignment metadata only; no real role generation is performed.
-- Confirming the Create World draft without a required world name does not create a world and leaves the draft open.
+- Confirming Create World without a required world name does not create a world, leaves the current create page open, and sets `validationError = "请输入世界名称"`.
 - Blank-world creation keeps selected AI original display names and records no assigned roles.
 - Non-blank source creation records role assignment as a placeholder only; it is not real random generation.
 - Cancelling the Create World draft clears the draft and returns to `CHAT_LIST`.
@@ -216,8 +218,8 @@ UI event
 | Toggle Create World AI | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft `selectedAIModelIds`. |
 | Select Create World next mode | `SELECT_CREATE_WORLD_NEXT_MODE` | Sets local draft `nextMode` to `random-role` or `detailed-edit`. |
 | Select detail role mode | `SELECT_DETAIL_ROLE_MODE` | Sets detail role mode to `random-role`, `fixed-role`, or `empty-role`. |
-| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for valid `random-role`, then switches into it and clears draft/overlay. |
-| Confirm Create World detail | `CONFIRM_CREATE_WORLD_DETAIL` | Registry preserves draft; Flow Executor creates a world for valid detail edit drafts, then switches into it and clears draft/overlay. |
+| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry sanitizes/validates draft state; Flow Executor creates a world only for valid `random-role`, then switches into it and clears draft/overlay. |
+| Confirm Create World detail | `CONFIRM_CREATE_WORLD_DETAIL` | Registry sanitizes/validates draft state; Flow Executor creates a world for valid detail edit drafts, then switches into it and clears draft/overlay. |
 | Cancel Create World draft | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft state and returns to `CHAT_LIST`. |
 | Cancel Create World detail | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft state and returns to `CHAT_LIST`. |
 | Group members | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |

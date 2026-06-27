@@ -651,7 +651,8 @@ function createCreateWorldDraftView(
     detailRoleMode: "random-role",
     randomRoleSlots: [],
     selectedUserRoleSlotId: null,
-    fixedRoles: []
+    fixedRoles: [],
+    validationError: null
   };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-draft";
@@ -741,7 +742,7 @@ function createCreateWorldDraftView(
 
   screen.append(
     createScreenHeader("创建世界", back),
-    createDraftStage("世界名称", name),
+    createDraftStage("世界名称", draft.validationError ? createFieldWithValidation(name, draft.validationError) : name),
     createDraftStage("世界观", worldviewBlock),
     createDraftStage("选择 AI 好友", aiList),
     createDraftStage("下一步", nextMode),
@@ -764,7 +765,8 @@ function createCreateWorldDetailEditView(
     detailRoleMode: "random-role" as const,
     randomRoleSlots: [],
     selectedUserRoleSlotId: null,
-    fixedRoles: []
+    fixedRoles: [],
+    validationError: null
   };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-detail-edit";
@@ -790,6 +792,9 @@ function createCreateWorldDetailEditView(
   const worldSection = document.createElement("section");
   worldSection.className = "mvp-create-world-detail-section";
   worldSection.append(name, worldview);
+  if (draft.validationError) {
+    worldSection.append(createValidationNote(draft.validationError));
+  }
 
   const roleModes = document.createElement("section");
   roleModes.className = "mvp-create-world-section";
@@ -983,6 +988,19 @@ function createDraftNote(text: string): HTMLElement {
   note.className = "mvp-rule-note";
   note.textContent = text;
   return note;
+}
+
+function createValidationNote(text: string): HTMLElement {
+  const note = createDraftNote(text);
+  note.classList.add("mvp-create-world-validation");
+  return note;
+}
+
+function createFieldWithValidation(field: HTMLElement, message: string): HTMLElement {
+  const wrapper = document.createElement("section");
+  wrapper.className = "mvp-create-world-field";
+  wrapper.append(field, createValidationNote(message));
+  return wrapper;
 }
 
 function createDetailRoleSetup(

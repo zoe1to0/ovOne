@@ -122,15 +122,18 @@ UI action
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
+- Create World validation state lives in `createWorldDraft.validationError`.
 - Create World draft view is a staged vertical flow: world name, worldview text area with attached source controls, small official quick-world chips, AI selection, and next mode.
 - `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a scaffold route for reviewing/editing world name, worldview text, and role assignment mode.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
 - `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
+- `CONFIRM_CREATE_WORLD_DRAFT` and `CONFIRM_CREATE_WORLD_DETAIL` both pass through the same validation/sanitization gate before runtime creation.
 - Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; role content remains placeholder metadata.
 - Detailed Edit Random Role mode creates scaffold role slots equal to user plus selected AI count.
 - Random Role slots store `roleName` and `personaNotes`; `selectedUserRoleSlotId` optionally marks one slot as the user's role and can be cleared for fully random future assignment.
+- Invalid `selectedUserRoleSlotId` values are cleared before create-world runtime effects execute.
 - Empty Role creation records role assignment as `none`.
 - Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
 - Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
@@ -287,8 +290,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
 | `SELECT_DETAIL_ROLE_MODE` | Updates detail scaffold role assignment mode. |
-| `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
-| `CONFIRM_CREATE_WORLD_DETAIL` | Registry preserves draft; Flow Executor creates a world for valid detail edit drafts, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` | Registry validates/sanitizes draft state; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |

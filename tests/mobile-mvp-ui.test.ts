@@ -183,9 +183,12 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| \{ readonly type: "CANCEL_CREATE_WORLD_DETAIL" \}/);
     assert.match(registry, /state\.activeView = "CREATE_WORLD_DRAFT"/);
     assert.match(registry, /state\.activeView = "CREATE_WORLD_DETAIL_EDIT"/);
+    assert.match(registry, /validationError/);
+    assert.match(registry, /sanitizeCreateWorldDraft/);
+    assert.match(registry, /validateCreateWorldDraft/);
     assert.match(adapter, /function createCreateWorldDraftView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /screen\.className = "mvp-screen mvp-create-world-draft"/);
-    assert.match(adapter, /createDraftStage\("世界名称", name\)/);
+    assert.match(adapter, /createDraftStage\("世界名称", draft\.validationError \? createFieldWithValidation\(name, draft\.validationError\) : name\)/);
     assert.match(adapter, /createDraftStage\("世界观", worldviewBlock\)/);
     assert.match(adapter, /createDraftStage\("选择 AI 好友", aiList\)/);
     assert.match(adapter, /createDraftStage\("下一步", nextMode\)/);
@@ -209,12 +212,15 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /checkboxText\.textContent = "分配给我"/);
     assert.match(adapter, /type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"/);
     assert.match(adapter, /type: "TOGGLE_RANDOM_ROLE_USER_SLOT"/);
+    assert.match(adapter, /function createValidationNote/);
+    assert.match(adapter, /mvp-create-world-validation/);
     assert.match(adapter, /function createFixedRoleSetup/);
     assert.match(adapter, /function createFixedRoleRow/);
     assert.match(adapter, /不设定角色，进入世界后不会触发主动初始反应。/);
     assert.match(adapter, /createMenuButton\("进入世界", controller, \{ type: "CONFIRM_CREATE_WORLD_DETAIL" \}\)/);
     assert.doesNotMatch(adapter, /overlayState === "create-world-draft"/);
     assert.match(html, /\.mvp-create-world-official-chips \{/);
+    assert.match(html, /\.mvp-create-world-validation \{/);
   });
 
   it("enforces the rebased UI skeleton contract", () => {

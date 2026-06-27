@@ -184,6 +184,9 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "TOGGLE_RANDOM_ROLE_USER_SLOT", slotId: "role-slot:2" }, state);
     assert.equal(state.createWorldDraft?.selectedUserRoleSlotId, "role-slot:2");
 
+    registry.execute({ type: "TOGGLE_RANDOM_ROLE_USER_SLOT", slotId: "role-slot:missing" }, state);
+    assert.equal(state.createWorldDraft?.selectedUserRoleSlotId, null);
+
     registry.execute({ type: "SELECT_DETAIL_ROLE_MODE", roleMode: "fixed-role" }, state);
     registry.execute({ type: "UPDATE_CREATE_WORLD_FIXED_ROLE", actorId: "user", field: "roleName", value: "Observer" }, state);
     registry.execute({ type: "UPDATE_CREATE_WORLD_FIXED_ROLE", actorId: "ai:friend", field: "notes", value: "old friend" }, state);
@@ -200,6 +203,28 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "NAV_BACK" }, state);
     assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
     assert.equal(state.createWorldDraft?.worldName, "edited detail world");
+  });
+
+  it("shows create world validation without leaving the current create route", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
+    registry.execute({ type: "SELECT_CREATE_WORLD_NEXT_MODE", nextMode: "random-role" }, state);
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
+
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.createWorldDraft?.validationError, "请输入世界名称");
+
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "valid world" }, state);
+    assert.equal(state.createWorldDraft?.validationError, null);
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DETAIL", field: "worldName", value: "" }, state);
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, state);
+
+    assert.equal(state.activeView, "CREATE_WORLD_DETAIL_EDIT");
+    assert.equal(state.createWorldDraft?.validationError, "请输入世界名称");
   });
 
   it("cancels create world draft and clears draft state", () => {
