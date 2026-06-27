@@ -117,6 +117,8 @@ UI action
   - `mountAppShell(...)` throws.
 - `src/platform/minimal-ui-adapter.ts`
   - `mountMinimalUiShell(...)` throws.
+- `src/bootstrap/runtime.ts`
+  - `mountOvOneRuntime(...)` throws.
 - `src/platform/index.ts`
   - does not export browser/minimal legacy mount functions.
 
@@ -274,6 +276,19 @@ The `v0.1` tag represents the current baseline after this audit:
 - Single production UI entry is `mountChatShell`.
 - Legacy browser/minimal UI roots are disabled.
 - Current limitations are documented as known issues.
+
+The `v0.1-foundation` tag is an additional foundation marker for the same audited baseline family. It does not change product behavior or architecture.
+
+## Freeze Review Status
+
+2026-06-27 freeze review result:
+
+- Docs accurately reflect the current production entry path.
+- Docs accurately reflect the active UI shell, local semantic mobile state, identity-only ViewRouter, and `renderShellPage` ownership of page selection.
+- Docs accurately reflect disabled legacy UI roots.
+- Known unresolved behavior gaps are documented in `docs/known-issues.md`.
+- No product rules were changed during freeze review.
+- The repo is ready for Behavior Registry phase as a documented foundation, with unresolved UI behavior gaps intentionally carried forward.
 
 ## Maintenance Rule
 

@@ -29,7 +29,12 @@ Last audited: 2026-06-27.
 - `src/main.ts` mounts `mountChatShell(document.body)`.
 - `src/platform/index.ts` exports only `mountChatShell`.
 - `mountApp`, `mountAppShell`, and `mountMinimalUiShell` throw `LegacyUiMountDisabledError`.
+- `mountOvOneRuntime` throws `LegacyUiMountDisabledError` and is not an active browser UI mount.
 - The active production CSS namespace is `.mvp-*`.
+
+## Freeze Review Result
+
+2026-06-27 freeze review found no undocumented implementation mismatch that blocks the Behavior Registry phase. Existing issues remain unresolved and intentionally documented above.
 
 ## Maintenance Rule
 

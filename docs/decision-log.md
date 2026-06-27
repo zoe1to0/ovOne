@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-06-27: v0.1 freeze review accepts documented foundation state
+
+Decision: ovOne v0.1 is accepted as a documented foundation baseline for the next Behavior Registry phase.
+
+Rules:
+
+- No product rules changed in the freeze review.
+- `v0.1` and `v0.1-foundation` are baseline markers for the audited foundation state.
+- Behavior Registry work must start from the documented current implementation, not from assumed final architecture.
+- Existing gaps such as placeholder `MENU_ACTION`, identity-only `ViewRouter`, heuristic chat/contact mapping, and unbound decorative controls remain known issues.
+
 ## 2026-06-27: v0.1 engineering baseline is tagged from audited implementation state
 
 Decision: `v0.1` marks the first GitHub-backed engineering baseline.
