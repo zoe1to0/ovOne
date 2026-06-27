@@ -353,7 +353,9 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       }
 
       case "CONFIRM_CREATE_WORLD_DRAFT":
-        closeOverlay(state);
+        state.createWorldDraft = state.createWorldDraft
+          ? Object.freeze({ ...state.createWorldDraft })
+          : null;
         return RENDER;
 
       case "CANCEL_CREATE_WORLD_DRAFT":

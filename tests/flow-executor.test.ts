@@ -107,6 +107,85 @@ describe("FlowExecutor", () => {
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
   });
+
+  it("executes random-role create world flow and clears draft after success", () => {
+    const targetWorldId = toWorldId("custom:new-world");
+    const nextView = createView(null, targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      (draft) => {
+        calls.push(draft);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-create"));
+    state.overlay = "create-world-draft";
+    state.activeView = "CHAT_VIEW";
+    state.activeChatId = "chat-before-create";
+    state.selectedContactActorId = "old-contact";
+    state.settingsOpen = true;
+    state.createWorldDraft = {
+      worldName: "New World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
+    const flow = executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.equal(flow.executedFlow, "CREATE_WORLD");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(calls.length, 1);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.selectedContactActorId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.createWorldDraft, null);
+  });
+
+  it("does not create worlds for detailed-edit or missing-name draft confirmation", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      (draft) => {
+        calls.push(draft);
+        return createView(null, toWorldId("custom:unexpected"));
+      }
+    );
+    const executor = createFlowExecutor();
+
+    const detailedEdit = createState(createView("chat-before-create"));
+    detailedEdit.createWorldDraft = {
+      worldName: "Future Edit",
+      worldviewSourceType: "text",
+      worldviewText: "placeholder",
+      selectedAIModelIds: [],
+      nextMode: "detailed-edit"
+    };
+    assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: detailedEdit }).shouldRender, false);
+
+    const missingName = createState(createView("chat-before-create"));
+    missingName.createWorldDraft = {
+      worldName: "   ",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: [],
+      nextMode: "random-role"
+    };
+    assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: missingName }).shouldRender, false);
+    assert.deepEqual(calls, []);
+  });
 });
 
 function createState(view: MinimalProductShellView): SemanticMobileState {
@@ -127,12 +206,14 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
 
 function createShell(
   sendMessage: (text: string) => MinimalProductShellView,
-  switchWorld: (worldId: string) => MinimalProductShellView = () => createView("initial")
+  switchWorld: (worldId: string) => MinimalProductShellView = () => createView("initial"),
+  createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
     openScreen: () => view,
     switchWorld,
+    createWorldFromDraft,
     sendMessage,
     snapshot: () => view.product.snapshot,
     view: () => view

@@ -4,17 +4,23 @@ import type { ChatId, MessageId } from "../chat-kernel/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 import { renderMinimalProductView } from "./views.js";
 import type {
+  CreateWorldDraftInput,
   MinimalProductScreen,
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
+import { createWorldFromDraft } from "./create-world-service.js";
 
 export const MinimalUiShell = Object.freeze({
   init
 });
 
-function init(app: AppRuntime): MinimalProductShellRuntime {
-  const worldIds = Object.freeze([app.defaultState.world.id, app.realityState.world.id]);
+function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly WorldId[] }> = {}): MinimalProductShellRuntime {
+  const worldIds: WorldId[] = uniqueWorldIds([
+    app.defaultState.world.id,
+    app.realityState.world.id,
+    ...(options.worldIds ?? [])
+  ]);
   let activeWorldId: WorldId = app.defaultState.world.id;
   let screen: MinimalProductScreen = "chat";
   let entryWorldId: WorldId | null = activeWorldId;
@@ -49,6 +55,20 @@ function init(app: AppRuntime): MinimalProductShellRuntime {
   const switchWorld = (worldId: WorldId): MinimalProductShellView => {
     app.worldDomain.getWorldState(worldId);
     activeWorldId = worldId;
+    entryWorldId = null;
+    screen = "chat";
+    return view();
+  };
+
+  const createWorld = (draft: CreateWorldDraftInput): MinimalProductShellView => {
+    const created = createWorldFromDraft({
+      app,
+      existingWorldIds: worldIds,
+      sourceSnapshot: snapshot(),
+      draft
+    });
+    worldIds.push(created.worldId);
+    activeWorldId = created.worldId;
     entryWorldId = null;
     screen = "chat";
     return view();
@@ -90,8 +110,13 @@ function init(app: AppRuntime): MinimalProductShellRuntime {
   return Object.freeze({
     openScreen,
     switchWorld,
+    createWorldFromDraft: createWorld,
     sendMessage,
     snapshot,
     view
   });
+}
+
+function uniqueWorldIds(worldIds: readonly WorldId[]): WorldId[] {
+  return [...new Set(worldIds)];
 }

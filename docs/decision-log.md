@@ -1,5 +1,24 @@
 # ovOne Decision Log
 
+## 2026-06-27: Minimal Random Role Create World flow added
+
+Decision: Create World confirmation now creates a custom world only for valid Random Role drafts.
+
+Rules:
+
+- `CONFIRM_CREATE_WORLD_DRAFT` remains a Behavior Registry state action and does not mutate WorldDomain directly.
+- Flow Executor owns the random-role creation runtime effect.
+- The shell exposes `createWorldFromDraft(draft)` as the runtime boundary for controlled world creation.
+- Creation commits a new custom `WorldState` through WorldDomain, appends the world to `availableWorlds`, switches into it, and lands on `CHAT_LIST`.
+- Successful creation clears `activeChatId`, `selectedContactActorId`, overlay/settings state, and `createWorldDraft`.
+- Selected AI ids become independent world-scoped contacts and chats in the new world.
+- Reality remains unchanged.
+- Blank-world creation keeps original selected AI display names and stores role assignment as `none`.
+- Non-blank source creation stores role assignment as `placeholder`; no real role generation is implemented.
+- `nextMode = "detailed-edit"` does not create a world yet.
+- Missing world name does not create a world yet.
+- Document parsing, AI initial messages, auto group creation, and detailed edit remain out of scope.
+
 ## 2026-06-27: Create World draft scaffold added
 
 Decision: Create World now opens a local draft scaffold instead of being a disabled/no-op menu action.
@@ -13,7 +32,7 @@ Rules:
 - `SELECT_WORLDVIEW_SOURCE` updates the worldview source option.
 - `TOGGLE_CREATE_WORLD_AI` updates selected AI ids in draft state.
 - `SELECT_CREATE_WORLD_NEXT_MODE` updates the future next mode.
-- `CONFIRM_CREATE_WORLD_DRAFT` closes the overlay but does not create or switch worlds yet.
+- `CONFIRM_CREATE_WORLD_DRAFT` was initially scaffolded without creation; it is now implemented only for valid Random Role drafts in the later Minimal Random Role Create World decision.
 - `CANCEL_CREATE_WORLD_DRAFT` clears the local draft and closes the overlay.
 - No world creation, world switching, role generation, detailed edit page, memory editing, AI initial messages, group creation, or world data model change is included in this decision.
 

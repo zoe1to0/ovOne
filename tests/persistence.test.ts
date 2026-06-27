@@ -15,6 +15,7 @@ import {
   serializeSnapshot
 } from "../src/persistence/index.js";
 import { MinimalUiShell } from "../src/minimal-ui-shell/index.js";
+import { toWorldId } from "../src/world-domain/index.js";
 
 describe("Persistence Layer", () => {
   it("serializes WorldSnapshot with the full required persistence shape", () => {
@@ -131,5 +132,23 @@ describe("Persistence Layer", () => {
 
     assert.equal(restored.runtimeState.metadata.settings.persistence, "enabled");
     assert.equal(restored.runtimeState.metadata.personaOverlays.ovone?.tone?.warmth, "stable");
+  });
+
+  it("persists and restores custom worlds created from drafts into the shell world list", () => {
+    const storage = createMemoryWorldStorage();
+    const first = createPersistentProductRuntime({ storage });
+    const created = first.shell.createWorldFromDraft({
+      worldName: "Persisted Draft World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ovone"],
+      nextMode: "random-role"
+    });
+
+    const second = createPersistentProductRuntime({ storage });
+
+    assert.equal(created.activeWorldId, toWorldId("custom:persisted-draft-world"));
+    assert.equal(second.shell.view().availableWorlds.some((world) => world.worldId === created.activeWorldId), true);
+    assert.equal(second.restoredWorlds.some((world) => world.worldMeta.id === created.activeWorldId), true);
   });
 });

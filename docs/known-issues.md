@@ -12,8 +12,8 @@ Last audited: 2026-06-27.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.
-- Create World draft scaffold is implemented, but confirm does not create a world, switch worlds, generate roles, create chats, or send initial messages yet.
+- World-scoped data model foundation now supports minimal random-role world creation, but does not implement edit world flows.
+- Create World random-role confirmation creates a world from selected AI and switches into it, but real random role generation, detailed edit, document parsing, AI initial messages, and auto group creation are not implemented.
 - ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
@@ -27,7 +27,7 @@ Last audited: 2026-06-27.
 - Create World import document options and official quick world options are placeholders only.
 - Reality is shown as locked in the editor selector, but no real worldview edit prevention is needed yet because editing is not implemented.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, and valid random-role `CONFIRM_CREATE_WORLD_DRAFT` are the only UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning

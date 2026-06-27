@@ -139,7 +139,7 @@ describe("Composer mode state machine", () => {
     assert.equal(state.createWorldDraft?.nextMode, "random-role");
 
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
-    assert.equal(state.overlay, null);
+    assert.equal(state.overlay, "create-world-draft");
     assert.equal(state.currentWorldId, initialWorldId);
     assert.equal(state.view.availableWorlds.length, worldCount);
   });

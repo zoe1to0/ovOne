@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / CONFIRM_CREATE_WORLD_DRAFT
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -86,6 +86,7 @@ UI action
 - Active UI implementation: `src/platform/mobile-mvp-adapter.ts`.
 - Behavior Registry scaffold: `src/platform/behavior-registry.ts`.
 - Flow Executor scaffold: `src/platform/flow-executor.ts`.
+- Create World service: `src/minimal-ui-shell/create-world-service.ts`.
 - Composer mode state machine: `src/platform/composer-mode.ts`.
 - World-scoped data model foundation: `src/domain/world-model.ts`.
 - Read-only world scope resolver: `src/domain/world-scope-resolver.ts`.
@@ -120,7 +121,12 @@ UI action
 - World switcher lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD`.
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and opens a local draft scaffold.
-- Create World draft state lives only in `SemanticMobileState.createWorldDraft`; it does not mutate `availableWorlds`, `currentWorldId`, or world-scoped snapshot data.
+- Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
+- `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
+- Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
+- `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
+- Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
+- Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -259,7 +265,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `SELECT_WORLDVIEW_SOURCE` | Updates local draft worldview source type. |
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
-| `CONFIRM_CREATE_WORLD_DRAFT` | Closes overlay only; does not create or switch worlds. |
+| `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and closes overlay. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -299,6 +305,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `SUBMIT_MESSAGE` with non-empty trimmed text | Calls `shell.sendMessage(text)`, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. |
 | `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
 | `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
+| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and non-empty name | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -327,7 +335,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / random-role Create World confirmation
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -342,7 +350,8 @@ Exceptions:
 - Disabled explicit actions close overlay but do not implement product behavior.
 - Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
-- Create World draft actions mutate only local `createWorldDraft` state and do not run Flow Executor runtime effects.
+- Create World draft edit actions mutate only local `createWorldDraft` state.
+- Random-role Create World confirmation is the only Create World draft action with a Flow Executor runtime effect.
 
 ## Current Test/Verification Surface
 
@@ -369,8 +378,7 @@ Current package version: `0.1.0`.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
-- World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
-- Create World draft scaffold exists, but confirm does not create a world, switch worlds, generate roles, or create chats yet.
+- Minimal random-role Create World creates and switches into a custom world, but detailed edit, real role generation, document parsing, AI initial messages, and auto group creation are not implemented.
 - ovO world menu supports read-only world switching and editor selection scaffold, but no create/edit world flow is implemented yet.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.

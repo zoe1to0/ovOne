@@ -12,9 +12,10 @@ export type OnboardedProductShellView = MinimalProductShellView & Readonly<{
   readonly onboarding: OnboardingState;
 }>;
 
-export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "openScreen" | "switchWorld" | "sendMessage" | "view"> & Readonly<{
+export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "openScreen" | "switchWorld" | "createWorldFromDraft" | "sendMessage" | "view"> & Readonly<{
   readonly openScreen: MinimalProductShellRuntime["openScreen"];
   readonly switchWorld: MinimalProductShellRuntime["switchWorld"];
+  readonly createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"];
   readonly sendMessage: MinimalProductShellRuntime["sendMessage"];
   readonly view: () => OnboardedProductShellView;
   readonly onboarding: () => OnboardingState;

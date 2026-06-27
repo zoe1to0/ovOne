@@ -10,6 +10,7 @@ import {
   renderWorldListView,
   renderWorldView
 } from "../src/minimal-ui-shell/index.js";
+import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.js";
 import { App } from "../src/app/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 
@@ -126,4 +127,78 @@ describe("Minimal UI Shell", () => {
     assert.equal(reality.product.chat.messages.length, 0);
     assert.equal(realityAfterMessage.product.chat.messages.at(-1)?.presentation.mode, "QA");
   });
+
+  it("creates a custom world from a random-role draft without changing Reality", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+    const beforeWorlds = realityBefore.availableWorlds.length;
+    const beforeRealityContactCount = realityBefore.product.snapshot.contacts.length;
+
+    const created = shell.createWorldFromDraft({
+      worldName: "Blank Test World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+
+    assert.equal(created.availableWorlds.length, beforeWorlds + 1);
+    assert.equal(created.activeWorldId, toWorldId("custom:blank-test-world"));
+    assert.equal(created.screen, "chat");
+    assert.equal(created.product.snapshot.worldMeta.type, "custom");
+    assert.equal(created.product.snapshot.worldMeta.title, "Blank Test World");
+    assert.equal(createWorldSettings(created).roleAssignment, "none");
+    assert.equal(created.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId && contact.worldId === created.activeWorldId), true);
+    assert.equal(created.product.snapshot.chatState.chats.size, 1);
+    assert.equal(created.product.snapshot.chatState.chats.values().next().value?.title, friend.displayName);
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.equal(realityAfter.product.snapshot.contacts.length, beforeRealityContactCount);
+    assert.equal(realityAfter.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)?.worldId, realityWorldId);
+  });
+
+  it("keeps non-blank role assignment as an explicit placeholder", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const worldId = shell.view().activeWorldId;
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const friend = shell.view().product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+
+    const created = shell.createWorldFromDraft({
+      worldName: "Story Test World",
+      worldviewSourceType: "text",
+      worldviewText: "A tiny studio world.",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+
+    assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "placeholder");
+    assert.equal(createWorldSettings(created).roleAssignment, "placeholder");
+  });
 });
+
+function createWorldSettings(view: ReturnType<MinimalProductShellRuntime["view"]>): Record<string, unknown> {
+  return view.product.snapshot.runtimeState.metadata.settings.createWorld as Record<string, unknown>;
+}

@@ -93,9 +93,18 @@ export type MinimalProductShellView = Readonly<{
   readonly product: MinimalProductView;
 }>;
 
+export type CreateWorldDraftInput = Readonly<{
+  readonly worldName: string;
+  readonly worldviewSourceType: string;
+  readonly worldviewText: string;
+  readonly selectedAIModelIds: readonly string[];
+  readonly nextMode: "random-role" | "detailed-edit" | null;
+}>;
+
 export type MinimalProductShellRuntime = Readonly<{
   readonly openScreen: (screen: MinimalProductScreen) => MinimalProductShellView;
   readonly switchWorld: (worldId: WorldId) => MinimalProductShellView;
+  readonly createWorldFromDraft: (draft: CreateWorldDraftInput) => MinimalProductShellView;
   readonly sendMessage: (text: string) => MinimalProductShellView;
   readonly snapshot: () => WorldSnapshot;
   readonly view: () => MinimalProductShellView;

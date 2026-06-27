@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / random-role Create World confirmation
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -69,7 +69,11 @@ UI event
 - Current visible chat composer remains normal/text by default.
 - Create World now opens a local draft scaffold through `OPEN_CREATE_WORLD_DRAFT`.
 - Create World draft state is stored in `SemanticMobileState.createWorldDraft`, not in `WorldScopedSnapshot`.
-- Confirming the Create World draft does not create or switch worlds yet.
+- Confirming the Create World draft with `nextMode = "random-role"` and a non-empty name creates a custom world through Flow Executor and the shell runtime boundary.
+- Confirming the Create World draft with `nextMode = "detailed-edit"` does not create a world yet.
+- Confirming the Create World draft without a required world name does not create a world and leaves the draft open.
+- Blank-world creation keeps selected AI original display names and records no assigned roles.
+- Non-blank source creation records role assignment as a placeholder only; it is not real random generation.
 - Cancelling the Create World draft clears the draft and closes the overlay.
 
 ## Action Categories
@@ -175,7 +179,7 @@ UI event
 | Select worldview source | `SELECT_WORLDVIEW_SOURCE` | Updates local draft `worldviewSourceType`. |
 | Toggle Create World AI | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft `selectedAIModelIds`. |
 | Select Create World next mode | `SELECT_CREATE_WORLD_NEXT_MODE` | Sets local draft `nextMode` to `random-role` or `detailed-edit`. |
-| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Closes overlay only; does not create or switch worlds yet. |
+| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for valid `random-role`, then switches into it and clears draft/overlay. |
 | Cancel Create World draft | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft state and closes overlay. |
 | Group members | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | Chat settings | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -207,9 +211,10 @@ These actions are named and routed but intentionally do not implement product be
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
+- `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
 - ovO world-button menu hierarchy is bound, but real world editing is not implemented yet.
-- Create World draft scaffold is bound, but it does not create worlds, switch worlds, generate roles, or create chats yet.
+- Create World random-role confirmation creates worlds, but detailed edit, real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 
 ## Remaining Behavior Questions
 
@@ -217,7 +222,8 @@ These actions are named and routed but intentionally do not implement product be
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
 - What should the real `OPEN_WORLD_EDITOR` implementation display after world editor behavior is in scope?
-- What should `CONFIRM_CREATE_WORLD_DRAFT` route to first: random-role generation or detailed-edit placeholder?
+- What validation UI should missing Create World name display?
+- What should the detailed-edit placeholder route display?
 - What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?
 

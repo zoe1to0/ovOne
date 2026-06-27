@@ -9,6 +9,7 @@ import {
   transition
 } from "../chat-kernel/index.js";
 import type { ChatId, MessageId } from "../chat-kernel/index.js";
+import { createPatchQueue } from "../patch-queue/index.js";
 import { toWorldId } from "../world-domain/index.js";
 import type { WorldChatSession, WorldId, WorldSnapshot, WorldState } from "../world-domain/index.js";
 import { createMemoryWorldStorage } from "./memory-storage.js";
@@ -90,15 +91,16 @@ export function createPersistentProductRuntime(
   const runtime = createPersistentApp(options);
   return Object.freeze({
     ...runtime,
-    shell: createPersistentMinimalUiShell(runtime.app, runtime.persistence)
+    shell: createPersistentMinimalUiShell(runtime.app, runtime.persistence, runtime.restoredWorlds.map((world) => world.worldMeta.id))
   });
 }
 
 export function createPersistentMinimalUiShell(
   app: AppRuntime,
-  persistence: WorldPersistence
+  persistence: WorldPersistence,
+  restoredWorldIds: readonly WorldId[] = []
 ): MinimalProductShellRuntime {
-  const shell = MinimalUiShell.init(app);
+  const shell = MinimalUiShell.init(app, { worldIds: restoredWorldIds });
 
   const saveVisibleWorlds = (view: MinimalProductShellView): void => {
     persistence.saveWorlds(view.availableWorlds.map((world) => world.worldId));
@@ -115,6 +117,7 @@ export function createPersistentMinimalUiShell(
   return Object.freeze({
     openScreen: (screen) => withAutosave(shell.openScreen(screen)),
     switchWorld: (worldId) => withAutosave(shell.switchWorld(worldId)),
+    createWorldFromDraft: (draft) => withAutosave(shell.createWorldFromDraft(draft)),
     sendMessage: (text) => withAutosave(shell.sendMessage(text)),
     snapshot: shell.snapshot,
     view: shell.view
@@ -245,13 +248,43 @@ function isSerializedWorldSnapshot(value: unknown): value is SerializedWorldSnap
 }
 
 function restoreSnapshotIntoApp(app: AppRuntime, snapshot: WorldSnapshot): WorldSnapshot {
-  assertRestorableWorld(snapshot.worldMeta.id);
+  if (!isKnownBootstrapWorld(snapshot.worldMeta.id)) {
+    restoreCustomSnapshotIntoApp(app, snapshot);
+    return app.worldDomain.generateSnapshot(snapshot.worldMeta.id);
+  }
 
   restoreStructuralState(app, snapshot);
   restoreChats(app, snapshot);
   restoreLifecycle(app, snapshot);
 
   return app.worldDomain.generateSnapshot(snapshot.worldMeta.id);
+}
+
+function restoreCustomSnapshotIntoApp(app: AppRuntime, snapshot: WorldSnapshot): void {
+  const state = {
+    world: { ...snapshot.worldMeta },
+    contacts: snapshot.contacts.map((contact) => ({ ...contact })),
+    groups: snapshot.groups.map((group) => ({
+      ...group,
+      actorIds: [...group.actorIds]
+    })),
+    memoryScope: { ...snapshot.memorySummary.scope },
+    metadata: {
+      title: snapshot.runtimeState.metadata.title,
+      type: snapshot.runtimeState.metadata.type,
+      worldView: { ...snapshot.runtimeState.metadata.worldView },
+      settings: { ...snapshot.runtimeState.metadata.settings },
+      personaOverlays: { ...snapshot.runtimeState.metadata.personaOverlays }
+    },
+    chat: {
+      activeChatId: snapshot.chatState.activeChatId,
+      chats: new Map([...snapshot.chatState.chats.entries()].map(([id, chat]) => [id, {
+        ...chat,
+        messages: chat.messages.map((message) => ({ ...message }))
+      }]))
+    }
+  } satisfies WorldState;
+  app.worldDomain.commitState(createSnapshotState(state));
 }
 
 function restoreStructuralState(app: AppRuntime, snapshot: WorldSnapshot): void {
@@ -377,11 +410,19 @@ function restoreLifecycle(app: AppRuntime, snapshot: WorldSnapshot): void {
   }
 }
 
-function assertRestorableWorld(worldId: WorldId): void {
-  if (worldId === toWorldId("reality") || worldId === toWorldId("custom:default")) {
-    return;
-  }
-  throw new Error(`PersistenceLayer: world "${worldId}" cannot be restored by the minimal v2 bootstrap.`);
+function isKnownBootstrapWorld(worldId: WorldId): boolean {
+  return worldId === toWorldId("reality") || worldId === toWorldId("custom:default");
+}
+
+function createSnapshotState(state: WorldState): WorldState {
+  const queue = createPatchQueue();
+  queue.enqueue({
+    source: "creation",
+    targetField: "world",
+    operation: "initialize",
+    value: state
+  });
+  return queue.reduce();
 }
 
 function deepFreeze<T>(value: T): T {

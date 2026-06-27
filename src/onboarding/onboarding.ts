@@ -87,6 +87,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    createWorldFromDraft: (draft) => {
+      try {
+        return shell.createWorldFromDraft(draft);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "createWorldFromDraft" });
+        return decorate();
+      }
+    },
     sendMessage: (text) => {
       const trimmed = text.trim();
       if (!trimmed) {

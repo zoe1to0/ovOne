@@ -28,7 +28,7 @@
 - ovO cannot be customized.
 - ovO is the entry for world switching and world editing.
 - Add/create actions include add AI friend, create group, create world.
-- Current known engineering issue: Create World has a local draft scaffold, but it does not create or switch worlds yet.
+- Current known engineering issue: Create World supports minimal Random Role direct creation, but real random role generation, detailed edit, document parsing, AI initial messages, and auto group creation are not implemented yet.
 
 ## Data Ownership Rules
 
