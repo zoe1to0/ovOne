@@ -1,5 +1,22 @@
 # ovOne Decision Log
 
+## 2026-06-27: ovO overlay binds read-only world switching
+
+Decision: ovO control overlay now exposes existing worlds for read-only context switching.
+
+Rules:
+
+- No create world flow was implemented.
+- No edit world flow or world editor UI was implemented.
+- ovO overlay lists `state.view.availableWorlds`.
+- The current world is visually marked.
+- Selecting a world dispatches `SWITCH_WORLD`.
+- Behavior Registry keeps owning the local `SWITCH_WORLD` state transition.
+- Flow Executor owns the `shell.switchWorld(worldId)` runtime effect and refreshes `state.view`.
+- World switching lands on `CHAT_LIST` and clears active chat/contact/overlay/settings state.
+- Chats and Contacts then render from the selected world's snapshot/context.
+- Me remains global.
+
 ## 2026-06-27: World-scoped data model foundation added
 
 Decision: ovOne now has a typed world-scoped data model foundation and read-only resolver layer.

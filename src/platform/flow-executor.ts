@@ -8,7 +8,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -20,6 +20,11 @@ const NO_FLOW: FlowExecutorResult = Object.freeze({ shouldRender: false });
 export function createFlowExecutor(): FlowExecutor {
   const run = (action: InteractionAction, context: FlowExecutorContext): FlowExecutorResult => {
     if (action.type !== "SUBMIT_MESSAGE") {
+      if (action.type === "SWITCH_WORLD") {
+        context.state.view = context.shell.switchWorld(action.worldId);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        return Object.freeze({ shouldRender: true, executedFlow: "SWITCH_WORLD" });
+      }
       return NO_FLOW;
     }
 

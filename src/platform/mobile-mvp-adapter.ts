@@ -148,7 +148,7 @@ function createChatShell(
   viewport.className = "mvp-viewport";
   viewport.append(createShellPageFrame(routeState, renderShellPage(routeState, snapshot, state, controller)));
 
-  app.append(viewport, createOverlayLayer(ViewRouter.currentOverlay(state), controller), createBottomNav(state, controller));
+  app.append(viewport, createOverlayLayer(ViewRouter.currentOverlay(state), state, controller), createBottomNav(state, controller));
   return app;
 }
 
@@ -541,19 +541,27 @@ function createHomeHeader(controller: InteractionController): HTMLElement {
   return header;
 }
 
-function createOverlayLayer(overlayState: MobileOverlay, controller: InteractionController): HTMLElement {
+function createOverlayLayer(
+  overlayState: MobileOverlay,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
   const layer = document.createElement("section");
   layer.className = "mvp-overlay-layer";
   layer.setAttribute("aria-label", "浮层");
 
-  const overlay = createOverlayContent(overlayState, controller);
+  const overlay = createOverlayContent(overlayState, state, controller);
   if (overlay) {
     layer.append(overlay);
   }
   return layer;
 }
 
-function createOverlayContent(overlayState: MobileOverlay, controller: InteractionController): HTMLElement | null {
+function createOverlayContent(
+  overlayState: MobileOverlay,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement | null {
   if (overlayState === "add-menu") {
     return createAddMenu(controller);
   }
@@ -561,7 +569,7 @@ function createOverlayContent(overlayState: MobileOverlay, controller: Interacti
     return createChatMenu(controller);
   }
   if (overlayState === "ovo-control") {
-    return createOvoControlPanel(controller);
+    return createOvoControlPanel(state, controller);
   }
   if (overlayState === "emoji-picker") {
     return createEmojiPicker();
@@ -596,10 +604,26 @@ function createChatMenu(controller: InteractionController): HTMLElement {
   return menu;
 }
 
-function createOvoControlPanel(controller: InteractionController): HTMLElement {
+function createOvoControlPanel(state: SemanticMobileState, controller: InteractionController): HTMLElement {
   const menu = document.createElement("section");
   menu.className = "mvp-overlay-panel mvp-ovo-control";
+
+  const worldList = document.createElement("section");
+  worldList.className = "mvp-ovo-world-list";
+  for (const world of state.view.availableWorlds) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = world.worldId === state.currentWorldId ? "mvp-ovo-world-row is-current" : "mvp-ovo-world-row";
+    item.textContent = world.worldId === state.currentWorldId ? `${world.title} · 当前` : world.title;
+    if (world.worldId === state.currentWorldId) {
+      item.setAttribute("aria-current", "true");
+    }
+    bindControllerAction(item, controller, { type: "SWITCH_WORLD", worldId: world.worldId });
+    worldList.append(item);
+  }
+
   menu.append(
+    worldList,
     createMenuButton("新建聊天", controller, { type: "OPEN_ADD_MENU" }),
     createMenuButton("查看联系人", controller, { type: "NAV_OPEN_CONTACTS" }),
     createMenuButton("我的设置", controller, { type: "NAV_OPEN_ME" })

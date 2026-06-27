@@ -11,7 +11,7 @@ Last audited: 2026-06-27.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.
-- `SWITCH_WORLD` exists as an explicit action scaffold, but no dedicated world-switch UI is bound yet.
+- ovO overlay supports read-only world switching, but no create/edit world flow is implemented yet.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
 - Real AI provider integration is not implemented; `GlobalAIModel` and `GlobalAILink` are foundation types.
@@ -19,9 +19,9 @@ Last audited: 2026-06-27.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has no dedicated world-switch/edit control flow beyond opening the control overlay.
+- ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` is the only UI action currently handled by Flow Executor.
+- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning
@@ -54,7 +54,7 @@ Disabled explicit actions:
 - Unknown active views resolve to `CHAT_LIST` before the view layer renders.
 - Runtime effects and autosave are out of scope for Behavior Registry.
 - Flow Executor exists in `src/platform/flow-executor.ts`.
-- Flow Executor currently handles only `SUBMIT_MESSAGE`.
+- Flow Executor currently handles `SUBMIT_MESSAGE` and `SWITCH_WORLD`.
 - Disabled explicit actions do not execute runtime effects.
 
 ## Freeze Review Result

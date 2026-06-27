@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -51,9 +51,11 @@ UI event
 - Emoji and file picker follow-up item actions remain disabled/no-op for now.
 - `TEXT_INPUT` updates `inputDraft` but does not re-render yet.
 - Unknown `activeView` falls back to `CHAT_LIST`. This is a temporary fallback, not a final invariant.
-- ovO click opens the ovO control overlay only. World switch/edit actions inside ovO remain later explicit actions.
+- ovO click opens the ovO control overlay only.
+- ovO control overlay lists existing worlds and binds each world row to `SWITCH_WORLD`.
+- World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
-- `SWITCH_WORLD` is an explicit scaffold action. It changes `currentWorldId`, lands on `CHAT_LIST`, and clears active chat/contact selection; no world-switch UI is implemented yet.
+- `SWITCH_WORLD` changes `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact selection, and Flow Executor refreshes the shell view through `shell.switchWorld(worldId)`.
 
 ## Action Categories
 
@@ -115,7 +117,7 @@ UI event
 | Open Chats tab | `NAV_OPEN_CHAT_LIST` | Sets `activeView` to `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | Open Contacts tab | `NAV_OPEN_CONTACTS` | Sets `activeView` to `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | Open Me tab | `NAV_OPEN_ME` | Sets `activeView` to `ME`, clears active chat/contact, closes overlay. |
-| Switch world | `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
+| Switch world from ovO overlay | `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay/settings, and Flow Executor refreshes the shell view. |
 | Open chat row | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
 | Back | `NAV_BACK` | From contact detail returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
 | ovO click | `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens ovO control overlay. |
@@ -154,15 +156,14 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE` is the only action currently handled by Flow Executor.
+- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
 - Emoji and file picker panel items remain decorative after the overlay opens.
 
 ## Remaining Behavior Questions
 
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
-- What exact actions should ovO overlay expose for world switch and world edit?
-- Where should `SWITCH_WORLD` be bound once ovO world controls are implemented?
+- What exact actions should ovO overlay expose for world edit?
 - What are the concrete product flows for the disabled creation/settings actions?
 
 ## Maintenance Rule

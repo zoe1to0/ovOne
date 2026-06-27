@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -110,6 +110,7 @@ UI action
 - Snapshot used by UI is `state.view.product.snapshot`.
 - Chats and Contacts read through `currentWorldId` and the world scope resolver.
 - Me remains global and reads account-level snapshot data directly instead of routing through the world resolver.
+- ovO control overlay lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD` for read-only world switching.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -201,7 +202,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `NAV_OPEN_CHAT_LIST` | Sets `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
 | `NAV_OPEN_CONTACTS` | Sets `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | `NAV_OPEN_ME` | Sets `ME`, clears active chat/contact, closes overlay. |
-| `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay and settings. |
+| `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay/settings, and Flow Executor refreshes the shell view. |
 | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
 | `NAV_BACK` | From `CONTACT_DETAIL` returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
 | `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens `ovo-control` overlay. |
@@ -254,6 +255,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | --- | --- |
 | `SUBMIT_MESSAGE` with non-empty trimmed text | Calls `shell.sendMessage(text)`, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. |
 | `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
+| `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -280,7 +282,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -320,15 +322,15 @@ Current package version: `0.1.0`.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
-- `SWITCH_WORLD` is scaffolded as an explicit action, but no dedicated world-switch UI flow is implemented yet.
+- ovO overlay supports read-only world switching, but no create/edit world flow is implemented yet.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has no dedicated world-switch/edit control flow beyond opening the control overlay.
+- ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` is the only UI action with a Flow Executor runtime effect.
+- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

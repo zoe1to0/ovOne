@@ -114,7 +114,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
     assert.match(registry, /openOverlay\(state, "ovo-control"\)/);
-    assert.match(adapter, /function createOvoControlPanel\(controller: InteractionController\)/);
+    assert.match(adapter, /function createOvoControlPanel\(state: SemanticMobileState, controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
     assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 42px minmax\(0, 1fr\) 42px;/);
@@ -149,8 +149,8 @@ describe("Mobile MVP Product Shell", () => {
     const html = readFileSync("index.html", "utf8");
 
     assert.match(registry, /export type MobileOverlay = "add-menu" \| "chat-menu" \| "ovo-control" \| "emoji-picker" \| "file-picker" \| null/);
-    assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), controller\), createBottomNav\(state, controller\)\)/);
-    assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*controller: InteractionController\s*\)/);
+    assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\), createBottomNav\(state, controller\)\)/);
+    assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /bindControllerAction\(emoji, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
     assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);
     assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\)/);
@@ -234,6 +234,22 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("function isOvoChat"), false);
     assert.equal(adapter.includes("system page"), false);
     assert.equal(html.includes(".mvp-composer.is-world-mode"), false);
+  });
+
+  it("binds read-only world switching through the ovO control overlay", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
+
+    assert.match(adapter, /function createOvoControlPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /worldList\.className = "mvp-ovo-world-list"/);
+    assert.match(adapter, /for \(const world of state\.view\.availableWorlds\)/);
+    assert.match(adapter, /item\.className = world\.worldId === state\.currentWorldId \? "mvp-ovo-world-row is-current" : "mvp-ovo-world-row"/);
+    assert.match(adapter, /item\.setAttribute\("aria-current", "true"\)/);
+    assert.match(adapter, /bindControllerAction\(item, controller, \{ type: "SWITCH_WORLD", worldId: world\.worldId \}\)/);
+    assert.match(adapter, /menu\.append\(\s*worldList,/);
+    assert.match(html, /\.mvp-ovo-world-row\.is-current \{[\s\S]*border-color: #d3382f;[\s\S]*font-weight: 700;/);
+    assert.equal(adapter.includes("createWorldEditor"), false);
+    assert.equal(adapter.includes("EDIT_WORLD"), false);
   });
 
   it("locks the final UI to Chats, Contacts, and Me only", () => {
