@@ -1,5 +1,22 @@
 # ovOne Decision Log
 
+## 2026-06-27: Create World draft scaffold added
+
+Decision: Create World now opens a local draft scaffold instead of being a disabled/no-op menu action.
+
+Rules:
+
+- `+ -> Create World` dispatches `OPEN_CREATE_WORLD_DRAFT`.
+- Create World draft state is stored in `SemanticMobileState.createWorldDraft`.
+- Draft fields are `worldName`, `worldviewSourceType`, `worldviewText`, `selectedAIModelIds`, and `nextMode`.
+- `UPDATE_CREATE_WORLD_DRAFT` updates draft text fields.
+- `SELECT_WORLDVIEW_SOURCE` updates the worldview source option.
+- `TOGGLE_CREATE_WORLD_AI` updates selected AI ids in draft state.
+- `SELECT_CREATE_WORLD_NEXT_MODE` updates the future next mode.
+- `CONFIRM_CREATE_WORLD_DRAFT` closes the overlay but does not create or switch worlds yet.
+- `CANCEL_CREATE_WORLD_DRAFT` clears the local draft and closes the overlay.
+- No world creation, world switching, role generation, detailed edit page, memory editing, AI initial messages, group creation, or world data model change is included in this decision.
+
 ## 2026-06-27: ovO world-button menu hierarchy added
 
 Decision: The ovO chat world-button now opens a first-level world menu before world switching or edit selection.

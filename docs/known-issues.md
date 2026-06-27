@@ -13,6 +13,7 @@ Last audited: 2026-06-27.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.
+- Create World draft scaffold is implemented, but confirm does not create a world, switch worlds, generate roles, create chats, or send initial messages yet.
 - ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
@@ -23,6 +24,7 @@ Last audited: 2026-06-27.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - `OPEN_WORLD_EDITOR` is a disabled/no-op scaffold and does not open a real editor yet.
+- Create World import document options and official quick world options are placeholders only.
 - Reality is shown as locked in the editor selector, but no real worldview edit prevention is needed yet because editing is not implemented.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions currently handled by Flow Executor.
@@ -36,7 +38,7 @@ Disabled explicit actions:
 
 - `CREATE_AI_FRIEND`
 - `CREATE_GROUP`
-- `CREATE_WORLD`
+- `OPEN_WORLD_EDITOR`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`

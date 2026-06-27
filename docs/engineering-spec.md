@@ -100,6 +100,7 @@ UI action
   - `composerMode: resolveDefaultComposerMode("normal")`
   - `inputDraft: ""`
   - `settingsOpen: false`
+  - `createWorldDraft: null`
   - `view: enterRealityContext(shell)`
 - Splash timeout:
   - waits 900 ms
@@ -118,6 +119,8 @@ UI action
 - First-level ovO world menu contains sibling options `OPEN_WORLD_SWITCHER` and `OPEN_WORLD_EDITOR_SELECTOR`.
 - World switcher lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD`.
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
+- Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and opens a local draft scaffold.
+- Create World draft state lives only in `SemanticMobileState.createWorldDraft`; it does not mutate `availableWorlds`, `currentWorldId`, or world-scoped snapshot data.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -152,6 +155,7 @@ UI action
 - `composerMode`
 - `inputDraft`
 - `settingsOpen`
+- `createWorldDraft`
 - `splashVisible`
 - `view`
 
@@ -173,6 +177,7 @@ Unknown view values resolve to `CHAT_LIST` inside ViewRouter. This is a temporar
 - `ovo-world-menu`
 - `world-switcher`
 - `world-editor-selector`
+- `create-world-draft`
 - `emoji-picker`
 - `file-picker`
 - `null`
@@ -195,6 +200,13 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_WORLD_SWITCHER`
 - `OPEN_WORLD_EDITOR_SELECTOR`
 - `OPEN_WORLD_EDITOR`
+- `OPEN_CREATE_WORLD_DRAFT`
+- `UPDATE_CREATE_WORLD_DRAFT`
+- `SELECT_WORLDVIEW_SOURCE`
+- `TOGGLE_CREATE_WORLD_AI`
+- `SELECT_CREATE_WORLD_NEXT_MODE`
+- `CONFIRM_CREATE_WORLD_DRAFT`
+- `CANCEL_CREATE_WORLD_DRAFT`
 - `OPEN_EMOJI_PICKER`
 - `OPEN_FILE_PICKER`
 - `CLOSE_OVERLAY`
@@ -207,7 +219,6 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_CONTACT`
 - `CREATE_AI_FRIEND`
 - `CREATE_GROUP`
-- `CREATE_WORLD`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
@@ -243,7 +254,13 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
 | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
-| `CREATE_WORLD` | Explicit disabled/no-op behavior; closes overlay. |
+| `OPEN_CREATE_WORLD_DRAFT` | Opens Create World draft overlay and initializes local draft state. |
+| `UPDATE_CREATE_WORLD_DRAFT` | Updates local draft `worldName` or `worldviewText`. |
+| `SELECT_WORLDVIEW_SOURCE` | Updates local draft worldview source type. |
+| `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
+| `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
+| `CONFIRM_CREATE_WORLD_DRAFT` | Closes overlay only; does not create or switch worlds. |
+| `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and closes overlay. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -325,6 +342,7 @@ Exceptions:
 - Disabled explicit actions close overlay but do not implement product behavior.
 - Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
+- Create World draft actions mutate only local `createWorldDraft` state and do not run Flow Executor runtime effects.
 
 ## Current Test/Verification Surface
 
@@ -352,6 +370,7 @@ Current package version: `0.1.0`.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
+- Create World draft scaffold exists, but confirm does not create a world, switch worlds, generate roles, or create chats yet.
 - ovO world menu supports read-only world switching and editor selection scaffold, but no create/edit world flow is implemented yet.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.

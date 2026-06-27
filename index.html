@@ -178,14 +178,42 @@
       .mvp-chat-menu,
       .mvp-ovo-control,
       .mvp-ovo-world-menu,
+      .mvp-create-world-draft,
       .mvp-file-picker {
         justify-self: end;
         width: min(220px, 100%);
       }
 
       .mvp-ovo-control,
-      .mvp-ovo-world-menu {
+      .mvp-ovo-world-menu,
+      .mvp-create-world-draft {
         justify-self: center;
+      }
+
+      .mvp-create-world-draft {
+        width: min(420px, 100%);
+      }
+
+      .mvp-create-world-draft input,
+      .mvp-create-world-draft textarea {
+        min-height: 40px;
+        box-sizing: border-box;
+        width: 100%;
+        border: 1px solid #d8ddd9;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font: inherit;
+      }
+
+      .mvp-create-world-draft textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+
+      .mvp-create-world-section,
+      .mvp-create-world-actions {
+        display: grid;
+        gap: 6px;
       }
 
       .mvp-ovo-world-list {

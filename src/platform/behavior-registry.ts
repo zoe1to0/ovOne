@@ -12,10 +12,25 @@ export type MobileOverlay =
   | "ovo-world-menu"
   | "world-switcher"
   | "world-editor-selector"
+  | "create-world-draft"
   | "emoji-picker"
   | "file-picker"
   | null;
 export const OVO_CHAT_ID = "ovo";
+export type CreateWorldViewSourceType =
+  | "text"
+  | "worldview-document"
+  | "project-document"
+  | "blank"
+  | "official";
+export type CreateWorldNextMode = "random-role" | "detailed-edit";
+export type CreateWorldDraft = {
+  worldName: string;
+  worldviewSourceType: CreateWorldViewSourceType;
+  worldviewText: string;
+  selectedAIModelIds: readonly string[];
+  nextMode: CreateWorldNextMode | null;
+};
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -49,7 +64,13 @@ export type InteractionAction =
   | { readonly type: "OPEN_CONTACT"; readonly actorId: string }
   | { readonly type: "CREATE_AI_FRIEND" }
   | { readonly type: "CREATE_GROUP" }
-  | { readonly type: "CREATE_WORLD" }
+  | { readonly type: "OPEN_CREATE_WORLD_DRAFT" }
+  | { readonly type: "UPDATE_CREATE_WORLD_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
+  | { readonly type: "SELECT_WORLDVIEW_SOURCE"; readonly sourceType: CreateWorldViewSourceType }
+  | { readonly type: "TOGGLE_CREATE_WORLD_AI"; readonly aiModelId: string }
+  | { readonly type: "SELECT_CREATE_WORLD_NEXT_MODE"; readonly nextMode: CreateWorldNextMode }
+  | { readonly type: "CONFIRM_CREATE_WORLD_DRAFT" }
+  | { readonly type: "CANCEL_CREATE_WORLD_DRAFT" }
   | { readonly type: "CHAT_OPEN_GROUP_MEMBERS" }
   | { readonly type: "CHAT_OPEN_SETTINGS" }
   | { readonly type: "CHAT_OPEN_BACKGROUND_SETTINGS" }
@@ -64,6 +85,7 @@ export type SemanticMobileState = {
   composerMode: ComposerMode;
   inputDraft: string;
   settingsOpen: boolean;
+  createWorldDraft: CreateWorldDraft | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
 };
@@ -98,6 +120,13 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_SETTINGS"
   | "CLOSE_SETTINGS"
   | "OPEN_CONTACT"
+  | "OPEN_CREATE_WORLD_DRAFT"
+  | "UPDATE_CREATE_WORLD_DRAFT"
+  | "SELECT_WORLDVIEW_SOURCE"
+  | "TOGGLE_CREATE_WORLD_AI"
+  | "SELECT_CREATE_WORLD_NEXT_MODE"
+  | "CONFIRM_CREATE_WORLD_DRAFT"
+  | "CANCEL_CREATE_WORLD_DRAFT"
 >;
 
 export type BehaviorRegistry = Readonly<{
@@ -116,6 +145,19 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
   const openOverlay = (state: SemanticMobileState, overlay: Exclude<MobileOverlay, null>): void => {
     state.overlay = overlay;
+  };
+
+  const createEmptyWorldDraft = (): CreateWorldDraft => ({
+    worldName: "",
+    worldviewSourceType: "text",
+    worldviewText: "",
+    selectedAIModelIds: [],
+    nextMode: null
+  });
+
+  const ensureCreateWorldDraft = (state: SemanticMobileState): CreateWorldDraft => {
+    state.createWorldDraft ??= createEmptyWorldDraft();
+    return state.createWorldDraft;
   };
 
   const disabled = (
@@ -266,9 +308,61 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         closeOverlay(state);
         return RENDER;
 
+      case "OPEN_CREATE_WORLD_DRAFT":
+        state.createWorldDraft = createEmptyWorldDraft();
+        openOverlay(state, "create-world-draft");
+        return RENDER;
+
+      case "UPDATE_CREATE_WORLD_DRAFT": {
+        const draft = ensureCreateWorldDraft(state);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          [action.field]: action.value
+        });
+        return RENDER;
+      }
+
+      case "SELECT_WORLDVIEW_SOURCE": {
+        const draft = ensureCreateWorldDraft(state);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          worldviewSourceType: action.sourceType
+        });
+        return RENDER;
+      }
+
+      case "TOGGLE_CREATE_WORLD_AI": {
+        const draft = ensureCreateWorldDraft(state);
+        const selected = draft.selectedAIModelIds.includes(action.aiModelId)
+          ? draft.selectedAIModelIds.filter((id) => id !== action.aiModelId)
+          : [...draft.selectedAIModelIds, action.aiModelId];
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          selectedAIModelIds: selected
+        });
+        return RENDER;
+      }
+
+      case "SELECT_CREATE_WORLD_NEXT_MODE": {
+        const draft = ensureCreateWorldDraft(state);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          nextMode: action.nextMode
+        });
+        return RENDER;
+      }
+
+      case "CONFIRM_CREATE_WORLD_DRAFT":
+        closeOverlay(state);
+        return RENDER;
+
+      case "CANCEL_CREATE_WORLD_DRAFT":
+        state.createWorldDraft = null;
+        closeOverlay(state);
+        return RENDER;
+
       case "CREATE_AI_FRIEND":
       case "CREATE_GROUP":
-      case "CREATE_WORLD":
       case "OPEN_WORLD_EDITOR":
       case "CHAT_OPEN_GROUP_MEMBERS":
       case "CHAT_OPEN_SETTINGS":

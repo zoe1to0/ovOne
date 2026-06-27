@@ -62,11 +62,11 @@ describe("FlowExecutor", () => {
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
 
-    const transition = registry.execute({ type: "CREATE_WORLD" }, state);
-    const flow = executor.run({ type: "CREATE_WORLD" }, { shell, state });
+    const transition = registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, state);
+    const flow = executor.run({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, { shell, state });
 
     assert.equal(transition.shouldRender, true);
-    assert.equal(transition.disabledAction, "CREATE_WORLD");
+    assert.equal(transition.disabledAction, "OPEN_WORLD_EDITOR");
     assert.equal(flow.shouldRender, false);
     assert.deepEqual(calls, []);
     assert.equal(state.activeChatId, "chat-before-disabled");
@@ -119,6 +119,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     composerMode: "text",
     inputDraft: "draft",
     settingsOpen: false,
+    createWorldDraft: null,
     splashVisible: false,
     view
   };

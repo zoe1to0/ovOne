@@ -115,6 +115,48 @@ describe("Composer mode state machine", () => {
     assert.equal(state.overlay, null);
   });
 
+  it("opens and updates create world draft without creating or switching worlds", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const initialWorldId = state.currentWorldId;
+    const worldCount = state.view.availableWorlds.length;
+
+    assert.equal(registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state).shouldRender, true);
+    assert.equal(state.overlay, "create-world-draft");
+    assert.equal(state.createWorldDraft?.worldName, "");
+    assert.equal(state.createWorldDraft?.worldviewSourceType, "text");
+
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "月面剧场" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldviewText", value: "近未来月面城市" }, state);
+    registry.execute({ type: "SELECT_WORLDVIEW_SOURCE", sourceType: "blank" }, state);
+    registry.execute({ type: "TOGGLE_CREATE_WORLD_AI", aiModelId: "ai:friend" }, state);
+    registry.execute({ type: "SELECT_CREATE_WORLD_NEXT_MODE", nextMode: "random-role" }, state);
+
+    assert.equal(state.createWorldDraft?.worldName, "月面剧场");
+    assert.equal(state.createWorldDraft?.worldviewText, "近未来月面城市");
+    assert.equal(state.createWorldDraft?.worldviewSourceType, "blank");
+    assert.deepEqual(state.createWorldDraft?.selectedAIModelIds, ["ai:friend"]);
+    assert.equal(state.createWorldDraft?.nextMode, "random-role");
+
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
+    assert.equal(state.overlay, null);
+    assert.equal(state.currentWorldId, initialWorldId);
+    assert.equal(state.view.availableWorlds.length, worldCount);
+  });
+
+  it("cancels create world draft and clears draft state", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "temporary" }, state);
+    registry.execute({ type: "CANCEL_CREATE_WORLD_DRAFT" }, state);
+
+    assert.equal(state.overlay, null);
+    assert.equal(state.createWorldDraft, null);
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+  });
+
   it("does not change world switching behavior", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
@@ -145,6 +187,7 @@ function createState(): SemanticMobileState {
     composerMode: "text",
     inputDraft: "",
     settingsOpen: false,
+    createWorldDraft: null,
     splashVisible: false,
     view: {
       screen: "chat",

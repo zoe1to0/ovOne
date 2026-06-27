@@ -109,7 +109,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
     assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "OPEN_ADD_MENU" \}\)/);
     assert.match(adapter, /function createAddMenu/);
-    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
+    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "OPEN_CREATE_WORLD_DRAFT" \}\)/);
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
@@ -162,6 +162,42 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-overlay-panel \{[\s\S]*pointer-events: auto;/);
     assert.match(html, /\.mvp-composer \{[\s\S]*position: fixed;[\s\S]*bottom: 64px;/);
     assert.equal(html.includes(".mvp-world-panel"), false);
+  });
+
+  it("renders create world draft scaffold from the add menu without creating worlds", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
+
+    assert.match(registry, /\| "create-world-draft"/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DRAFT" \}/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_CREATE_WORLD_DRAFT"; readonly field: "worldName" \| "worldviewText"; readonly value: string \}/);
+    assert.match(registry, /\| \{ readonly type: "SELECT_WORLDVIEW_SOURCE"; readonly sourceType: CreateWorldViewSourceType \}/);
+    assert.match(registry, /\| \{ readonly type: "TOGGLE_CREATE_WORLD_AI"; readonly aiModelId: string \}/);
+    assert.match(registry, /\| \{ readonly type: "SELECT_CREATE_WORLD_NEXT_MODE"; readonly nextMode: CreateWorldNextMode \}/);
+    assert.match(registry, /\| \{ readonly type: "CONFIRM_CREATE_WORLD_DRAFT" \}/);
+    assert.match(registry, /\| \{ readonly type: "CANCEL_CREATE_WORLD_DRAFT" \}/);
+    assert.match(registry, /case "OPEN_CREATE_WORLD_DRAFT":/);
+    assert.match(registry, /openOverlay\(state, "create-world-draft"\)/);
+    assert.match(registry, /case "CONFIRM_CREATE_WORLD_DRAFT":/);
+    assert.match(registry, /case "CANCEL_CREATE_WORLD_DRAFT":/);
+    assert.match(adapter, /function createCreateWorldDraftPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /panel\.className = "mvp-overlay-panel mvp-create-world-draft"/);
+    assert.match(adapter, /name\.placeholder = "世界名称"/);
+    assert.match(adapter, /worldview\.placeholder = "写下世界观"/);
+    assert.match(adapter, /createDraftOption\("导入世界观文档"/);
+    assert.match(adapter, /createDraftOption\("导入项目文档"/);
+    assert.match(adapter, /createDraftOption\("空白世界"/);
+    assert.match(adapter, /createDraftOption\("官方快速世界"/);
+    assert.match(adapter, /type: "TOGGLE_CREATE_WORLD_AI"/);
+    assert.match(adapter, /nextMode: "random-role"/);
+    assert.match(adapter, /nextMode: "detailed-edit"/);
+    assert.match(adapter, /createMenuButton\("取消", controller, \{ type: "CANCEL_CREATE_WORLD_DRAFT" \}\)/);
+    assert.match(adapter, /createMenuButton\("确认", controller, \{ type: "CONFIRM_CREATE_WORLD_DRAFT" \}\)/);
+    assert.match(adapter, /controller\.dispatch\(\{ type: "UPDATE_CREATE_WORLD_DRAFT", field, value: input\.value \}\)/);
+    assert.equal(adapter.includes("shell.switchWorld"), true);
+    assert.doesNotMatch(adapter, /OPEN_CREATE_WORLD_DRAFT[\s\S]*shell\.switchWorld/);
+    assert.match(html, /\.mvp-create-world-draft \{/);
   });
 
   it("enforces the rebased UI skeleton contract", () => {
@@ -282,7 +318,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /\? \{ type: "SWITCH_WORLD", worldId: world\.worldId \}/);
     assert.match(adapter, /: \{ type: "OPEN_WORLD_EDITOR", worldId: world\.worldId \}/);
     assert.match(html, /\.mvp-ovo-world-row\.is-current \{[\s\S]*border-color: #d3382f;[\s\S]*font-weight: 700;/);
-    assert.match(html, /\.mvp-ovo-world-menu \{/);
+    assert.match(html, /\.mvp-ovo-world-menu,[\s\S]*\.mvp-create-world-draft \{/);
     assert.equal(adapter.includes("function createWorldEditor("), false);
     assert.equal(adapter.includes("EDIT_WORLD"), false);
   });
@@ -323,11 +359,11 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /const flowResult = flowExecutor\.run\(action, \{ shell, state \}\)/);
     assert.match(adapter, /createMenuButton\("添加 AI 好友", controller, \{ type: "CREATE_AI_FRIEND" \}\)/);
     assert.match(adapter, /createMenuButton\("创建群聊", controller, \{ type: "CREATE_GROUP" \}\)/);
-    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
+    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "OPEN_CREATE_WORLD_DRAFT" \}\)/);
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 1);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 2);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });
