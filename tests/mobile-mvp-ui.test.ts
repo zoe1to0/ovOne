@@ -68,7 +68,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /readonly fallbackApplied: boolean;/);
     assert.match(registry, /readonly issue\?: string;/);
     assert.match(adapter, /return createChatList\(snapshot, state, controller\)/);
-    assert.match(adapter, /return createChatView\(snapshot, state\.activeChatId, controller\)/);
+    assert.match(adapter, /return createChatView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactsView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
@@ -166,7 +166,7 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /screen\.append\(header, messages, createComposer\(snapshot, controller\)\)/);
+    assert.match(adapter, /screen\.append\(header, messages, createComposer\(snapshot, state, controller\)\)/);
     assert.match(adapter, /function createContactsView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\): HTMLElement/);
     assert.match(adapter, /screen\.append\(list\)/);
     assert.match(adapter, /screen\.append\(createProfileHeader\(\), createFeatureMenu\(snapshot, controller\)\)/);

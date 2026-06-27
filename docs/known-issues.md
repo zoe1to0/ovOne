@@ -8,6 +8,8 @@ Last audited: 2026-06-27.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
+- Composer mode state machine exists, but ovO chat composer/world-button UI is not bound yet.
+- Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.

@@ -5,6 +5,11 @@ import {
   resolveWorldContacts
 } from "../domain/index.js";
 import {
+  isComposerModeAllowed,
+  resolveDefaultComposerMode
+} from "./composer-mode.js";
+import type { ComposerKind } from "./composer-mode.js";
+import {
   createBehaviorRegistry,
   tabForView
 } from "./behavior-registry.js";
@@ -51,6 +56,7 @@ export function mountChatShell(
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
+    composerMode: resolveDefaultComposerMode("normal"),
     inputDraft: "",
     settingsOpen: false,
     splashVisible: true,
@@ -167,7 +173,7 @@ function renderShellPage(
     case "CHAT_LIST":
       return createChatList(snapshot, state, controller);
     case "CHAT_VIEW":
-      return createChatView(snapshot, state.activeChatId, controller);
+      return createChatView(snapshot, state, controller);
     case "CONTACTS":
       return createContactsView(snapshot, state, controller);
     case "CONTACT_DETAIL":
@@ -250,10 +256,10 @@ function createChatList(
 
 function createChatView(
   snapshot: WorldSnapshot,
-  activeChatId: string | null,
+  state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
-  const chat = chatById(snapshot, activeChatId ?? snapshot.chatState.activeChatId);
+  const chat = chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
   const title = chat ? chatTitle(snapshot, chat) : "聊天";
 
   const screen = document.createElement("section");
@@ -286,16 +292,21 @@ function createChatView(
     messages.append(createMessageItem(snapshot, message));
   }
 
-  screen.append(header, messages, createComposer(snapshot, controller));
+  screen.append(header, messages, createComposer(snapshot, state, controller));
   return screen;
 }
 
 function createComposer(
   snapshot: WorldSnapshot,
+  state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
   const form = document.createElement("form");
   form.className = "mvp-composer";
+  const composerKind: ComposerKind = "normal";
+  const composerMode = isComposerModeAllowed(composerKind, state.composerMode)
+    ? state.composerMode
+    : resolveDefaultComposerMode(composerKind);
 
   const emoji = document.createElement("button");
   emoji.type = "button";
@@ -316,20 +327,28 @@ function createComposer(
     form.append(action);
   }
 
-  const input = document.createElement("input");
-  input.name = "message";
-  input.autocomplete = "off";
-  input.placeholder = "输入消息";
-  bindTextInput(input, controller);
+  if (composerMode === "text") {
+    const input = document.createElement("input");
+    input.name = "message";
+    input.autocomplete = "off";
+    input.placeholder = "输入消息";
+    bindTextInput(input, controller);
 
-  const submit = document.createElement("button");
-  submit.type = "submit";
-  submit.textContent = "发送";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "发送";
 
-  form.append(input, submit);
-  bindComposerSubmit(form, input, controller);
+    form.append(input, submit);
+    bindComposerSubmit(form, input, controller);
+  } else {
+    const modeButton = document.createElement("button");
+    modeButton.type = "button";
+    modeButton.className = "mvp-composer-mode-button";
+    modeButton.disabled = true;
+    modeButton.textContent = composerMode === "world-button" ? `📍${snapshot.worldMeta.title}` : "按住说话";
+    form.append(modeButton);
+  }
 
-  void snapshot;
   return form;
 }
 

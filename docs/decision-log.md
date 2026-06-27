@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-27: Composer mode state machine foundation added
+
+Decision: ovOne now has a reusable composer mode state machine before ovO chat/world-button behavior is implemented.
+
+Rules:
+
+- No ovO chat flow was implemented.
+- No world menu, create world, edit world, or world editor UI was implemented.
+- No real voice sending was implemented.
+- `normal` composer supports `text` and `voice-button`.
+- `ovo` composer supports `world-button` and `text`.
+- ovO default composer mode resolves to `world-button` for future binding.
+- Current ChatView remains normal/text by default.
+- `TOGGLE_COMPOSER_MODE` and `SET_COMPOSER_MODE` are explicit local UI state actions.
+- World switching behavior is unchanged.
+
 ## 2026-06-27: ovO overlay binds read-only world switching
 
 Decision: ovO control overlay now exposes existing worlds for read-only context switching.

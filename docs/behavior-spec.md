@@ -56,6 +56,10 @@ UI event
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
 - `SWITCH_WORLD` changes `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact selection, and Flow Executor refreshes the shell view through `shell.switchWorld(worldId)`.
+- Composer mode resolution is centralized in `src/platform/composer-mode.ts`.
+- Normal composer supports `text` and `voice-button`.
+- ovO composer supports `world-button` and `text`; ovO default resolves to `world-button` for future ovO chat binding.
+- Current visible chat composer remains normal/text by default.
 
 ## Action Categories
 
@@ -79,6 +83,8 @@ UI event
 
 ### Chat Actions
 
+- `TOGGLE_COMPOSER_MODE`
+- `SET_COMPOSER_MODE`
 - `TEXT_INPUT`
 - `SUBMIT_MESSAGE`
 - `CHAT_OPEN_GROUP_MEMBERS`
@@ -126,6 +132,8 @@ UI event
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
 | File button | `OPEN_FILE_PICKER` | Opens file picker overlay. |
 | Close overlay | `CLOSE_OVERLAY` | Clears current overlay. |
+| Toggle composer mode | `TOGGLE_COMPOSER_MODE` | Uses composer mode state machine to rotate the current mode for the given composer kind. |
+| Set composer mode | `SET_COMPOSER_MODE` | Sets the requested mode only when it is valid for the given composer kind. |
 | Text input | `TEXT_INPUT` | Updates `inputDraft` and skips render. |
 | Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the send-message runtime effect. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
@@ -151,6 +159,13 @@ These actions are named and routed but intentionally do not implement product be
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
 - `SETTINGS_DISCONNECT_AI`
 
+## Composer Modes
+
+| Composer kind | Supported modes | Default mode | Current binding |
+| --- | --- | --- | --- |
+| `normal` | `text`, `voice-button` | `text` | Chat composer renders `text` by default. |
+| `ovo` | `world-button`, `text` | `world-button` | Foundation only; ovO chat composer is not bound yet. |
+
 ## Current Temporary Fallbacks
 
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
@@ -158,12 +173,15 @@ These actions are named and routed but intentionally do not implement product be
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
 - Emoji and file picker panel items remain decorative after the overlay opens.
+- Composer mode state machine exists, but ovO chat composer/world-button UI is not bound yet.
 
 ## Remaining Behavior Questions
 
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
+- How should ovO chat be entered before binding the ovO `world-button` composer?
+- What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?
 
 ## Maintenance Rule

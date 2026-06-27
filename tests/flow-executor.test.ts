@@ -116,6 +116,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     activeChatId: view.product.snapshot.chatState.activeChatId,
     overlay: "add-menu",
     selectedContactActorId: null,
+    composerMode: "text",
     inputDraft: "draft",
     settingsOpen: false,
     splashVisible: false,

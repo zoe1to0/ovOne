@@ -69,6 +69,7 @@ describe("World scoped data model foundation", () => {
       activeChatId: "reality-chat-1",
       overlay: "chat-menu",
       selectedContactActorId: "actor:old",
+      composerMode: "text",
       inputDraft: "",
       settingsOpen: true,
       splashVisible: false,

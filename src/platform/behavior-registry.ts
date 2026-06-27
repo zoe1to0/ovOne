@@ -1,5 +1,7 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import type { WorldId } from "../world-domain/index.js";
+import { isComposerModeAllowed, toggleComposerMode } from "./composer-mode.js";
+import type { ComposerKind, ComposerMode } from "./composer-mode.js";
 
 export type MobileMvpTab = "chats" | "contacts" | "me";
 export type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
@@ -23,6 +25,8 @@ export type InteractionAction =
   | { readonly type: "OPEN_EMOJI_PICKER" }
   | { readonly type: "OPEN_FILE_PICKER" }
   | { readonly type: "CLOSE_OVERLAY" }
+  | { readonly type: "TOGGLE_COMPOSER_MODE"; readonly kind: ComposerKind }
+  | { readonly type: "SET_COMPOSER_MODE"; readonly kind: ComposerKind; readonly mode: ComposerMode }
   | { readonly type: "TEXT_INPUT"; readonly text: string }
   | { readonly type: "SUBMIT_MESSAGE"; readonly text: string }
   | { readonly type: "OPEN_SETTINGS" }
@@ -42,6 +46,7 @@ export type SemanticMobileState = {
   activeChatId: string | null;
   overlay: MobileOverlay;
   selectedContactActorId: string | null;
+  composerMode: ComposerMode;
   inputDraft: string;
   settingsOpen: boolean;
   splashVisible: boolean;
@@ -67,6 +72,8 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_EMOJI_PICKER"
   | "OPEN_FILE_PICKER"
   | "CLOSE_OVERLAY"
+  | "TOGGLE_COMPOSER_MODE"
+  | "SET_COMPOSER_MODE"
   | "TEXT_INPUT"
   | "SUBMIT_MESSAGE"
   | "OPEN_SETTINGS"
@@ -180,6 +187,16 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "CLOSE_OVERLAY":
         closeOverlay(state);
+        return RENDER;
+
+      case "TOGGLE_COMPOSER_MODE":
+        state.composerMode = toggleComposerMode(action.kind, state.composerMode);
+        return RENDER;
+
+      case "SET_COMPOSER_MODE":
+        state.composerMode = isComposerModeAllowed(action.kind, action.mode)
+          ? action.mode
+          : state.composerMode;
         return RENDER;
 
       case "SUBMIT_MESSAGE": {

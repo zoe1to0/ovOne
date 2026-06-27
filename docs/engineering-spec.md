@@ -86,6 +86,7 @@ UI action
 - Active UI implementation: `src/platform/mobile-mvp-adapter.ts`.
 - Behavior Registry scaffold: `src/platform/behavior-registry.ts`.
 - Flow Executor scaffold: `src/platform/flow-executor.ts`.
+- Composer mode state machine: `src/platform/composer-mode.ts`.
 - World-scoped data model foundation: `src/domain/world-model.ts`.
 - Read-only world scope resolver: `src/domain/world-scope-resolver.ts`.
 - Runtime bootstrap used by UI: `createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell`.
@@ -96,6 +97,7 @@ UI action
   - `activeChatId: null`
   - `overlay: null`
   - `selectedContactActorId: null`
+  - `composerMode: resolveDefaultComposerMode("normal")`
   - `inputDraft: ""`
   - `settingsOpen: false`
   - `view: enterRealityContext(shell)`
@@ -111,6 +113,7 @@ UI action
 - Chats and Contacts read through `currentWorldId` and the world scope resolver.
 - Me remains global and reads account-level snapshot data directly instead of routing through the world resolver.
 - ovO control overlay lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD` for read-only world switching.
+- Current ChatView composer resolves as normal composer and remains in text mode by default.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -142,6 +145,7 @@ UI action
 - `activeChatId`
 - `overlay`
 - `selectedContactActorId`
+- `composerMode`
 - `inputDraft`
 - `settingsOpen`
 - `splashVisible`
@@ -182,6 +186,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_EMOJI_PICKER`
 - `OPEN_FILE_PICKER`
 - `CLOSE_OVERLAY`
+- `TOGGLE_COMPOSER_MODE`
+- `SET_COMPOSER_MODE`
 - `TEXT_INPUT`
 - `SUBMIT_MESSAGE`
 - `OPEN_SETTINGS`
@@ -211,6 +217,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_EMOJI_PICKER` | Opens `emoji-picker` overlay. |
 | `OPEN_FILE_PICKER` | Opens `file-picker` overlay. |
 | `CLOSE_OVERLAY` | Clears overlay. |
+| `TOGGLE_COMPOSER_MODE` | Rotates the current composer mode for the requested composer kind. |
+| `SET_COMPOSER_MODE` | Sets the requested composer mode only when valid for the requested composer kind. |
 | `TEXT_INPUT` | Updates `inputDraft` only and does not call render. |
 | `SUBMIT_MESSAGE` | Behavior Registry trims text, clears draft/overlay, and Flow Executor calls `shell.sendMessage(text)`. |
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
@@ -263,6 +271,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 
 View helpers still derive presentation data from `WorldSnapshot`:
 
+- `createComposer(snapshot, state, controller)` resolves the current normal composer mode through the composer mode state machine.
 - `chatsFromSnapshot(snapshot, worldId)` reads through `resolveWorldChats(worldId, snapshot)`.
 - `contactsFromSnapshot(snapshot, worldId)` reads through `resolveWorldContacts(worldId, snapshot)`, filters assistant contacts, and removes ovO.
 - Me settings/favorites read direct account-level assistant contacts and do not use `currentWorldId`.
@@ -319,6 +328,8 @@ Current package version: `0.1.0`.
 - Disabled explicit actions exist for creation/settings flows but do not implement product behavior yet.
 - Some visible buttons are unbound or only decorative.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
+- Composer mode state machine exists, but ovO chat composer/world-button UI is not bound yet.
+- Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
