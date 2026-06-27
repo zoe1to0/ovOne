@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-27: Behavior Registry scaffold implemented
+
+Decision: ovOne now routes mobile ChatShell UI actions through a Behavior Registry scaffold.
+
+Rules:
+
+- No product rules changed.
+- `src/platform/behavior-registry.ts` owns UI action -> local UI state transitions.
+- `InteractionController` remains the dispatcher and executes only explicit actions.
+- `OPEN_CHAT` is one action that sets `activeChatId` and `activeView = CHAT_VIEW`.
+- Overlays use explicit open/close actions, not toggle actions.
+- Unknown `activeView` falls back to `CHAT_LIST` as temporary fallback behavior.
+- Generic `MENU_ACTION` is removed from the active mobile UI action model.
+- Former menu intents are explicit disabled/no-op actions until product behavior is implemented.
+- Runtime effects and autosave remain outside Behavior Registry scope.
+
 ## 2026-06-27: Behavior Specification phase begins
 
 Decision: ovOne enters the Behavior Specification phase before behavior refactoring.

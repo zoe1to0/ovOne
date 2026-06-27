@@ -1,5 +1,16 @@
 import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
+import {
+  createBehaviorRegistry,
+  tabForView
+} from "./behavior-registry.js";
+import type {
+  InteractionAction,
+  MobileMvpTab,
+  MobileOverlay,
+  SemanticMobileState,
+  ViewState
+} from "./behavior-registry.js";
 import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
@@ -11,39 +22,9 @@ import type {
   WorldSnapshot
 } from "../world-domain/index.js";
 
-type MobileMvpTab = "chats" | "contacts" | "me";
-type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
-type MobileOverlay = "add-menu" | "chat-menu" | "ovo-control" | "emoji-picker" | "file-picker" | null;
-type InteractionAction =
-  | { readonly type: "TAB_SWITCH"; readonly tab: MobileMvpTab }
-  | { readonly type: "OPEN_CHAT"; readonly chatId: string }
-  | { readonly type: "BACK" }
-  | { readonly type: "OVO_CLICK" }
-  | { readonly type: "CREATE_MENU" }
-  | { readonly type: "CHAT_MENU" }
-  | { readonly type: "EMOJI_PICKER" }
-  | { readonly type: "FILE_UPLOAD" }
-  | { readonly type: "TEXT_INPUT"; readonly text: string }
-  | { readonly type: "SUBMIT_MESSAGE"; readonly text: string }
-  | { readonly type: "OPEN_SETTINGS" }
-  | { readonly type: "CLOSE_SETTINGS" }
-  | { readonly type: "OPEN_CONTACT"; readonly actorId: string }
-  | { readonly type: "MENU_ACTION"; readonly intent: "add-ai" | "create-group" | "create-world" | "group-members" | "chat-settings" | "background-settings" | "disconnect-ai" };
-
 type InteractionController = Readonly<{
   readonly dispatch: (action: InteractionAction) => void;
 }>;
-
-type SemanticMobileState = {
-  activeView: ViewState;
-  activeChatId: string | null;
-  overlay: MobileOverlay;
-  selectedContactActorId: string | null;
-  inputDraft: string;
-  settingsOpen: boolean;
-  splashVisible: boolean;
-  view: MinimalProductShellView;
-};
 
 export type ChatShellMount = Readonly<{
   readonly render: () => void;
@@ -107,71 +88,17 @@ function createInteractionController(
   state: SemanticMobileState,
   render: () => void
 ): InteractionController {
-  const closeOverlay = (): void => {
-    state.overlay = null;
-  };
+  const registry = createBehaviorRegistry();
 
   const dispatch = (action: InteractionAction): void => {
-    if (action.type === "TEXT_INPUT") {
-      state.inputDraft = action.text;
-      return;
-    }
-    if (action.type === "TAB_SWITCH") {
-      state.activeView = viewForTab(action.tab);
-      state.activeChatId = null;
-      state.selectedContactActorId = null;
-      closeOverlay();
-      state.settingsOpen = false;
-    } else if (action.type === "OPEN_CHAT") {
-      state.activeChatId = action.chatId;
-      state.activeView = "CHAT_VIEW";
-      closeOverlay();
-    } else if (action.type === "BACK") {
-      if (state.activeView === "CONTACT_DETAIL") {
-        state.activeView = "CONTACTS";
-        state.selectedContactActorId = null;
-      } else {
-        state.activeView = "CHAT_LIST";
-        state.activeChatId = null;
-      }
-      closeOverlay();
-    } else if (action.type === "OVO_CLICK") {
-      state.activeView = "CHAT_LIST";
-      state.activeChatId = null;
-      state.overlay = state.overlay === "ovo-control" ? null : "ovo-control";
-    } else if (action.type === "CREATE_MENU") {
-      state.overlay = state.overlay === "add-menu" ? null : "add-menu";
-    } else if (action.type === "CHAT_MENU") {
-      state.overlay = state.overlay === "chat-menu" ? null : "chat-menu";
-    } else if (action.type === "EMOJI_PICKER") {
-      state.overlay = state.overlay === "emoji-picker" ? null : "emoji-picker";
-    } else if (action.type === "FILE_UPLOAD") {
-      state.overlay = state.overlay === "file-picker" ? null : "file-picker";
-    } else if (action.type === "SUBMIT_MESSAGE") {
-      const text = action.text.trim();
-      if (!text) {
-        return;
-      }
-      state.view = shell.sendMessage(text);
+    const result = registry.execute(action, state);
+    if (result.runtimeEffect?.type === "SEND_MESSAGE") {
+      state.view = shell.sendMessage(result.runtimeEffect.text);
       state.activeChatId = state.view.product.snapshot.chatState.activeChatId;
       state.activeView = "CHAT_VIEW";
-      state.inputDraft = "";
-      closeOverlay();
-    } else if (action.type === "OPEN_SETTINGS") {
-      state.settingsOpen = true;
-      closeOverlay();
-    } else if (action.type === "CLOSE_SETTINGS") {
-      state.settingsOpen = false;
-      closeOverlay();
-    } else if (action.type === "OPEN_CONTACT") {
-      state.activeView = "CONTACT_DETAIL";
-      state.selectedContactActorId = action.actorId;
-      closeOverlay();
-    } else if (action.type === "MENU_ACTION") {
-      state.view = refreshView(shell);
-      closeOverlay();
-    } else {
-      closeOverlay();
+    }
+    if (!result.shouldRender) {
+      return;
     }
     commitStateTransition(state, render);
   };
@@ -221,17 +148,9 @@ function createChatShell(
 }
 
 const ViewRouter = Object.freeze({
-  resolve,
-  currentOverlay
+  resolve: createBehaviorRegistry().resolveView,
+  currentOverlay: createBehaviorRegistry().currentOverlay
 });
-
-function resolve(activeView: ViewState): ViewState {
-  return activeView;
-}
-
-function currentOverlay(state: SemanticMobileState): MobileOverlay {
-  return state.overlay;
-}
 
 function renderShellPage(
   viewState: ViewState,
@@ -251,7 +170,10 @@ function renderShellPage(
   if (viewState === "CONTACT_DETAIL") {
     return createContactDetailView(snapshot, state.selectedContactActorId, controller);
   }
-  return createMeView(snapshot, state.settingsOpen, controller);
+  if (viewState === "ME") {
+    return createMeView(snapshot, state.settingsOpen, controller);
+  }
+  return createChatList(snapshot, controller);
 }
 
 function createShellPageFrame(viewState: ViewState, page: HTMLElement): HTMLElement {
@@ -275,31 +197,21 @@ function createBottomNav(state: SemanticMobileState, controller: InteractionCont
     button.type = "button";
     button.className = tabForView(state.activeView) === item.tab ? "mvp-nav-item is-active" : "mvp-nav-item";
     button.textContent = item.label;
-    bindControllerAction(button, controller, { type: "TAB_SWITCH", tab: item.tab });
+    bindControllerAction(button, controller, actionForTab(item.tab));
     nav.append(button);
   }
 
   return nav;
 }
 
-function viewForTab(tab: MobileMvpTab): ViewState {
+function actionForTab(tab: MobileMvpTab): InteractionAction {
   if (tab === "contacts") {
-    return "CONTACTS";
+    return { type: "NAV_OPEN_CONTACTS" };
   }
   if (tab === "me") {
-    return "ME";
+    return { type: "NAV_OPEN_ME" };
   }
-  return "CHAT_LIST";
-}
-
-function tabForView(activeView: ViewState): MobileMvpTab {
-  if (activeView === "CONTACTS" || activeView === "CONTACT_DETAIL") {
-    return "contacts";
-  }
-  if (activeView === "ME") {
-    return "me";
-  }
-  return "chats";
+  return { type: "NAV_OPEN_CHAT_LIST" };
 }
 
 function createChatList(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
@@ -346,7 +258,7 @@ function createChatView(
   back.type = "button";
   back.className = "mvp-back-button";
   back.textContent = "聊天";
-  bindControllerAction(back, controller, { type: "BACK" });
+  bindControllerAction(back, controller, { type: "NAV_BACK" });
 
   const heading = document.createElement("div");
   heading.className = "mvp-chat-title";
@@ -357,7 +269,7 @@ function createChatView(
   menu.className = "mvp-chat-menu-button";
   menu.textContent = "⋯";
   menu.setAttribute("aria-label", "更多");
-  bindControllerAction(menu, controller, { type: "CHAT_MENU" });
+  bindControllerAction(menu, controller, { type: "OPEN_CHAT_MENU" });
 
   const header = document.createElement("header");
   header.className = "mvp-chat-page-header";
@@ -385,7 +297,7 @@ function createComposer(
   emoji.className = "mvp-inline-action";
   emoji.textContent = "☺";
   emoji.setAttribute("aria-label", "表情");
-  bindControllerAction(emoji, controller, { type: "EMOJI_PICKER" });
+  bindControllerAction(emoji, controller, { type: "OPEN_EMOJI_PICKER" });
   form.append(emoji);
 
   {
@@ -395,7 +307,7 @@ function createComposer(
     action.textContent = "+";
     action.title = "更多";
     action.setAttribute("aria-label", "更多");
-    bindControllerAction(action, controller, { type: "FILE_UPLOAD" });
+    bindControllerAction(action, controller, { type: "OPEN_FILE_PICKER" });
     form.append(action);
   }
 
@@ -484,7 +396,7 @@ function createSettingsView(snapshot: WorldSnapshot, controller: InteractionCont
     disconnect.type = "button";
     disconnect.textContent = "断开连接";
     disconnect.disabled = isOvoContact(snapshot, contact);
-    bindControllerAction(disconnect, controller, { type: "MENU_ACTION", intent: "disconnect-ai" });
+    bindControllerAction(disconnect, controller, { type: "SETTINGS_DISCONNECT_AI" });
     item.append(name, disconnect);
     list.append(item);
   }
@@ -598,7 +510,7 @@ function createHomeHeader(controller: InteractionController): HTMLElement {
   brand.type = "button";
   brand.className = "mvp-home-brand";
   brand.setAttribute("aria-label", "ovO");
-  bindControllerAction(brand, controller, { type: "OVO_CLICK" });
+  bindControllerAction(brand, controller, { type: "OPEN_OVO_CONTROL" });
 
   const title = document.createElement("h1");
   title.textContent = "ovO";
@@ -614,7 +526,7 @@ function createHomeHeader(controller: InteractionController): HTMLElement {
   add.className = "mvp-add-button";
   add.textContent = "+";
   add.setAttribute("aria-label", "添加");
-  bindControllerAction(add, controller, { type: "CREATE_MENU" });
+  bindControllerAction(add, controller, { type: "OPEN_ADD_MENU" });
 
   header.append(brand, add);
   return header;
@@ -655,23 +567,23 @@ function createAddMenu(controller: InteractionController): HTMLElement {
   const menu = document.createElement("section");
   menu.className = "mvp-overlay-panel mvp-add-menu";
   menu.append(
-    createMenuButton("添加 AI 好友", controller, { type: "MENU_ACTION", intent: "add-ai" }),
-    createMenuButton("创建群聊", controller, { type: "MENU_ACTION", intent: "create-group" }),
-    createMenuButton("创建世界", controller, { type: "MENU_ACTION", intent: "create-world" })
+    createMenuButton("添加 AI 好友", controller, { type: "CREATE_AI_FRIEND" }),
+    createMenuButton("创建群聊", controller, { type: "CREATE_GROUP" }),
+    createMenuButton("创建世界", controller, { type: "CREATE_WORLD" })
   );
   return menu;
 }
 
-const CHAT_MENU_ACTIONS = Object.freeze([
-  Object.freeze({ label: "群成员", action: Object.freeze({ type: "MENU_ACTION", intent: "group-members" } as const) }),
-  Object.freeze({ label: "聊天设置", action: Object.freeze({ type: "MENU_ACTION", intent: "chat-settings" } as const) }),
-  Object.freeze({ label: "背景设置", action: Object.freeze({ type: "MENU_ACTION", intent: "background-settings" } as const) })
+const CHAT_PANEL_ACTIONS = Object.freeze([
+  Object.freeze({ label: "群成员", action: Object.freeze({ type: "CHAT_OPEN_GROUP_MEMBERS" } as const) }),
+  Object.freeze({ label: "聊天设置", action: Object.freeze({ type: "CHAT_OPEN_SETTINGS" } as const) }),
+  Object.freeze({ label: "背景设置", action: Object.freeze({ type: "CHAT_OPEN_BACKGROUND_SETTINGS" } as const) })
 ]);
 
 function createChatMenu(controller: InteractionController): HTMLElement {
   const menu = document.createElement("section");
   menu.className = "mvp-overlay-panel mvp-chat-menu";
-  menu.append(...CHAT_MENU_ACTIONS.map((item) => createMenuButton(item.label, controller, item.action)));
+  menu.append(...CHAT_PANEL_ACTIONS.map((item) => createMenuButton(item.label, controller, item.action)));
   return menu;
 }
 
@@ -679,9 +591,9 @@ function createOvoControlPanel(controller: InteractionController): HTMLElement {
   const menu = document.createElement("section");
   menu.className = "mvp-overlay-panel mvp-ovo-control";
   menu.append(
-    createMenuButton("新建聊天", controller, { type: "CREATE_MENU" }),
-    createMenuButton("查看联系人", controller, { type: "TAB_SWITCH", tab: "contacts" }),
-    createMenuButton("我的设置", controller, { type: "TAB_SWITCH", tab: "me" })
+    createMenuButton("新建聊天", controller, { type: "OPEN_ADD_MENU" }),
+    createMenuButton("查看联系人", controller, { type: "NAV_OPEN_CONTACTS" }),
+    createMenuButton("我的设置", controller, { type: "NAV_OPEN_ME" })
   );
   return menu;
 }
@@ -699,7 +611,7 @@ function createContactDetailView(
   back.type = "button";
   back.className = "mvp-back-button";
   back.textContent = "联系人";
-  bindControllerAction(back, controller, { type: "BACK" });
+  bindControllerAction(back, controller, { type: "NAV_BACK" });
 
   const title = document.createElement("strong");
   title.textContent = contact ? contactDisplayName(contact) : "联系人";

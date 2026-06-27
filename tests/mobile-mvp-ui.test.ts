@@ -48,10 +48,11 @@ describe("Mobile MVP Product Shell", () => {
 
   it("routes every page through the unified UI shell layout", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
-    assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve,[\s\S]*currentOverlay[\s\S]*\}\)/);
+    assert.match(registry, /export type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
+    assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
     assert.match(adapter, /const viewState = ViewRouter\.resolve\(state\.activeView\)/);
     assert.match(adapter, /function commitStateTransition\(state: SemanticMobileState, render: \(\) => void\): void/);
     assert.match(adapter, /commitStateTransition\(state, render\)/);
@@ -77,18 +78,19 @@ describe("Mobile MVP Product Shell", () => {
 
   it("renders the chat list as product rows with centered ovO and clickable add menu", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /screen\.append\(createHomeHeader\(controller\)\)/);
     assert.match(adapter, /function createHomeHeader\(controller: InteractionController\)/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OVO_CLICK" \}\)/);
-    assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "CREATE_MENU" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
+    assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "OPEN_ADD_MENU" \}\)/);
     assert.match(adapter, /function createAddMenu/);
-    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "MENU_ACTION", intent: "create-world" \}\)/);
+    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
-    assert.match(adapter, /state\.overlay = state\.overlay === "ovo-control" \? null : "ovo-control"/);
+    assert.match(registry, /openOverlay\(state, "ovo-control"\)/);
     assert.match(adapter, /function createOvoControlPanel\(controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
@@ -102,12 +104,12 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(adapter, /header\.className = "mvp-chat-page-header"/);
     assert.match(adapter, /menu\.className = "mvp-chat-menu-button"/);
-    assert.match(adapter, /bindControllerAction\(menu, controller, \{ type: "CHAT_MENU" \}\)/);
+    assert.match(adapter, /bindControllerAction\(menu, controller, \{ type: "OPEN_CHAT_MENU" \}\)/);
     assert.match(adapter, /function createChatMenu/);
-    assert.match(adapter, /const CHAT_MENU_ACTIONS = Object\.freeze/);
-    assert.match(adapter, /intent: "group-members"/);
-    assert.match(adapter, /intent: "chat-settings"/);
-    assert.match(adapter, /intent: "background-settings"/);
+    assert.match(adapter, /const CHAT_PANEL_ACTIONS = Object\.freeze/);
+    assert.match(adapter, /type: "CHAT_OPEN_GROUP_MEMBERS"/);
+    assert.match(adapter, /type: "CHAT_OPEN_SETTINGS"/);
+    assert.match(adapter, /type: "CHAT_OPEN_BACKGROUND_SETTINGS"/);
     assert.match(adapter, /item\.className = mine \? "mvp-message-row is-mine" : "mvp-message-row"/);
     assert.match(adapter, /createAvatarWithStatus\(createUserAvatar\(\), true\)/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
@@ -120,13 +122,14 @@ describe("Mobile MVP Product Shell", () => {
 
   it("keeps expandable chat input tools in the floating overlay layer", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /type MobileOverlay = "add-menu" \| "chat-menu" \| "ovo-control" \| "emoji-picker" \| "file-picker" \| null/);
+    assert.match(registry, /export type MobileOverlay = "add-menu" \| "chat-menu" \| "ovo-control" \| "emoji-picker" \| "file-picker" \| null/);
     assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), controller\), createBottomNav\(state, controller\)\)/);
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*controller: InteractionController\s*\)/);
-    assert.match(adapter, /bindControllerAction\(emoji, controller, \{ type: "EMOJI_PICKER" \}\)/);
-    assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "FILE_UPLOAD" \}\)/);
+    assert.match(adapter, /bindControllerAction\(emoji, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
+    assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);
     assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\)/);
     assert.doesNotMatch(adapter, /screen\.append\(createAddMenu\(\)\)/);
     assert.doesNotMatch(adapter, /screen\.append\(createChatMenu\(\)\)/);
@@ -192,12 +195,13 @@ describe("Mobile MVP Product Shell", () => {
 
   it("keeps ovO as an inline system controller without chat or world UI", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /type InteractionAction =/);
+    assert.match(registry, /export type InteractionAction =/);
     assert.match(adapter, /type InteractionController = Readonly/);
     assert.match(adapter, /function createInteractionController\(/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OVO_CLICK" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
     assert.match(adapter, /controller\.dispatch\(\{ type: "SUBMIT_MESSAGE", text: input\.value \}\)/);
     assert.equal(adapter.includes("MobileInputMode"), false);
     assert.equal(adapter.includes("createWorldComposer"), false);
@@ -211,13 +215,14 @@ describe("Mobile MVP Product Shell", () => {
 
   it("locks the final UI to Chats, Contacts, and Me only", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
+    assert.match(registry, /export type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
     assert.match(adapter, /\{ tab: "chats", label: "聊天" \}/);
     assert.match(adapter, /\{ tab: "contacts", label: "联系人" \}/);
     assert.match(adapter, /\{ tab: "me", label: "我的" \}/);
-    assert.doesNotMatch(adapter, /type ViewState = .*"WORLD"/);
+    assert.doesNotMatch(registry, /type ViewState = .*"WORLD"/);
     assert.doesNotMatch(adapter, /return "world"/);
     assert.equal(adapter.includes("world-panel"), false);
     assert.equal(adapter.includes("mvp-world"), false);
@@ -226,25 +231,25 @@ describe("Mobile MVP Product Shell", () => {
 
   it("routes all user interactions through InteractionController", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
 
     assert.match(adapter, /function bindControllerAction\(/);
     assert.match(adapter, /function bindComposerSubmit\(/);
-    assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "TAB_SWITCH", tab: item\.tab \}\)/);
+    assert.match(adapter, /bindControllerAction\(button, controller, actionForTab\(item\.tab\)\)/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_CHAT", chatId: chat\.id \}\)/);
-    assert.match(adapter, /bindControllerAction\(back, controller, \{ type: "BACK" \}\)/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OVO_CLICK" \}\)/);
+    assert.match(adapter, /bindControllerAction\(back, controller, \{ type: "NAV_BACK" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_CONTACT", actorId: contact\.actorId \}\)/);
-    assert.match(adapter, /state\.selectedContactActorId = action\.actorId/);
+    assert.match(registry, /state\.selectedContactActorId = action\.actorId/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_SETTINGS" \}\)/);
     assert.match(adapter, /bindControllerAction\(back, controller, \{ type: "CLOSE_SETTINGS" \}\)/);
     assert.match(adapter, /bindComposerSubmit\(form, input, controller\)/);
     assert.match(adapter, /bindTextInput\(input, controller\)/);
-    assert.match(adapter, /else if \(action\.type === "MENU_ACTION"\)/);
-    assert.match(adapter, /state\.view = refreshView\(shell\);/);
-    assert.match(adapter, /createMenuButton\("添加 AI 好友", controller, \{ type: "MENU_ACTION", intent: "add-ai" \}\)/);
-    assert.match(adapter, /createMenuButton\("创建群聊", controller, \{ type: "MENU_ACTION", intent: "create-group" \}\)/);
-    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "MENU_ACTION", intent: "create-world" \}\)/);
-    assert.equal((adapter.match(/intent: "create-world"/g) ?? []).length, 1);
+    assert.match(adapter, /const result = registry\.execute\(action, state\)/);
+    assert.match(adapter, /createMenuButton\("添加 AI 好友", controller, \{ type: "CREATE_AI_FRIEND" \}\)/);
+    assert.match(adapter, /createMenuButton\("创建群聊", controller, \{ type: "CREATE_GROUP" \}\)/);
+    assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
+    assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 1);

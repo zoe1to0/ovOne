@@ -47,9 +47,10 @@ describe("Product UI Consolidation", () => {
 
   it("enforces the mobile MVP routing pipeline as the only active product layout", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
 
-    assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve,[\s\S]*currentOverlay[\s\S]*\}\)/);
-    assert.match(adapter, /function resolve\(activeView: ViewState\): ViewState/);
+    assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
+    assert.match(registry, /export function resolveView\(activeView: string\): ViewState/);
     assert.match(adapter, /function renderShellPage\(/);
     assert.match(adapter, /function createShellPageFrame\(viewState: ViewState, page: HTMLElement\)/);
     assert.match(adapter, /function createChatShell\(/);

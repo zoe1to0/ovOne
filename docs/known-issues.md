@@ -4,27 +4,34 @@ Last audited: 2026-06-27.
 
 ## Current Known Engineering Issues
 
-- `MENU_ACTION` is placeholder only.
+- Disabled explicit actions exist for creation/settings flows but do not implement product behavior yet.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
-- `ViewRouter` is identity-only.
-- `renderShellPage` owns real routing and has fallback behavior.
-- View helpers contain business derivation.
+- `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
+- `ViewRouter` delegates view validation to Behavior Registry, but `renderShellPage` still owns real page selection.
+- Unknown `activeView` falls back to `CHAT_LIST`. This is temporary fallback behavior.
+- View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has no dedicated world-switch/edit control flow beyond overlay toggling and tab shortcuts.
+- ovO panel has no dedicated world-switch/edit control flow beyond opening the control overlay.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` is the only UI action that currently invokes a shell runtime operation from the mobile UI controller.
-- `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
-- `renderShellPage` falls back to Me for unknown view values instead of failing explicitly.
+- `SUBMIT_MESSAGE` is the only UI action that currently requests a shell runtime operation from the mobile UI controller.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
-- Behavior Registry does not exist in code yet; `docs/behavior-spec.md` is currently a target contract only.
-- Current action names do not yet follow the explicit Behavior Registry naming model.
 
 ## Current Warning
 
-`MENU_ACTION` must not be treated as implemented behavior until each menu intent is mapped to a real flow.
+The generic `MENU_ACTION` sink has been removed from the active mobile UI action model. Its former intents are now explicit disabled actions and must not be treated as implemented product behavior.
+
+Disabled explicit actions:
+
+- `CREATE_AI_FRIEND`
+- `CREATE_GROUP`
+- `CREATE_WORLD`
+- `CHAT_OPEN_GROUP_MEMBERS`
+- `CHAT_OPEN_SETTINGS`
+- `CHAT_OPEN_BACKGROUND_SETTINGS`
+- `SETTINGS_DISCONNECT_AI`
 
 ## Stable As Of v0.1
 
@@ -34,13 +41,16 @@ Last audited: 2026-06-27.
 - `mountOvOneRuntime` throws `LegacyUiMountDisabledError` and is not an active browser UI mount.
 - The active production CSS namespace is `.mvp-*`.
 
+## Behavior Registry Status
+
+- Behavior Registry scaffold exists in `src/platform/behavior-registry.ts`.
+- `InteractionController` delegates local UI state transitions to Behavior Registry.
+- Runtime effects and autosave are out of scope for Behavior Registry.
+- `SUBMIT_MESSAGE` currently returns a `SEND_MESSAGE` runtime effect request that the controller executes through the existing shell flow.
+
 ## Freeze Review Result
 
-2026-06-27 freeze review found no undocumented implementation mismatch that blocks the Behavior Registry phase. Existing issues remain unresolved and intentionally documented above.
-
-## Behavior Specification Warning
-
-Behavior Registry principles are documented but not implemented. Until implementation begins, `MENU_ACTION` remains a placeholder sink in code.
+2026-06-27 freeze review found no undocumented implementation mismatch that blocked the Behavior Registry phase. Existing issues were intentionally documented and carried forward.
 
 ## Maintenance Rule
 
