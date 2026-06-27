@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-27: Create World draft becomes page route
+
+Decision: Create World draft navigation now uses explicit page routes instead of an overlay panel.
+
+Rules:
+
+- `+ -> 创建世界` dispatches `OPEN_CREATE_WORLD_DRAFT`.
+- `OPEN_CREATE_WORLD_DRAFT` initializes draft state and routes to `CREATE_WORLD_DRAFT`.
+- The draft page is a staged vertical flow with world name, worldview area, attached source controls, official quick-world chips, AI selection, and next mode.
+- Official quick-world options are chips, not large cards.
+- Detailed Edit dispatches `OPEN_CREATE_WORLD_DETAIL_EDIT`.
+- `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a placeholder scaffold page.
+- Detailed Edit does not create a world and does not bounce back to the draft start.
+- Random Role confirmation preserves the existing create/switch/land-on-CHAT_LIST behavior.
+- No real detailed edit fields, loading animation, random role generation, document parsing, AI initial messages, or auto group creation are included.
+
 ## 2026-06-27: Minimal Random Role Create World flow added
 
 Decision: Create World confirmation now creates a custom world only for valid Random Role drafts.
@@ -33,7 +49,7 @@ Rules:
 - `TOGGLE_CREATE_WORLD_AI` updates selected AI ids in draft state.
 - `SELECT_CREATE_WORLD_NEXT_MODE` updates the future next mode.
 - `CONFIRM_CREATE_WORLD_DRAFT` was initially scaffolded without creation; it is now implemented only for valid Random Role drafts in the later Minimal Random Role Create World decision.
-- `CANCEL_CREATE_WORLD_DRAFT` clears the local draft and closes the overlay.
+- `CANCEL_CREATE_WORLD_DRAFT` initially cleared the local draft and closed the overlay; the current routed flow clears the draft and returns to `CHAT_LIST`.
 - No world creation, world switching, role generation, detailed edit page, memory editing, AI initial messages, group creation, or world data model change is included in this decision.
 
 ## 2026-06-27: ovO world-button menu hierarchy added

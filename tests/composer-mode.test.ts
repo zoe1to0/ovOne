@@ -122,7 +122,8 @@ describe("Composer mode state machine", () => {
     const worldCount = state.view.availableWorlds.length;
 
     assert.equal(registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state).shouldRender, true);
-    assert.equal(state.overlay, "create-world-draft");
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.overlay, null);
     assert.equal(state.createWorldDraft?.worldName, "");
     assert.equal(state.createWorldDraft?.worldviewSourceType, "text");
 
@@ -139,9 +140,32 @@ describe("Composer mode state machine", () => {
     assert.equal(state.createWorldDraft?.nextMode, "random-role");
 
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
-    assert.equal(state.overlay, "create-world-draft");
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.overlay, null);
     assert.equal(state.currentWorldId, initialWorldId);
     assert.equal(state.view.availableWorlds.length, worldCount);
+  });
+
+  it("routes detailed edit to a scaffold page without creating or bouncing back", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "detail world" }, state);
+    const result = registry.execute({ type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }, state);
+
+    assert.equal(result.shouldRender, true);
+    assert.equal(state.activeView, "CREATE_WORLD_DETAIL_EDIT");
+    assert.equal(state.createWorldDraft?.nextMode, "detailed-edit");
+    assert.equal(state.overlay, null);
+
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
+    assert.equal(state.activeView, "CREATE_WORLD_DETAIL_EDIT");
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+
+    registry.execute({ type: "NAV_BACK" }, state);
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.createWorldDraft?.worldName, "detail world");
   });
 
   it("cancels create world draft and clears draft state", () => {
@@ -154,6 +178,7 @@ describe("Composer mode state machine", () => {
 
     assert.equal(state.overlay, null);
     assert.equal(state.createWorldDraft, null);
+    assert.equal(state.activeView, "CHAT_LIST");
     assert.equal(state.currentWorldId, toWorldId("reality"));
   });
 

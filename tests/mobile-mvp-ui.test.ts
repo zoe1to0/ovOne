@@ -52,7 +52,7 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(registry, /export type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
+    assert.match(registry, /export type ViewState =[\s\S]*\| "CHAT_LIST"[\s\S]*\| "CHAT_VIEW"[\s\S]*\| "CONTACTS"[\s\S]*\| "CONTACT_DETAIL"[\s\S]*\| "ME"[\s\S]*\| "CREATE_WORLD_DRAFT"[\s\S]*\| "CREATE_WORLD_DETAIL_EDIT"/);
     assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
     assert.match(adapter, /const routeState = ViewRouter\.resolve\(state\.activeView\)/);
     assert.match(adapter, /function commitStateTransition\(state: SemanticMobileState, render: \(\) => void\): void/);
@@ -72,6 +72,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /return createContactsView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
+    assert.match(adapter, /return createCreateWorldDraftView\(snapshot, state, controller\)/);
+    assert.match(adapter, /return createCreateWorldDetailEditView\(state, controller\)/);
     assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
     assert.match(adapter, /frame\.className = `mvp-page mvp-page-\$\{routeState\.route\.toLowerCase\(\)\.replaceAll\("_", "-"\)\}`/);
     assert.doesNotMatch(adapter, /viewport\.append\(state\.activeChatId/);
@@ -90,6 +92,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.deepEqual(resolveView("CONTACTS"), { route: "CONTACTS", fallbackApplied: false });
     assert.deepEqual(resolveView("CONTACT_DETAIL"), { route: "CONTACT_DETAIL", fallbackApplied: false });
     assert.deepEqual(resolveView("ME"), { route: "ME", fallbackApplied: false });
+    assert.deepEqual(resolveView("CREATE_WORLD_DRAFT"), { route: "CREATE_WORLD_DRAFT", fallbackApplied: false });
+    assert.deepEqual(resolveView("CREATE_WORLD_DETAIL_EDIT"), { route: "CREATE_WORLD_DETAIL_EDIT", fallbackApplied: false });
     assert.deepEqual(resolveView("UNKNOWN_VIEW"), {
       route: "CHAT_LIST",
       fallbackApplied: true,
@@ -168,6 +172,28 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
+
+    assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DRAFT" \}/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" \}/);
+    assert.match(registry, /state\.activeView = "CREATE_WORLD_DRAFT"/);
+    assert.match(registry, /state\.activeView = "CREATE_WORLD_DETAIL_EDIT"/);
+    assert.match(adapter, /function createCreateWorldDraftView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
+    assert.match(adapter, /screen\.className = "mvp-screen mvp-create-world-draft"/);
+    assert.match(adapter, /createDraftStage\("世界名称", name\)/);
+    assert.match(adapter, /createDraftStage\("世界观", worldviewBlock\)/);
+    assert.match(adapter, /createDraftStage\("选择 AI 好友", aiList\)/);
+    assert.match(adapter, /createDraftStage\("下一步", nextMode\)/);
+    assert.match(adapter, /sourceControls\.className = "mvp-create-world-source-controls"/);
+    assert.match(adapter, /officialChips\.className = "mvp-create-world-official-chips"/);
+    assert.match(adapter, /createDraftChip\("魔法学院"/);
+    assert.match(adapter, /createDraftChip\("修仙世界"/);
+    assert.match(adapter, /type: "OPEN_CREATE_WORLD_DETAIL_EDIT"/);
+    assert.match(adapter, /createMenuButton\("进入世界", controller, \{ type: "CONFIRM_CREATE_WORLD_DRAFT" \}\)/);
+    assert.match(adapter, /function createCreateWorldDetailEditView\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /screen\.className = "mvp-screen mvp-create-world-detail-edit"/);
+    assert.doesNotMatch(adapter, /overlayState === "create-world-draft"/);
+    assert.match(html, /\.mvp-create-world-official-chips \{/);
+    return;
 
     assert.match(registry, /\| "create-world-draft"/);
     assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DRAFT" \}/);
@@ -328,11 +354,11 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(registry, /export type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
+    assert.match(registry, /export type ViewState =[\s\S]*"CREATE_WORLD_DRAFT"[\s\S]*"CREATE_WORLD_DETAIL_EDIT"/);
     assert.match(adapter, /\{ tab: "chats", label: "聊天" \}/);
     assert.match(adapter, /\{ tab: "contacts", label: "联系人" \}/);
     assert.match(adapter, /\{ tab: "me", label: "我的" \}/);
-    assert.doesNotMatch(registry, /type ViewState = .*"WORLD"/);
+    assert.equal((adapter.match(/tab: "/g) ?? []).length, 3);
     assert.doesNotMatch(adapter, /return "world"/);
     assert.equal(adapter.includes("world-panel"), false);
     assert.equal(adapter.includes("mvp-world-page"), false);

@@ -1,4 +1,4 @@
-import { createOnboardedProductRuntime } from "../onboarding/index.js";
+﻿import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
   resolveWorldChats,
@@ -182,6 +182,10 @@ function renderShellPage(
       return createContactDetailView(snapshot, state.selectedContactActorId, controller);
     case "ME":
       return createMeView(snapshot, state.settingsOpen, controller);
+    case "CREATE_WORLD_DRAFT":
+      return createCreateWorldDraftView(snapshot, state, controller);
+    case "CREATE_WORLD_DETAIL_EDIT":
+      return createCreateWorldDetailEditView(state, controller);
   }
 }
 
@@ -613,9 +617,6 @@ function createOverlayContent(
   if (overlayState === "world-editor-selector") {
     return createWorldEditorSelectorPanel(state, controller);
   }
-  if (overlayState === "create-world-draft") {
-    return createCreateWorldDraftPanel(state, controller);
-  }
   if (overlayState === "emoji-picker") {
     return createEmojiPicker();
   }
@@ -636,7 +637,11 @@ function createAddMenu(controller: InteractionController): HTMLElement {
   return menu;
 }
 
-function createCreateWorldDraftPanel(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+function createCreateWorldDraftView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
   const draft = state.createWorldDraft ?? {
     worldName: "",
     worldviewSourceType: "text",
@@ -644,11 +649,14 @@ function createCreateWorldDraftPanel(state: SemanticMobileState, controller: Int
     selectedAIModelIds: [],
     nextMode: null
   };
-  const panel = document.createElement("section");
-  panel.className = "mvp-overlay-panel mvp-create-world-draft";
+  const screen = document.createElement("section");
+  screen.className = "mvp-screen mvp-create-world-draft";
 
-  const title = document.createElement("h2");
-  title.textContent = "创建世界";
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "mvp-back-button";
+  back.textContent = "聊天";
+  bindControllerAction(back, controller, { type: "NAV_BACK" });
 
   const name = document.createElement("input");
   name.name = "worldName";
@@ -662,9 +670,9 @@ function createCreateWorldDraftPanel(state: SemanticMobileState, controller: Int
   worldview.value = draft.worldviewText;
   bindCreateWorldDraftInput(worldview, controller, "worldviewText");
 
-  const sourceArea = document.createElement("section");
-  sourceArea.className = "mvp-create-world-section";
-  sourceArea.append(
+  const sourceControls = document.createElement("section");
+  sourceControls.className = "mvp-create-world-source-controls";
+  sourceControls.append(
     createDraftOption("文本世界观", draft.worldviewSourceType === "text", controller, {
       type: "SELECT_WORLDVIEW_SOURCE",
       sourceType: "text"
@@ -680,16 +688,23 @@ function createCreateWorldDraftPanel(state: SemanticMobileState, controller: Int
     createDraftOption("空白世界", draft.worldviewSourceType === "blank", controller, {
       type: "SELECT_WORLDVIEW_SOURCE",
       sourceType: "blank"
-    }),
-    createDraftOption("官方快速世界", draft.worldviewSourceType === "official", controller, {
-      type: "SELECT_WORLDVIEW_SOURCE",
-      sourceType: "official"
     })
   );
 
+  const officialChips = document.createElement("section");
+  officialChips.className = "mvp-create-world-official-chips";
+  officialChips.append(
+    createDraftChip("魔法学院", draft.worldviewSourceType === "official", controller),
+    createDraftChip("修仙世界", draft.worldviewSourceType === "official", controller)
+  );
+
+  const worldviewBlock = document.createElement("section");
+  worldviewBlock.className = "mvp-create-world-worldview-block";
+  worldviewBlock.append(worldview, sourceControls, officialChips);
+
   const aiList = document.createElement("section");
   aiList.className = "mvp-create-world-section";
-  for (const contact of assistantContacts(state.view.product.snapshot).filter((item) => !isOvoContact(state.view.product.snapshot, item))) {
+  for (const contact of assistantContacts(snapshot).filter((item) => !isOvoContact(snapshot, item))) {
     aiList.append(
       createDraftOption(contactDisplayName(contact), draft.selectedAIModelIds.includes(contact.actorId), controller, {
         type: "TOGGLE_CREATE_WORLD_AI",
@@ -709,20 +724,52 @@ function createCreateWorldDraftPanel(state: SemanticMobileState, controller: Int
       nextMode: "random-role"
     }),
     createDraftOption("详细编辑", draft.nextMode === "detailed-edit", controller, {
-      type: "SELECT_CREATE_WORLD_NEXT_MODE",
-      nextMode: "detailed-edit"
+      type: "OPEN_CREATE_WORLD_DETAIL_EDIT"
     })
   );
 
   const actions = document.createElement("section");
   actions.className = "mvp-create-world-actions";
-  actions.append(
-    createMenuButton("取消", controller, { type: "CANCEL_CREATE_WORLD_DRAFT" }),
-    createMenuButton("确认", controller, { type: "CONFIRM_CREATE_WORLD_DRAFT" })
-  );
+  actions.append(createMenuButton("取消", controller, { type: "CANCEL_CREATE_WORLD_DRAFT" }));
+  if (draft.nextMode === "random-role") {
+    actions.append(createMenuButton("进入世界", controller, { type: "CONFIRM_CREATE_WORLD_DRAFT" }));
+  }
 
-  panel.append(title, name, worldview, sourceArea, aiList, nextMode, actions);
-  return panel;
+  screen.append(
+    createScreenHeader("创建世界", back),
+    createDraftStage("世界名称", name),
+    createDraftStage("世界观", worldviewBlock),
+    createDraftStage("选择 AI 好友", aiList),
+    createDraftStage("下一步", nextMode),
+    actions
+  );
+  return screen;
+}
+
+function createCreateWorldDetailEditView(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+  const screen = document.createElement("section");
+  screen.className = "mvp-screen mvp-create-world-detail-edit";
+
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "mvp-back-button";
+  back.textContent = "创建世界";
+  bindControllerAction(back, controller, { type: "NAV_BACK" });
+
+  const placeholder = document.createElement("section");
+  placeholder.className = "mvp-create-world-detail-placeholder";
+  const name = document.createElement("strong");
+  name.textContent = state.createWorldDraft?.worldName || "未命名世界";
+  const note = document.createElement("p");
+  note.textContent = "详细编辑页即将开放。当前不会创建世界，也不会生成角色。";
+  placeholder.append(name, note);
+
+  const actions = document.createElement("section");
+  actions.className = "mvp-create-world-actions";
+  actions.append(createMenuButton("取消", controller, { type: "CANCEL_CREATE_WORLD_DRAFT" }));
+
+  screen.append(createScreenHeader("详细编辑", back), placeholder, actions);
+  return screen;
 }
 
 const CHAT_PANEL_ACTIONS = Object.freeze([
@@ -845,6 +892,24 @@ function createMenuButton(
     bindControllerAction(button, controller, action);
   }
   return button;
+}
+
+function createDraftStage(title: string, content: HTMLElement): HTMLElement {
+  const stage = document.createElement("section");
+  stage.className = "mvp-create-world-stage";
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+  stage.append(heading, content);
+  return stage;
+}
+
+function createDraftChip(label: string, selected: boolean, controller: InteractionController): HTMLElement {
+  const chip = createDraftOption(label, selected, controller, {
+    type: "SELECT_WORLDVIEW_SOURCE",
+    sourceType: "official"
+  });
+  chip.className = selected ? "mvp-create-world-chip is-selected" : "mvp-create-world-chip";
+  return chip;
 }
 
 function createDraftOption(

@@ -120,8 +120,10 @@ UI action
 - First-level ovO world menu contains sibling options `OPEN_WORLD_SWITCHER` and `OPEN_WORLD_EDITOR_SELECTOR`.
 - World switcher lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD`.
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
-- Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and opens a local draft scaffold.
+- Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
+- Create World draft view is a staged vertical flow: world name, worldview text area with attached source controls, small official quick-world chips, AI selection, and next mode.
+- `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a real placeholder route that does not create a world.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
@@ -172,6 +174,8 @@ UI action
 - `CONTACTS`
 - `CONTACT_DETAIL`
 - `ME`
+- `CREATE_WORLD_DRAFT`
+- `CREATE_WORLD_DETAIL_EDIT`
 
 Unknown view values resolve to `CHAT_LIST` inside ViewRouter. This is a temporary fallback, not final invariant behavior.
 
@@ -183,7 +187,6 @@ Unknown view values resolve to `CHAT_LIST` inside ViewRouter. This is a temporar
 - `ovo-world-menu`
 - `world-switcher`
 - `world-editor-selector`
-- `create-world-draft`
 - `emoji-picker`
 - `file-picker`
 - `null`
@@ -207,6 +210,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_WORLD_EDITOR_SELECTOR`
 - `OPEN_WORLD_EDITOR`
 - `OPEN_CREATE_WORLD_DRAFT`
+- `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `SELECT_WORLDVIEW_SOURCE`
 - `TOGGLE_CREATE_WORLD_AI`
@@ -260,13 +264,14 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
 | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
-| `OPEN_CREATE_WORLD_DRAFT` | Opens Create World draft overlay and initializes local draft state. |
+| `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
+| `OPEN_CREATE_WORLD_DETAIL_EDIT` | Sets draft next mode to `detailed-edit` and opens `CREATE_WORLD_DETAIL_EDIT` scaffold page. |
 | `UPDATE_CREATE_WORLD_DRAFT` | Updates local draft `worldName` or `worldviewText`. |
 | `SELECT_WORLDVIEW_SOURCE` | Updates local draft worldview source type. |
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
 | `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
-| `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and closes overlay. |
+| `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -295,6 +300,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONTACTS` | `createContactsView(snapshot, state, controller)` |
 | `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
+| `CREATE_WORLD_DRAFT` | `createCreateWorldDraftView(snapshot, state, controller)` |
+| `CREATE_WORLD_DETAIL_EDIT` | `createCreateWorldDetailEditView(state, controller)` |
 
 ## Current Flow Executor Behavior
 

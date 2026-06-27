@@ -178,20 +178,21 @@
       .mvp-chat-menu,
       .mvp-ovo-control,
       .mvp-ovo-world-menu,
-      .mvp-create-world-draft,
       .mvp-file-picker {
         justify-self: end;
         width: min(220px, 100%);
       }
 
       .mvp-ovo-control,
-      .mvp-ovo-world-menu,
-      .mvp-create-world-draft {
+      .mvp-ovo-world-menu {
         justify-self: center;
       }
 
       .mvp-create-world-draft {
-        width: min(420px, 100%);
+        display: grid;
+        align-content: start;
+        gap: 14px;
+        padding-bottom: 12px;
       }
 
       .mvp-create-world-draft input,
@@ -210,10 +211,54 @@
         resize: vertical;
       }
 
+      .mvp-create-world-stage,
+      .mvp-create-world-worldview-block,
       .mvp-create-world-section,
       .mvp-create-world-actions {
         display: grid;
         gap: 6px;
+      }
+
+      .mvp-create-world-stage h2 {
+        margin: 0;
+        font-size: 0.95rem;
+      }
+
+      .mvp-create-world-source-controls,
+      .mvp-create-world-official-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .mvp-create-world-source-controls button,
+      .mvp-create-world-chip {
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid #d8ddd9;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #1f2528;
+        cursor: pointer;
+      }
+
+      .mvp-create-world-chip {
+        font-size: 0.9rem;
+      }
+
+      .mvp-create-world-detail-edit {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+      }
+
+      .mvp-create-world-detail-placeholder {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        border: 1px solid #e2e5e0;
+        border-radius: 10px;
+        background: #ffffff;
       }
 
       .mvp-ovo-world-list {

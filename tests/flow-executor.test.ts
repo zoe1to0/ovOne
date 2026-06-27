@@ -121,8 +121,8 @@ describe("FlowExecutor", () => {
       }
     );
     const state = createState(createView("chat-before-create"));
-    state.overlay = "create-world-draft";
-    state.activeView = "CHAT_VIEW";
+    state.overlay = null;
+    state.activeView = "CREATE_WORLD_DRAFT";
     state.activeChatId = "chat-before-create";
     state.selectedContactActorId = "old-contact";
     state.settingsOpen = true;
