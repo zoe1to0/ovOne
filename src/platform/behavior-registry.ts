@@ -5,7 +5,16 @@ import type { ComposerKind, ComposerMode } from "./composer-mode.js";
 
 export type MobileMvpTab = "chats" | "contacts" | "me";
 export type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
-export type MobileOverlay = "add-menu" | "chat-menu" | "ovo-control" | "emoji-picker" | "file-picker" | null;
+export type MobileOverlay =
+  | "add-menu"
+  | "chat-menu"
+  | "ovo-control"
+  | "ovo-world-menu"
+  | "world-switcher"
+  | "world-editor-selector"
+  | "emoji-picker"
+  | "file-picker"
+  | null;
 export const OVO_CHAT_ID = "ovo";
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -24,6 +33,10 @@ export type InteractionAction =
   | { readonly type: "OPEN_ADD_MENU" }
   | { readonly type: "OPEN_CHAT_MENU" }
   | { readonly type: "OPEN_OVO_CONTROL" }
+  | { readonly type: "OPEN_OVO_WORLD_MENU" }
+  | { readonly type: "OPEN_WORLD_SWITCHER" }
+  | { readonly type: "OPEN_WORLD_EDITOR_SELECTOR" }
+  | { readonly type: "OPEN_WORLD_EDITOR"; readonly worldId: WorldId }
   | { readonly type: "OPEN_EMOJI_PICKER" }
   | { readonly type: "OPEN_FILE_PICKER" }
   | { readonly type: "CLOSE_OVERLAY" }
@@ -72,6 +85,9 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_ADD_MENU"
   | "OPEN_CHAT_MENU"
   | "OPEN_OVO_CONTROL"
+  | "OPEN_OVO_WORLD_MENU"
+  | "OPEN_WORLD_SWITCHER"
+  | "OPEN_WORLD_EDITOR_SELECTOR"
   | "OPEN_EMOJI_PICKER"
   | "OPEN_FILE_PICKER"
   | "CLOSE_OVERLAY"
@@ -179,7 +195,19 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "OPEN_OVO_CONTROL":
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
-        openOverlay(state, "ovo-control");
+        openOverlay(state, "ovo-world-menu");
+        return RENDER;
+
+      case "OPEN_OVO_WORLD_MENU":
+        openOverlay(state, "ovo-world-menu");
+        return RENDER;
+
+      case "OPEN_WORLD_SWITCHER":
+        openOverlay(state, "world-switcher");
+        return RENDER;
+
+      case "OPEN_WORLD_EDITOR_SELECTOR":
+        openOverlay(state, "world-editor-selector");
         return RENDER;
 
       case "OPEN_ADD_MENU":
@@ -241,6 +269,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "CREATE_AI_FRIEND":
       case "CREATE_GROUP":
       case "CREATE_WORLD":
+      case "OPEN_WORLD_EDITOR":
       case "CHAT_OPEN_GROUP_MEMBERS":
       case "CHAT_OPEN_SETTINGS":
       case "CHAT_OPEN_BACKGROUND_SETTINGS":

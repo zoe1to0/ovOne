@@ -8,12 +8,12 @@ Last audited: 2026-06-27.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
-- ovO chat composer/world-button UI is bound, but the world-button menu is not implemented yet.
+- ovO chat composer/world-button UI is bound, and the first-level world menu hierarchy is bound.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - World-scoped data model foundation is read-only scaffolding and does not implement create/edit world flows.
-- ovO overlay supports read-only world switching when opened by scaffold action, but it is no longer the direct ovO click path.
+- ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
 - Real AI provider integration is not implemented; `GlobalAIModel` and `GlobalAILink` are foundation types.
@@ -22,7 +22,8 @@ Last audited: 2026-06-27.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
-- ovO world-button displays the current world but does not open a world switch/edit menu yet.
+- `OPEN_WORLD_EDITOR` is a disabled/no-op scaffold and does not open a real editor yet.
+- Reality is shown as locked in the editor selector, but no real worldview edit prevention is needed yet because editing is not implemented.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.

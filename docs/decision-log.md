@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-06-27: ovO world-button menu hierarchy added
+
+Decision: The ovO chat world-button now opens a first-level world menu before world switching or edit selection.
+
+Rules:
+
+- Clicking `📍 {currentWorldName}` dispatches `OPEN_OVO_WORLD_MENU`.
+- First-level ovO world menu shows Switch World and Edit World as sibling options.
+- Switch World dispatches `OPEN_WORLD_SWITCHER`.
+- World switcher lists existing worlds, marks the current world, and selecting a world dispatches `SWITCH_WORLD`.
+- Edit World dispatches `OPEN_WORLD_EDITOR_SELECTOR`.
+- World editor selector lists existing worlds, marks the current world, and marks Reality as locked.
+- Selecting a world to edit dispatches disabled scaffold action `OPEN_WORLD_EDITOR`.
+- No create world flow, real edit world page, memory editing, or world data model change is included in this decision.
+
 ## 2026-06-27: ovO opens as chat with world-button composer
 
 Decision: ovO is now entered as a special chat route before world switch/edit menu behavior is implemented.

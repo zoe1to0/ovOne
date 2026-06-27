@@ -54,7 +54,11 @@ UI event
 - ovO click opens the special ovO chat with stable `activeChatId = "ovo"`.
 - ovO chat uses the same `CHAT_VIEW` structure as other chats.
 - ovO chat composer kind is `ovo` and defaults to `world-button`.
-- ovO `world-button` composer shows the current world name as a disabled `📍 {world}` button until the world menu is implemented.
+- ovO `world-button` composer shows the current world name as `📍 {world}` and opens the first-level ovO world menu.
+- The first-level ovO world menu shows sibling options: Switch World and Edit World.
+- Switch World opens the world switcher list and selecting a world dispatches `SWITCH_WORLD`.
+- Edit World opens the world editor selector list and selecting a world dispatches disabled scaffold action `OPEN_WORLD_EDITOR`.
+- Reality appears in the editor selector and is marked as locked; no real worldview editing is allowed.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -81,6 +85,9 @@ UI event
 - `OPEN_ADD_MENU`
 - `OPEN_CHAT_MENU`
 - `OPEN_OVO_CONTROL`
+- `OPEN_OVO_WORLD_MENU`
+- `OPEN_WORLD_SWITCHER`
+- `OPEN_WORLD_EDITOR_SELECTOR`
 - `OPEN_EMOJI_PICKER`
 - `OPEN_FILE_PICKER`
 - `CLOSE_OVERLAY`
@@ -103,11 +110,13 @@ UI event
 
 - `SWITCH_WORLD`
 - `CREATE_WORLD`
+- `OPEN_WORLD_EDITOR`
 
 ### ovO Actions
 
 - `OPEN_OVO_CHAT`
 - `OPEN_OVO_CONTROL`
+- `OPEN_OVO_WORLD_MENU`
 
 ### Me / Settings Actions
 
@@ -132,7 +141,11 @@ UI event
 | Open chat row | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, resets to normal text composer, closes overlay. |
 | Back | `NAV_BACK` | From contact detail returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
 | ovO click | `OPEN_OVO_CHAT` | Sets `activeChatId = "ovo"`, sets `CHAT_VIEW`, resets to ovO `world-button` composer, closes overlay/settings. |
-| Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens ovO control overlay; not the direct ovO click path. |
+| Open ovO world menu | `OPEN_OVO_WORLD_MENU` | Opens first-level ovO world menu with Switch World and Edit World as sibling options. |
+| Open world switcher | `OPEN_WORLD_SWITCHER` | Opens world switcher list. Selecting a world dispatches `SWITCH_WORLD`. |
+| Open world editor selector | `OPEN_WORLD_EDITOR_SELECTOR` | Opens world editor selector list. Reality is marked locked. |
+| Select world to edit | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op scaffold; closes overlay and performs no real editing. |
+| Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
 | Chat menu button | `OPEN_CHAT_MENU` | Opens chat menu overlay. |
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
@@ -160,6 +173,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CREATE_AI_FRIEND`
 - `CREATE_GROUP`
 - `CREATE_WORLD`
+- `OPEN_WORLD_EDITOR`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
@@ -170,7 +184,7 @@ These actions are named and routed but intentionally do not implement product be
 | Composer kind | Supported modes | Default mode | Current binding |
 | --- | --- | --- | --- |
 | `normal` | `text`, `voice-button` | `text` | Chat composer renders `text` by default. |
-| `ovo` | `world-button`, `text` | `world-button` | ovO chat composer renders `world-button` by default; keyboard action toggles it to `text`. |
+| `ovo` | `world-button`, `text` | `world-button` | ovO chat composer renders `world-button` by default; keyboard action toggles it to `text`; world button opens ovO world menu. |
 
 ## Current Temporary Fallbacks
 
@@ -179,14 +193,14 @@ These actions are named and routed but intentionally do not implement product be
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button composer is bound, but its world menu is not implemented yet.
+- ovO world-button menu hierarchy is bound, but real world editing is not implemented yet.
 
 ## Remaining Behavior Questions
 
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
-- What exact action should the ovO world-button dispatch when the world menu is implemented?
+- What should the real `OPEN_WORLD_EDITOR` implementation display after world editor behavior is in scope?
 - What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?
 

@@ -113,8 +113,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
-    assert.match(registry, /openOverlay\(state, "ovo-control"\)/);
-    assert.match(adapter, /function createOvoControlPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(registry, /openOverlay\(state, "ovo-world-menu"\)/);
+    assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
     assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 42px minmax\(0, 1fr\) 42px;/);
@@ -148,7 +148,9 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(registry, /export type MobileOverlay = "add-menu" \| "chat-menu" \| "ovo-control" \| "emoji-picker" \| "file-picker" \| null/);
+    assert.match(registry, /\| "ovo-world-menu"/);
+    assert.match(registry, /\| "world-switcher"/);
+    assert.match(registry, /\| "world-editor-selector"/);
     assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\), createBottomNav\(state, controller\)\)/);
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
@@ -238,6 +240,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /left\.textContent = "⌨"/);
     assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "TOGGLE_COMPOSER_MODE", kind: "ovo" \}\)/);
     assert.match(adapter, /modeButton\.textContent = composerMode === "world-button" \? `📍 \$\{snapshot\.worldMeta\.title\}` : "按住说话"/);
+    assert.match(adapter, /bindControllerAction\(modeButton, controller, \{ type: "OPEN_OVO_WORLD_MENU" \}\)/);
     assert.match(adapter, /controller\.dispatch\(\{ type: "SUBMIT_MESSAGE", text: input\.value \}\)/);
     assert.equal(adapter.includes("MobileInputMode"), false);
     assert.equal(adapter.includes("createWorldComposer"), false);
@@ -248,19 +251,39 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(html.includes(".mvp-composer.is-world-mode"), false);
   });
 
-  it("binds read-only world switching through the ovO control overlay", () => {
+  it("binds ovO world button to switch and edit world menu hierarchy", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /function createOvoControlPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_OVO_WORLD_MENU" \}/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_WORLD_SWITCHER" \}/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_WORLD_EDITOR_SELECTOR" \}/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_WORLD_EDITOR"; readonly worldId: WorldId \}/);
+    assert.match(registry, /case "OPEN_OVO_WORLD_MENU":/);
+    assert.match(registry, /openOverlay\(state, "ovo-world-menu"\)/);
+    assert.match(registry, /case "OPEN_WORLD_SWITCHER":/);
+    assert.match(registry, /openOverlay\(state, "world-switcher"\)/);
+    assert.match(registry, /case "OPEN_WORLD_EDITOR_SELECTOR":/);
+    assert.match(registry, /openOverlay\(state, "world-editor-selector"\)/);
+    assert.match(registry, /case "OPEN_WORLD_EDITOR":/);
+    assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
+    assert.match(adapter, /createMenuButton\("切换世界", controller, \{ type: "OPEN_WORLD_SWITCHER" \}\)/);
+    assert.match(adapter, /createMenuButton\("编辑世界", controller, \{ type: "OPEN_WORLD_EDITOR_SELECTOR" \}\)/);
+    assert.match(adapter, /function createWorldSwitcherPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /function createWorldEditorSelectorPanel\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /function createWorldList\(/);
     assert.match(adapter, /worldList\.className = "mvp-ovo-world-list"/);
     assert.match(adapter, /for \(const world of state\.view\.availableWorlds\)/);
     assert.match(adapter, /item\.className = world\.worldId === state\.currentWorldId \? "mvp-ovo-world-row is-current" : "mvp-ovo-world-row"/);
+    assert.match(adapter, /const currentMark = world\.worldId === state\.currentWorldId \? "● " : ""/);
+    assert.match(adapter, /const lockedText = mode === "edit" && world\.type === "reality" \? " · 已锁定" : ""/);
     assert.match(adapter, /item\.setAttribute\("aria-current", "true"\)/);
-    assert.match(adapter, /bindControllerAction\(item, controller, \{ type: "SWITCH_WORLD", worldId: world\.worldId \}\)/);
-    assert.match(adapter, /menu\.append\(\s*worldList,/);
+    assert.match(adapter, /\? \{ type: "SWITCH_WORLD", worldId: world\.worldId \}/);
+    assert.match(adapter, /: \{ type: "OPEN_WORLD_EDITOR", worldId: world\.worldId \}/);
     assert.match(html, /\.mvp-ovo-world-row\.is-current \{[\s\S]*border-color: #d3382f;[\s\S]*font-weight: 700;/);
-    assert.equal(adapter.includes("createWorldEditor"), false);
+    assert.match(html, /\.mvp-ovo-world-menu \{/);
+    assert.equal(adapter.includes("function createWorldEditor("), false);
     assert.equal(adapter.includes("EDIT_WORLD"), false);
   });
 
@@ -276,8 +299,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.doesNotMatch(registry, /type ViewState = .*"WORLD"/);
     assert.doesNotMatch(adapter, /return "world"/);
     assert.equal(adapter.includes("world-panel"), false);
-    assert.equal(adapter.includes("mvp-world"), false);
-    assert.equal(html.includes(".mvp-world"), false);
+    assert.equal(adapter.includes("mvp-world-page"), false);
+    assert.equal(html.includes(".mvp-world-page"), false);
   });
 
   it("routes all user interactions through InteractionController", () => {

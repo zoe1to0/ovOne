@@ -353,8 +353,12 @@ function createComposer(
     const modeButton = document.createElement("button");
     modeButton.type = "button";
     modeButton.className = "mvp-composer-mode-button";
-    modeButton.disabled = true;
     modeButton.textContent = composerMode === "world-button" ? `📍 ${snapshot.worldMeta.title}` : "按住说话";
+    if (composerMode === "world-button") {
+      bindControllerAction(modeButton, controller, { type: "OPEN_OVO_WORLD_MENU" });
+    } else {
+      modeButton.disabled = true;
+    }
     form.append(modeButton);
   }
 
@@ -597,7 +601,16 @@ function createOverlayContent(
     return createChatMenu(controller);
   }
   if (overlayState === "ovo-control") {
-    return createOvoControlPanel(state, controller);
+    return createOvoWorldMenu(controller);
+  }
+  if (overlayState === "ovo-world-menu") {
+    return createOvoWorldMenu(controller);
+  }
+  if (overlayState === "world-switcher") {
+    return createWorldSwitcherPanel(state, controller);
+  }
+  if (overlayState === "world-editor-selector") {
+    return createWorldEditorSelectorPanel(state, controller);
   }
   if (overlayState === "emoji-picker") {
     return createEmojiPicker();
@@ -632,31 +645,58 @@ function createChatMenu(controller: InteractionController): HTMLElement {
   return menu;
 }
 
-function createOvoControlPanel(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+function createOvoWorldMenu(controller: InteractionController): HTMLElement {
   const menu = document.createElement("section");
-  menu.className = "mvp-overlay-panel mvp-ovo-control";
+  menu.className = "mvp-overlay-panel mvp-ovo-world-menu";
+  menu.append(
+    createMenuButton("切换世界", controller, { type: "OPEN_WORLD_SWITCHER" }),
+    createMenuButton("编辑世界", controller, { type: "OPEN_WORLD_EDITOR_SELECTOR" })
+  );
+  return menu;
+}
 
+function createWorldSwitcherPanel(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+  const menu = document.createElement("section");
+  menu.className = "mvp-overlay-panel mvp-ovo-control mvp-world-switcher";
+  menu.append(createWorldList(state, controller, "switch"));
+  return menu;
+}
+
+function createWorldEditorSelectorPanel(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+  const menu = document.createElement("section");
+  menu.className = "mvp-overlay-panel mvp-ovo-control mvp-world-editor-selector";
+  menu.append(createWorldList(state, controller, "edit"));
+  return menu;
+}
+
+function createWorldList(
+  state: SemanticMobileState,
+  controller: InteractionController,
+  mode: "switch" | "edit"
+): HTMLElement {
   const worldList = document.createElement("section");
   worldList.className = "mvp-ovo-world-list";
   for (const world of state.view.availableWorlds) {
     const item = document.createElement("button");
     item.type = "button";
     item.className = world.worldId === state.currentWorldId ? "mvp-ovo-world-row is-current" : "mvp-ovo-world-row";
-    item.textContent = world.worldId === state.currentWorldId ? `${world.title} · 当前` : world.title;
+    const currentMark = world.worldId === state.currentWorldId ? "● " : "";
+    const currentText = world.worldId === state.currentWorldId ? " · 当前" : "";
+    const lockedText = mode === "edit" && world.type === "reality" ? " · 已锁定" : "";
+    item.textContent = `${currentMark}${world.title}${currentText}${lockedText}`;
     if (world.worldId === state.currentWorldId) {
       item.setAttribute("aria-current", "true");
     }
-    bindControllerAction(item, controller, { type: "SWITCH_WORLD", worldId: world.worldId });
+    bindControllerAction(
+      item,
+      controller,
+      mode === "switch"
+        ? { type: "SWITCH_WORLD", worldId: world.worldId }
+        : { type: "OPEN_WORLD_EDITOR", worldId: world.worldId }
+    );
     worldList.append(item);
   }
-
-  menu.append(
-    worldList,
-    createMenuButton("新建聊天", controller, { type: "OPEN_ADD_MENU" }),
-    createMenuButton("查看联系人", controller, { type: "NAV_OPEN_CONTACTS" }),
-    createMenuButton("我的设置", controller, { type: "NAV_OPEN_ME" })
-  );
-  return menu;
+  return worldList;
 }
 
 function createContactDetailView(

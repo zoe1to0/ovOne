@@ -83,6 +83,38 @@ describe("Composer mode state machine", () => {
     assert.equal(state.composerMode, "text");
   });
 
+  it("opens ovO world menu and routes to switcher/editor selector overlays", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.activeView = "CHAT_VIEW";
+    state.activeChatId = OVO_CHAT_ID;
+    state.composerMode = "world-button";
+
+    assert.equal(registry.execute({ type: "OPEN_OVO_WORLD_MENU" }, state).shouldRender, true);
+    assert.equal(state.overlay, "ovo-world-menu");
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.activeChatId, OVO_CHAT_ID);
+
+    assert.equal(registry.execute({ type: "OPEN_WORLD_SWITCHER" }, state).shouldRender, true);
+    assert.equal(state.overlay, "world-switcher");
+
+    assert.equal(registry.execute({ type: "OPEN_WORLD_EDITOR_SELECTOR" }, state).shouldRender, true);
+    assert.equal(state.overlay, "world-editor-selector");
+  });
+
+  it("keeps world editor scaffold disabled without changing world state", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.overlay = "world-editor-selector";
+
+    const result = registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, state);
+
+    assert.equal(result.shouldRender, true);
+    assert.equal(result.disabledAction, "OPEN_WORLD_EDITOR");
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+    assert.equal(state.overlay, null);
+  });
+
   it("does not change world switching behavior", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
