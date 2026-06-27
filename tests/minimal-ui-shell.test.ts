@@ -197,6 +197,38 @@ describe("Minimal UI Shell", () => {
     assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "placeholder");
     assert.equal(createWorldSettings(created).roleAssignment, "placeholder");
   });
+
+  it("creates a custom world from detailed edit empty role without changing Reality", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const beforeWorlds = realityBefore.availableWorlds.length;
+    const beforeRealityContactCount = realityBefore.product.snapshot.contacts.length;
+
+    const created = shell.createWorldFromDraft({
+      worldName: "Empty Role World",
+      worldviewSourceType: "text",
+      worldviewText: "A quiet place.",
+      selectedAIModelIds: [],
+      nextMode: "detailed-edit",
+      detailRoleMode: "empty-role",
+      randomParticipantCount: "",
+      randomRelationshipNotes: "",
+      fixedRoles: []
+    });
+
+    assert.equal(created.availableWorlds.length, beforeWorlds + 1);
+    assert.equal(created.activeWorldId, toWorldId("custom:empty-role-world"));
+    assert.equal(created.screen, "chat");
+    assert.equal(created.product.snapshot.worldMeta.title, "Empty Role World");
+    assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "none");
+    assert.equal(createWorldSettings(created).roleAssignment, "none");
+    assert.equal(createWorldSettings(created).detailRoleMode, "empty-role");
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.equal(realityAfter.product.snapshot.contacts.length, beforeRealityContactCount);
+  });
 });
 
 function createWorldSettings(view: ReturnType<MinimalProductShellRuntime["view"]>): Record<string, unknown> {

@@ -26,8 +26,8 @@ export function createWorldFromDraft(input: Readonly<{
   if (!title) {
     throw new Error("CreateWorldService: world name is required.");
   }
-  if (input.draft.nextMode !== "random-role") {
-    throw new Error("CreateWorldService: only random-role creation is supported.");
+  if (input.draft.nextMode !== "random-role" && input.draft.nextMode !== "detailed-edit") {
+    throw new Error("CreateWorldService: only random-role or detailed-edit creation is supported.");
   }
 
   const worldId = createStableWorldId(title, input.existingWorldIds);
@@ -86,7 +86,8 @@ function createInitialWorldState(
       settings: {
         createWorld: {
           sourceType: draft.worldviewSourceType,
-          roleAssignment: draft.worldviewSourceType === "blank" ? "none" : "placeholder"
+          roleAssignment: roleAssignmentForDraft(draft),
+          detailRoleMode: draft.detailRoleMode ?? null
         }
       },
       personaOverlays: {}
@@ -149,14 +150,33 @@ function toWorldContact(
 function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<string, unknown>> {
   if (draft.worldviewSourceType === "blank") {
     return Object.freeze({
-      sourceType: "blank"
+      sourceType: "blank",
+      roleAssignment: roleAssignmentForDraft(draft),
+      detailRoleMode: draft.detailRoleMode ?? null,
+      randomParticipantCount: draft.randomParticipantCount ?? "",
+      randomRelationshipNotes: draft.randomRelationshipNotes ?? "",
+      fixedRoles: draft.fixedRoles ?? []
     });
   }
   return Object.freeze({
     sourceType: draft.worldviewSourceType,
     text: draft.worldviewText,
-    roleAssignment: "placeholder"
+    roleAssignment: roleAssignmentForDraft(draft),
+    detailRoleMode: draft.detailRoleMode ?? null,
+    randomParticipantCount: draft.randomParticipantCount ?? "",
+    randomRelationshipNotes: draft.randomRelationshipNotes ?? "",
+    fixedRoles: draft.fixedRoles ?? []
   });
+}
+
+function roleAssignmentForDraft(draft: CreateWorldDraftInput): "none" | "placeholder" {
+  if (draft.nextMode === "detailed-edit" && draft.detailRoleMode === "empty-role") {
+    return "none";
+  }
+  if (draft.worldviewSourceType === "blank" && draft.nextMode !== "detailed-edit") {
+    return "none";
+  }
+  return "placeholder";
 }
 
 function createStableWorldId(title: string, existingWorldIds: readonly WorldId[]): WorldId {

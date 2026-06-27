@@ -99,6 +99,14 @@ export type CreateWorldDraftInput = Readonly<{
   readonly worldviewText: string;
   readonly selectedAIModelIds: readonly string[];
   readonly nextMode: "random-role" | "detailed-edit" | null;
+  readonly detailRoleMode?: "random-role" | "fixed-role" | "empty-role";
+  readonly randomParticipantCount?: string;
+  readonly randomRelationshipNotes?: string;
+  readonly fixedRoles?: readonly Readonly<{
+    readonly actorId: string;
+    readonly roleName: string;
+    readonly notes: string;
+  }>[];
 }>;
 
 export type MinimalProductShellRuntime = Readonly<{

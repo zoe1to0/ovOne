@@ -73,7 +73,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
     assert.match(adapter, /return createCreateWorldDraftView\(snapshot, state, controller\)/);
-    assert.match(adapter, /return createCreateWorldDetailEditView\(state, controller\)/);
+    assert.match(adapter, /return createCreateWorldDetailEditView\(snapshot, state, controller\)/);
     assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
     assert.match(adapter, /frame\.className = `mvp-page mvp-page-\$\{routeState\.route\.toLowerCase\(\)\.replaceAll\("_", "-"\)\}`/);
     assert.doesNotMatch(adapter, /viewport\.append\(state\.activeChatId/);
@@ -175,6 +175,10 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DRAFT" \}/);
     assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" \}/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_CREATE_WORLD_DETAIL"/);
+    assert.match(registry, /\| \{ readonly type: "SELECT_DETAIL_ROLE_MODE"/);
+    assert.match(registry, /\| \{ readonly type: "CONFIRM_CREATE_WORLD_DETAIL" \}/);
+    assert.match(registry, /\| \{ readonly type: "CANCEL_CREATE_WORLD_DETAIL" \}/);
     assert.match(registry, /state\.activeView = "CREATE_WORLD_DRAFT"/);
     assert.match(registry, /state\.activeView = "CREATE_WORLD_DETAIL_EDIT"/);
     assert.match(adapter, /function createCreateWorldDraftView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
@@ -189,8 +193,17 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createDraftChip\("修仙世界"/);
     assert.match(adapter, /type: "OPEN_CREATE_WORLD_DETAIL_EDIT"/);
     assert.match(adapter, /createMenuButton\("进入世界", controller, \{ type: "CONFIRM_CREATE_WORLD_DRAFT" \}\)/);
-    assert.match(adapter, /function createCreateWorldDetailEditView\(state: SemanticMobileState, controller: InteractionController\)/);
+    assert.match(adapter, /function createCreateWorldDetailEditView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /screen\.className = "mvp-screen mvp-create-world-detail-edit"/);
+    assert.match(adapter, /createDraftStage\("世界", worldSection\)/);
+    assert.match(adapter, /createDraftStage\("角色分配", roleModes\)/);
+    assert.match(adapter, /roleMode: "random-role"/);
+    assert.match(adapter, /roleMode: "fixed-role"/);
+    assert.match(adapter, /roleMode: "empty-role"/);
+    assert.match(adapter, /function createFixedRoleSetup/);
+    assert.match(adapter, /function createFixedRoleRow/);
+    assert.match(adapter, /不设定角色，进入世界后不会触发主动初始反应。/);
+    assert.match(adapter, /createMenuButton\("进入世界", controller, \{ type: "CONFIRM_CREATE_WORLD_DETAIL" \}\)/);
     assert.doesNotMatch(adapter, /overlayState === "create-world-draft"/);
     assert.match(html, /\.mvp-create-world-official-chips \{/);
   });
@@ -358,7 +371,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 2);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 4);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

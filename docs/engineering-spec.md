@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / CONFIRM_CREATE_WORLD_DRAFT
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -123,10 +123,13 @@ UI action
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
 - Create World draft view is a staged vertical flow: world name, worldview text area with attached source controls, small official quick-world chips, AI selection, and next mode.
-- `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a real placeholder route that does not create a world.
+- `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a scaffold route for reviewing/editing world name, worldview text, and role assignment mode.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
+- `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
+- Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; random/fixed role content remains placeholder metadata.
+- Empty Role creation records role assignment as `none`.
 - Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
 - Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
 - CSS production namespace is `.mvp-*`.
@@ -212,11 +215,16 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_CREATE_WORLD_DRAFT`
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
+- `UPDATE_CREATE_WORLD_DETAIL`
+- `UPDATE_CREATE_WORLD_FIXED_ROLE`
 - `SELECT_WORLDVIEW_SOURCE`
 - `TOGGLE_CREATE_WORLD_AI`
 - `SELECT_CREATE_WORLD_NEXT_MODE`
+- `SELECT_DETAIL_ROLE_MODE`
 - `CONFIRM_CREATE_WORLD_DRAFT`
+- `CONFIRM_CREATE_WORLD_DETAIL`
 - `CANCEL_CREATE_WORLD_DRAFT`
+- `CANCEL_CREATE_WORLD_DETAIL`
 - `OPEN_EMOJI_PICKER`
 - `OPEN_FILE_PICKER`
 - `CLOSE_OVERLAY`
@@ -267,11 +275,16 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
 | `OPEN_CREATE_WORLD_DETAIL_EDIT` | Sets draft next mode to `detailed-edit` and opens `CREATE_WORLD_DETAIL_EDIT` scaffold page. |
 | `UPDATE_CREATE_WORLD_DRAFT` | Updates local draft `worldName` or `worldviewText`. |
+| `UPDATE_CREATE_WORLD_DETAIL` | Updates detail scaffold fields in the same local draft. |
+| `UPDATE_CREATE_WORLD_FIXED_ROLE` | Updates placeholder fixed role row fields. |
 | `SELECT_WORLDVIEW_SOURCE` | Updates local draft worldview source type. |
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
+| `SELECT_DETAIL_ROLE_MODE` | Updates detail scaffold role assignment mode. |
 | `CONFIRM_CREATE_WORLD_DRAFT` | Registry preserves draft; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` | Registry preserves draft; Flow Executor creates a world for valid detail edit drafts, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
+| `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -284,7 +297,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 
 ```text
 resolve(activeView) -> {
-  route: "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME",
+  route: "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME" | "CREATE_WORLD_DRAFT" | "CREATE_WORLD_DETAIL_EDIT",
   fallbackApplied: boolean,
   issue?: string
 }
@@ -301,7 +314,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
 | `CREATE_WORLD_DRAFT` | `createCreateWorldDraftView(snapshot, state, controller)` |
-| `CREATE_WORLD_DETAIL_EDIT` | `createCreateWorldDetailEditView(state, controller)` |
+| `CREATE_WORLD_DETAIL_EDIT` | `createCreateWorldDetailEditView(snapshot, state, controller)` |
 
 ## Current Flow Executor Behavior
 
@@ -314,6 +327,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and non-empty name | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
+| `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -342,7 +357,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / random-role Create World confirmation
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -358,7 +373,7 @@ Exceptions:
 - Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 - Create World draft edit actions mutate only local `createWorldDraft` state.
-- Random-role Create World confirmation is the only Create World draft action with a Flow Executor runtime effect.
+- Random-role Create World draft confirmation and valid Detailed Edit confirmation are the Create World actions with Flow Executor runtime effects.
 
 ## Current Test/Verification Surface
 
@@ -385,7 +400,7 @@ Current package version: `0.1.0`.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
-- Minimal random-role Create World creates and switches into a custom world, but detailed edit, real role generation, document parsing, AI initial messages, and auto group creation are not implemented.
+- Minimal random-role Create World and Detailed Edit scaffold confirmation create and switch into a custom world, but real role generation, document parsing, AI initial messages, and auto group creation are not implemented.
 - ovO world menu supports read-only world switching and editor selection scaffold, but no create/edit world flow is implemented yet.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
@@ -394,7 +409,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are the only UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, and `CONFIRM_CREATE_WORLD_DETAIL` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

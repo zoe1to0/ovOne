@@ -185,7 +185,7 @@ function renderShellPage(
     case "CREATE_WORLD_DRAFT":
       return createCreateWorldDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DETAIL_EDIT":
-      return createCreateWorldDetailEditView(state, controller);
+      return createCreateWorldDetailEditView(snapshot, state, controller);
   }
 }
 
@@ -647,7 +647,11 @@ function createCreateWorldDraftView(
     worldviewSourceType: "text",
     worldviewText: "",
     selectedAIModelIds: [],
-    nextMode: null
+    nextMode: null,
+    detailRoleMode: "random-role",
+    randomParticipantCount: "",
+    randomRelationshipNotes: "",
+    fixedRoles: []
   };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-draft";
@@ -746,7 +750,22 @@ function createCreateWorldDraftView(
   return screen;
 }
 
-function createCreateWorldDetailEditView(state: SemanticMobileState, controller: InteractionController): HTMLElement {
+function createCreateWorldDetailEditView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
+  const draft = state.createWorldDraft ?? {
+    worldName: "",
+    worldviewSourceType: "text",
+    worldviewText: "",
+    selectedAIModelIds: [],
+    nextMode: "detailed-edit" as const,
+    detailRoleMode: "random-role" as const,
+    randomParticipantCount: "",
+    randomRelationshipNotes: "",
+    fixedRoles: []
+  };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-detail-edit";
 
@@ -756,19 +775,55 @@ function createCreateWorldDetailEditView(state: SemanticMobileState, controller:
   back.textContent = "创建世界";
   bindControllerAction(back, controller, { type: "NAV_BACK" });
 
-  const placeholder = document.createElement("section");
-  placeholder.className = "mvp-create-world-detail-placeholder";
-  const name = document.createElement("strong");
-  name.textContent = state.createWorldDraft?.worldName || "未命名世界";
-  const note = document.createElement("p");
-  note.textContent = "详细编辑页即将开放。当前不会创建世界，也不会生成角色。";
-  placeholder.append(name, note);
+  const name = document.createElement("input");
+  name.name = "worldName";
+  name.placeholder = "世界名称";
+  name.value = draft.worldName;
+  bindCreateWorldDetailInput(name, controller, "worldName");
+
+  const worldview = document.createElement("textarea");
+  worldview.name = "worldviewText";
+  worldview.placeholder = "扩写世界观";
+  worldview.value = draft.worldviewText;
+  bindCreateWorldDetailInput(worldview, controller, "worldviewText");
+
+  const worldSection = document.createElement("section");
+  worldSection.className = "mvp-create-world-detail-section";
+  worldSection.append(name, worldview);
+
+  const roleModes = document.createElement("section");
+  roleModes.className = "mvp-create-world-section";
+  roleModes.append(
+    createDraftOption("随机角色", draft.detailRoleMode === "random-role", controller, {
+      type: "SELECT_DETAIL_ROLE_MODE",
+      roleMode: "random-role"
+    }),
+    createDraftOption("固定角色", draft.detailRoleMode === "fixed-role", controller, {
+      type: "SELECT_DETAIL_ROLE_MODE",
+      roleMode: "fixed-role"
+    }),
+    createDraftOption("空角色", draft.detailRoleMode === "empty-role", controller, {
+      type: "SELECT_DETAIL_ROLE_MODE",
+      roleMode: "empty-role"
+    })
+  );
+
+  const roleSetup = createDetailRoleSetup(snapshot, draft, controller);
 
   const actions = document.createElement("section");
   actions.className = "mvp-create-world-actions";
-  actions.append(createMenuButton("取消", controller, { type: "CANCEL_CREATE_WORLD_DRAFT" }));
+  actions.append(
+    createMenuButton("取消", controller, { type: "CANCEL_CREATE_WORLD_DETAIL" }),
+    createMenuButton("进入世界", controller, { type: "CONFIRM_CREATE_WORLD_DETAIL" })
+  );
 
-  screen.append(createScreenHeader("详细编辑", back), placeholder, actions);
+  screen.append(
+    createScreenHeader("详细编辑", back),
+    createDraftStage("世界", worldSection),
+    createDraftStage("角色分配", roleModes),
+    roleSetup,
+    actions
+  );
   return screen;
 }
 
@@ -930,6 +985,78 @@ function createDraftNote(text: string): HTMLElement {
   return note;
 }
 
+function createDetailRoleSetup(
+  snapshot: WorldSnapshot,
+  draft: NonNullable<SemanticMobileState["createWorldDraft"]>,
+  controller: InteractionController
+): HTMLElement {
+  if (draft.detailRoleMode === "fixed-role") {
+    return createFixedRoleSetup(snapshot, draft, controller);
+  }
+  if (draft.detailRoleMode === "empty-role") {
+    return createDraftStage("空角色", createDraftNote("不设定角色，进入世界后不会触发主动初始反应。"));
+  }
+
+  const setup = document.createElement("section");
+  setup.className = "mvp-create-world-detail-section";
+  const count = document.createElement("input");
+  count.name = "randomParticipantCount";
+  count.placeholder = "参与人数";
+  count.value = draft.randomParticipantCount;
+  bindCreateWorldDetailInput(count, controller, "randomParticipantCount");
+
+  const notes = document.createElement("textarea");
+  notes.name = "randomRelationshipNotes";
+  notes.placeholder = "粗略关系备注";
+  notes.value = draft.randomRelationshipNotes;
+  bindCreateWorldDetailInput(notes, controller, "randomRelationshipNotes");
+
+  setup.append(count, notes, createDraftNote("暂不生成真实角色；确认后会以占位角色分配创建世界。"));
+  return createDraftStage("随机角色设置", setup);
+}
+
+function createFixedRoleSetup(
+  snapshot: WorldSnapshot,
+  draft: NonNullable<SemanticMobileState["createWorldDraft"]>,
+  controller: InteractionController
+): HTMLElement {
+  const rows = document.createElement("section");
+  rows.className = "mvp-create-world-fixed-roles";
+  rows.append(createFixedRoleRow("user", "你", draft, controller));
+  for (const contact of assistantContacts(snapshot).filter((item) => draft.selectedAIModelIds.includes(item.actorId))) {
+    rows.append(createFixedRoleRow(contact.actorId, contactDisplayName(contact), draft, controller));
+  }
+  return createDraftStage("固定角色", rows);
+}
+
+function createFixedRoleRow(
+  actorId: string,
+  label: string,
+  draft: NonNullable<SemanticMobileState["createWorldDraft"]>,
+  controller: InteractionController
+): HTMLElement {
+  const row = document.createElement("section");
+  row.className = "mvp-create-world-fixed-role-row";
+  const title = document.createElement("strong");
+  title.textContent = label;
+  const role = draft.fixedRoles.find((item) => item.actorId === actorId);
+
+  const roleName = document.createElement("input");
+  roleName.name = `roleName:${actorId}`;
+  roleName.placeholder = "角色名";
+  roleName.value = role?.roleName ?? "";
+  bindFixedRoleInput(roleName, controller, actorId, "roleName");
+
+  const notes = document.createElement("input");
+  notes.name = `roleNotes:${actorId}`;
+  notes.placeholder = "关系 / 人设备注";
+  notes.value = role?.notes ?? "";
+  bindFixedRoleInput(notes, controller, actorId, "notes");
+
+  row.append(title, roleName, notes);
+  return row;
+}
+
 function bindControllerAction(
   element: HTMLElement,
   controller: InteractionController,
@@ -957,6 +1084,27 @@ function bindCreateWorldDraftInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_CREATE_WORLD_DRAFT", field, value: input.value });
+  });
+}
+
+function bindCreateWorldDetailInput(
+  input: HTMLInputElement | HTMLTextAreaElement,
+  controller: InteractionController,
+  field: "worldName" | "worldviewText" | "randomParticipantCount" | "randomRelationshipNotes"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_CREATE_WORLD_DETAIL", field, value: input.value });
+  });
+}
+
+function bindFixedRoleInput(
+  input: HTMLInputElement,
+  controller: InteractionController,
+  actorId: string,
+  field: "roleName" | "notes"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_CREATE_WORLD_FIXED_ROLE", actorId, field, value: input.value });
   });
 }
 

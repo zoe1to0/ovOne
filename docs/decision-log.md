@@ -1,5 +1,25 @@
 # ovOne Decision Log
 
+## 2026-06-27: Create World Detailed Edit scaffold fields added
+
+Decision: Create World Detailed Edit is now an actionable scaffold route instead of a placeholder-only route.
+
+This supersedes earlier notes that described Detailed Edit as non-creating placeholder behavior.
+
+Rules:
+
+- `CREATE_WORLD_DETAIL_EDIT` renders world name and worldview text inputs from the same `createWorldDraft` state.
+- Detail edit role modes are `random-role`, `fixed-role`, and `empty-role`.
+- Random Role detail mode exposes placeholder participant count and relationship notes.
+- Fixed Role detail mode exposes placeholder role rows for the user and selected AI friends.
+- Empty Role detail mode explains that no active initial reaction is triggered.
+- `UPDATE_CREATE_WORLD_DETAIL`, `UPDATE_CREATE_WORLD_FIXED_ROLE`, and `SELECT_DETAIL_ROLE_MODE` mutate local draft state only.
+- `CONFIRM_CREATE_WORLD_DETAIL` creates a custom world only when the world name is non-empty.
+- Detailed Edit confirmation uses the existing shell create-world boundary and then switches to the new world `CHAT_LIST`.
+- Empty Role stores role assignment as `none`.
+- Random Role and Fixed Role store placeholder role assignment metadata only; no real role generation is implemented.
+- Document parsing, AI initial messages, auto group creation, and real detailed role behavior remain out of scope.
+
 ## 2026-06-27: Create World draft becomes page route
 
 Decision: Create World draft navigation now uses explicit page routes instead of an overlay panel.

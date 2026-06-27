@@ -30,12 +30,22 @@ export type CreateWorldViewSourceType =
   | "blank"
   | "official";
 export type CreateWorldNextMode = "random-role" | "detailed-edit";
+export type CreateWorldDetailRoleMode = "random-role" | "fixed-role" | "empty-role";
+export type FixedRoleDraft = Readonly<{
+  readonly actorId: string;
+  readonly roleName: string;
+  readonly notes: string;
+}>;
 export type CreateWorldDraft = {
   worldName: string;
   worldviewSourceType: CreateWorldViewSourceType;
   worldviewText: string;
   selectedAIModelIds: readonly string[];
   nextMode: CreateWorldNextMode | null;
+  detailRoleMode: CreateWorldDetailRoleMode;
+  randomParticipantCount: string;
+  randomRelationshipNotes: string;
+  fixedRoles: readonly FixedRoleDraft[];
 };
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -73,11 +83,16 @@ export type InteractionAction =
   | { readonly type: "OPEN_CREATE_WORLD_DRAFT" }
   | { readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }
   | { readonly type: "UPDATE_CREATE_WORLD_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
+  | { readonly type: "UPDATE_CREATE_WORLD_DETAIL"; readonly field: "worldName" | "worldviewText" | "randomParticipantCount" | "randomRelationshipNotes"; readonly value: string }
+  | { readonly type: "UPDATE_CREATE_WORLD_FIXED_ROLE"; readonly actorId: string; readonly field: "roleName" | "notes"; readonly value: string }
   | { readonly type: "SELECT_WORLDVIEW_SOURCE"; readonly sourceType: CreateWorldViewSourceType }
   | { readonly type: "TOGGLE_CREATE_WORLD_AI"; readonly aiModelId: string }
   | { readonly type: "SELECT_CREATE_WORLD_NEXT_MODE"; readonly nextMode: CreateWorldNextMode }
+  | { readonly type: "SELECT_DETAIL_ROLE_MODE"; readonly roleMode: CreateWorldDetailRoleMode }
   | { readonly type: "CONFIRM_CREATE_WORLD_DRAFT" }
+  | { readonly type: "CONFIRM_CREATE_WORLD_DETAIL" }
   | { readonly type: "CANCEL_CREATE_WORLD_DRAFT" }
+  | { readonly type: "CANCEL_CREATE_WORLD_DETAIL" }
   | { readonly type: "CHAT_OPEN_GROUP_MEMBERS" }
   | { readonly type: "CHAT_OPEN_SETTINGS" }
   | { readonly type: "CHAT_OPEN_BACKGROUND_SETTINGS" }
@@ -130,11 +145,16 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_CREATE_WORLD_DRAFT"
   | "OPEN_CREATE_WORLD_DETAIL_EDIT"
   | "UPDATE_CREATE_WORLD_DRAFT"
+  | "UPDATE_CREATE_WORLD_DETAIL"
+  | "UPDATE_CREATE_WORLD_FIXED_ROLE"
   | "SELECT_WORLDVIEW_SOURCE"
   | "TOGGLE_CREATE_WORLD_AI"
   | "SELECT_CREATE_WORLD_NEXT_MODE"
+  | "SELECT_DETAIL_ROLE_MODE"
   | "CONFIRM_CREATE_WORLD_DRAFT"
+  | "CONFIRM_CREATE_WORLD_DETAIL"
   | "CANCEL_CREATE_WORLD_DRAFT"
+  | "CANCEL_CREATE_WORLD_DETAIL"
 >;
 
 export type BehaviorRegistry = Readonly<{
@@ -160,12 +180,26 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     worldviewSourceType: "text",
     worldviewText: "",
     selectedAIModelIds: [],
-    nextMode: null
+    nextMode: null,
+    detailRoleMode: "random-role",
+    randomParticipantCount: "",
+    randomRelationshipNotes: "",
+    fixedRoles: []
   });
 
   const ensureCreateWorldDraft = (state: SemanticMobileState): CreateWorldDraft => {
     state.createWorldDraft ??= createEmptyWorldDraft();
     return state.createWorldDraft;
+  };
+
+  const syncFixedRoles = (draft: CreateWorldDraft): readonly FixedRoleDraft[] => {
+    const actorIds = ["user", ...draft.selectedAIModelIds];
+    const existing = new Map(draft.fixedRoles.map((role) => [role.actorId, role]));
+    return Object.freeze(actorIds.map((actorId) => existing.get(actorId) ?? Object.freeze({
+      actorId,
+      roleName: "",
+      notes: ""
+    })));
   };
 
   const disabled = (
@@ -333,7 +367,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         const draft = ensureCreateWorldDraft(state);
         state.createWorldDraft = Object.freeze({
           ...draft,
-          nextMode: "detailed-edit"
+          nextMode: "detailed-edit",
+          fixedRoles: syncFixedRoles(draft)
         });
         state.activeView = "CREATE_WORLD_DETAIL_EDIT";
         state.activeChatId = null;
@@ -348,6 +383,29 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           [action.field]: action.value
+        });
+        return RENDER;
+      }
+
+      case "UPDATE_CREATE_WORLD_DETAIL": {
+        const draft = ensureCreateWorldDraft(state);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          [action.field]: action.value
+        });
+        return RENDER;
+      }
+
+      case "UPDATE_CREATE_WORLD_FIXED_ROLE": {
+        const draft = ensureCreateWorldDraft(state);
+        const fixedRoles = syncFixedRoles(draft).map((role) =>
+          role.actorId === action.actorId
+            ? Object.freeze({ ...role, [action.field]: action.value })
+            : role
+        );
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          fixedRoles
         });
         return RENDER;
       }
@@ -382,13 +440,26 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         return RENDER;
       }
 
+      case "SELECT_DETAIL_ROLE_MODE": {
+        const draft = ensureCreateWorldDraft(state);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          detailRoleMode: action.roleMode,
+          nextMode: "detailed-edit",
+          fixedRoles: syncFixedRoles(draft)
+        });
+        return RENDER;
+      }
+
       case "CONFIRM_CREATE_WORLD_DRAFT":
+      case "CONFIRM_CREATE_WORLD_DETAIL":
         state.createWorldDraft = state.createWorldDraft
           ? Object.freeze({ ...state.createWorldDraft })
           : null;
         return RENDER;
 
       case "CANCEL_CREATE_WORLD_DRAFT":
+      case "CANCEL_CREATE_WORLD_DETAIL":
         state.createWorldDraft = null;
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;

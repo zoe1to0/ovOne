@@ -196,7 +196,9 @@
       }
 
       .mvp-create-world-draft input,
-      .mvp-create-world-draft textarea {
+      .mvp-create-world-draft textarea,
+      .mvp-create-world-detail-edit input,
+      .mvp-create-world-detail-edit textarea {
         min-height: 40px;
         box-sizing: border-box;
         width: 100%;
@@ -211,10 +213,18 @@
         resize: vertical;
       }
 
+      .mvp-create-world-detail-edit textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+
       .mvp-create-world-stage,
       .mvp-create-world-worldview-block,
       .mvp-create-world-section,
-      .mvp-create-world-actions {
+      .mvp-create-world-actions,
+      .mvp-create-world-detail-section,
+      .mvp-create-world-fixed-roles,
+      .mvp-create-world-fixed-role-row {
         display: grid;
         gap: 6px;
       }
@@ -256,6 +266,13 @@
         display: grid;
         gap: 8px;
         padding: 14px;
+        border: 1px solid #e2e5e0;
+        border-radius: 10px;
+        background: #ffffff;
+      }
+
+      .mvp-create-world-fixed-role-row {
+        padding: 10px;
         border: 1px solid #e2e5e0;
         border-radius: 10px;
         background: #ffffff;

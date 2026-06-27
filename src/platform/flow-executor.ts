@@ -25,9 +25,18 @@ export function createFlowExecutor(): FlowExecutor {
         context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
         return Object.freeze({ shouldRender: true, executedFlow: "SWITCH_WORLD" });
       }
-      if (action.type === "CONFIRM_CREATE_WORLD_DRAFT") {
+      if (action.type === "CONFIRM_CREATE_WORLD_DRAFT" || action.type === "CONFIRM_CREATE_WORLD_DETAIL") {
         const draft = context.state.createWorldDraft;
-        if (!draft || draft.nextMode !== "random-role" || !draft.worldName.trim()) {
+        if (!draft || !draft.worldName.trim()) {
+          return NO_FLOW;
+        }
+        if (action.type === "CONFIRM_CREATE_WORLD_DRAFT" && draft.nextMode !== "random-role") {
+          return NO_FLOW;
+        }
+        if (
+          action.type === "CONFIRM_CREATE_WORLD_DETAIL" &&
+          (draft.nextMode !== "detailed-edit" || !draft.detailRoleMode)
+        ) {
           return NO_FLOW;
         }
         context.state.view = context.shell.createWorldFromDraft(draft);

@@ -152,20 +152,40 @@ describe("Composer mode state machine", () => {
 
     registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
     registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "detail world" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldviewText", value: "detail view" }, state);
+    registry.execute({ type: "TOGGLE_CREATE_WORLD_AI", aiModelId: "ai:friend" }, state);
     const result = registry.execute({ type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }, state);
 
     assert.equal(result.shouldRender, true);
     assert.equal(state.activeView, "CREATE_WORLD_DETAIL_EDIT");
     assert.equal(state.createWorldDraft?.nextMode, "detailed-edit");
+    assert.equal(state.createWorldDraft?.detailRoleMode, "random-role");
+    assert.equal(state.createWorldDraft?.worldviewText, "detail view");
     assert.equal(state.overlay, null);
 
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
     assert.equal(state.activeView, "CREATE_WORLD_DETAIL_EDIT");
     assert.equal(state.currentWorldId, toWorldId("reality"));
 
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DETAIL", field: "worldName", value: "edited detail world" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DETAIL", field: "randomParticipantCount", value: "4" }, state);
+    registry.execute({ type: "SELECT_DETAIL_ROLE_MODE", roleMode: "fixed-role" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_FIXED_ROLE", actorId: "user", field: "roleName", value: "Observer" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_FIXED_ROLE", actorId: "ai:friend", field: "notes", value: "old friend" }, state);
+
+    assert.equal(state.createWorldDraft?.worldName, "edited detail world");
+    assert.equal(state.createWorldDraft?.randomParticipantCount, "4");
+    assert.equal(state.createWorldDraft?.detailRoleMode, "fixed-role");
+    assert.deepEqual(state.createWorldDraft?.fixedRoles.map((role) => role.actorId), ["user", "ai:friend"]);
+    assert.equal(state.createWorldDraft?.fixedRoles.find((role) => role.actorId === "user")?.roleName, "Observer");
+    assert.equal(state.createWorldDraft?.fixedRoles.find((role) => role.actorId === "ai:friend")?.notes, "old friend");
+
+    registry.execute({ type: "SELECT_DETAIL_ROLE_MODE", roleMode: "empty-role" }, state);
+    assert.equal(state.createWorldDraft?.detailRoleMode, "empty-role");
+
     registry.execute({ type: "NAV_BACK" }, state);
     assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
-    assert.equal(state.createWorldDraft?.worldName, "detail world");
+    assert.equal(state.createWorldDraft?.worldName, "edited detail world");
   });
 
   it("cancels create world draft and clears draft state", () => {

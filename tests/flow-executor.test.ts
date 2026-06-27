@@ -131,7 +131,11 @@ describe("FlowExecutor", () => {
       worldviewSourceType: "blank",
       worldviewText: "",
       selectedAIModelIds: ["ai:friend"],
-      nextMode: "random-role"
+      nextMode: "random-role",
+      detailRoleMode: "random-role",
+      randomParticipantCount: "",
+      randomRelationshipNotes: "",
+      fixedRoles: []
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -171,7 +175,11 @@ describe("FlowExecutor", () => {
       worldviewSourceType: "text",
       worldviewText: "placeholder",
       selectedAIModelIds: [],
-      nextMode: "detailed-edit"
+      nextMode: "detailed-edit",
+      detailRoleMode: "random-role",
+      randomParticipantCount: "",
+      randomRelationshipNotes: "",
+      fixedRoles: []
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: detailedEdit }).shouldRender, false);
 
@@ -181,10 +189,56 @@ describe("FlowExecutor", () => {
       worldviewSourceType: "blank",
       worldviewText: "",
       selectedAIModelIds: [],
-      nextMode: "random-role"
+      nextMode: "random-role",
+      detailRoleMode: "random-role",
+      randomParticipantCount: "",
+      randomRelationshipNotes: "",
+      fixedRoles: []
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: missingName }).shouldRender, false);
     assert.deepEqual(calls, []);
+  });
+
+  it("executes detailed edit confirm for a valid detail draft", () => {
+    const targetWorldId = toWorldId("custom:detail-world");
+    const nextView = createView(null, targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      (draft) => {
+        calls.push(draft);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-detail-create"));
+    state.activeView = "CREATE_WORLD_DETAIL_EDIT";
+    state.activeChatId = "old-chat";
+    state.createWorldDraft = {
+      worldName: "Detail World",
+      worldviewSourceType: "text",
+      worldviewText: "expanded",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "detailed-edit",
+      detailRoleMode: "empty-role",
+      randomParticipantCount: "",
+      randomRelationshipNotes: "",
+      fixedRoles: []
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, state);
+    const flow = executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.equal(flow.executedFlow, "CREATE_WORLD");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(calls.length, 1);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.createWorldDraft, null);
   });
 });
 
