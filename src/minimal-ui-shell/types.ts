@@ -1,0 +1,102 @@
+import type { ChatId } from "../chat-kernel/index.js";
+import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
+
+export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
+
+export type WorldListView = Readonly<{
+  readonly activeWorld: Readonly<{
+    readonly worldId: WorldId;
+    readonly title: string;
+    readonly type: string;
+    readonly lifecycle: string;
+    readonly memoryNamespace: string;
+  }>;
+}>;
+
+export type ChatView = Readonly<{
+  readonly chatId: ChatId | null;
+  readonly title: string;
+  readonly messages: readonly Readonly<{
+    readonly messageId: string;
+    readonly authorName: string;
+    readonly text: string;
+    readonly outputMode: "QA" | "Dialogue";
+    readonly presentation: MessagePresentationView;
+    readonly createdAt: number;
+  }>[];
+}>;
+
+export type MessagePresentationView = Readonly<{
+  readonly mode: "QA" | "Dialogue";
+  readonly segments: readonly Readonly<{
+    readonly text: string;
+    readonly pauseAfterMs: number;
+  }>[];
+  readonly rhythm: "single-block" | "conversational";
+}>;
+
+export type WorldView = Readonly<{
+  readonly worldMeta: WorldSnapshot["worldMeta"];
+  readonly contacts: WorldSnapshot["contacts"];
+  readonly groups: WorldSnapshot["groups"];
+  readonly memorySummary: WorldSnapshot["memorySummary"];
+  readonly runtimeState: WorldSnapshot["runtimeState"];
+}>;
+
+export type InputPanelView = Readonly<{
+  readonly targetWorldId: WorldId;
+  readonly targetChatId: ChatId | null;
+  readonly ownerActorId: string;
+  readonly placeholder: string;
+  readonly canSubmit: boolean;
+}>;
+
+export type AiPresenceState = "ACTIVE" | "IDLE" | "REACTIVE";
+
+export type ExperienceLayerView = Readonly<{
+  readonly worldEntrance: Readonly<{
+    readonly state: "entering" | "settled";
+    readonly visible: boolean;
+    readonly text: string;
+  }>;
+  readonly contextualPresence: Readonly<{
+    readonly situation: string;
+    readonly narrativeState: string;
+  }>;
+  readonly firstInteractionHint: Readonly<{
+    readonly kind: "unread-message" | "ai-prompt" | "world-status-event";
+    readonly text: string;
+  }>;
+  readonly aiPresence: Readonly<{
+    readonly state: AiPresenceState;
+    readonly text: string;
+  }>;
+}>;
+
+export type MinimalProductView = Readonly<{
+  readonly snapshot: WorldSnapshot;
+  readonly worldList: WorldListView;
+  readonly chat: ChatView;
+  readonly world: WorldView;
+  readonly inputPanel: InputPanelView;
+  readonly experience: ExperienceLayerView;
+}>;
+
+export type MinimalProductShellView = Readonly<{
+  readonly screen: MinimalProductScreen;
+  readonly activeWorldId: WorldId;
+  readonly availableWorlds: readonly Readonly<{
+    readonly worldId: WorldId;
+    readonly title: string;
+    readonly type: string;
+  }>[];
+  readonly product: MinimalProductView;
+}>;
+
+export type MinimalProductShellRuntime = Readonly<{
+  readonly openScreen: (screen: MinimalProductScreen) => MinimalProductShellView;
+  readonly switchWorld: (worldId: WorldId) => MinimalProductShellView;
+  readonly sendMessage: (text: string) => MinimalProductShellView;
+  readonly snapshot: () => WorldSnapshot;
+  readonly view: () => MinimalProductShellView;
+}>;

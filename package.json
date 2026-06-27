@@ -1,0 +1,23 @@
+{
+  "name": "ovone-v2",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "dev": "node scripts/dev-server.mjs",
+    "dev:check": "node scripts/dev-server.mjs --check",
+    "drift": "tsx src/drift-detector/cli.ts",
+    "e2e": "tsx src/e2e-flow-validation/cli.ts",
+    "hardening": "tsx src/hardening-suite/cli.ts",
+    "harness": "tsx src/runtime-harness/cli.ts",
+    "start": "tsx src/bootstrap/node-main.ts",
+    "test": "node --test --import tsx tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  }
+}
