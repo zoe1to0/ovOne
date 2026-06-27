@@ -51,8 +51,11 @@ UI event
 - Emoji and file picker follow-up item actions remain disabled/no-op for now.
 - `TEXT_INPUT` updates `inputDraft` but does not re-render yet.
 - Unknown `activeView` falls back to `CHAT_LIST`. This is a temporary fallback, not a final invariant.
-- ovO click opens the ovO control overlay only.
-- ovO control overlay lists existing worlds and binds each world row to `SWITCH_WORLD`.
+- ovO click opens the special ovO chat with stable `activeChatId = "ovo"`.
+- ovO chat uses the same `CHAT_VIEW` structure as other chats.
+- ovO chat composer kind is `ovo` and defaults to `world-button`.
+- ovO `world-button` composer shows the current world name as a disabled `📍 {world}` button until the world menu is implemented.
+- ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
 - `SWITCH_WORLD` changes `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact selection, and Flow Executor refreshes the shell view through `shell.switchWorld(worldId)`.
@@ -70,6 +73,7 @@ UI event
 - `NAV_OPEN_ME`
 - `SWITCH_WORLD`
 - `OPEN_CHAT`
+- `OPEN_OVO_CHAT`
 - `NAV_BACK`
 
 ### Overlay Actions
@@ -102,6 +106,7 @@ UI event
 
 ### ovO Actions
 
+- `OPEN_OVO_CHAT`
 - `OPEN_OVO_CONTROL`
 
 ### Me / Settings Actions
@@ -124,9 +129,10 @@ UI event
 | Open Contacts tab | `NAV_OPEN_CONTACTS` | Sets `activeView` to `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | Open Me tab | `NAV_OPEN_ME` | Sets `activeView` to `ME`, clears active chat/contact, closes overlay. |
 | Switch world from ovO overlay | `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay/settings, and Flow Executor refreshes the shell view. |
-| Open chat row | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
+| Open chat row | `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, resets to normal text composer, closes overlay. |
 | Back | `NAV_BACK` | From contact detail returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
-| ovO click | `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens ovO control overlay. |
+| ovO click | `OPEN_OVO_CHAT` | Sets `activeChatId = "ovo"`, sets `CHAT_VIEW`, resets to ovO `world-button` composer, closes overlay/settings. |
+| Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens ovO control overlay; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
 | Chat menu button | `OPEN_CHAT_MENU` | Opens chat menu overlay. |
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
@@ -164,7 +170,7 @@ These actions are named and routed but intentionally do not implement product be
 | Composer kind | Supported modes | Default mode | Current binding |
 | --- | --- | --- | --- |
 | `normal` | `text`, `voice-button` | `text` | Chat composer renders `text` by default. |
-| `ovo` | `world-button`, `text` | `world-button` | Foundation only; ovO chat composer is not bound yet. |
+| `ovo` | `world-button`, `text` | `world-button` | ovO chat composer renders `world-button` by default; keyboard action toggles it to `text`. |
 
 ## Current Temporary Fallbacks
 
@@ -173,14 +179,14 @@ These actions are named and routed but intentionally do not implement product be
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 - `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- Composer mode state machine exists, but ovO chat composer/world-button UI is not bound yet.
+- ovO world-button composer is bound, but its world menu is not implemented yet.
 
 ## Remaining Behavior Questions
 
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
-- How should ovO chat be entered before binding the ovO `world-button` composer?
+- What exact action should the ovO world-button dispatch when the world menu is implemented?
 - What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?
 

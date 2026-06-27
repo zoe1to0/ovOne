@@ -112,8 +112,10 @@ UI action
 - Snapshot used by UI is `state.view.product.snapshot`.
 - Chats and Contacts read through `currentWorldId` and the world scope resolver.
 - Me remains global and reads account-level snapshot data directly instead of routing through the world resolver.
-- ovO control overlay lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD` for read-only world switching.
-- Current ChatView composer resolves as normal composer and remains in text mode by default.
+- ovO header dispatches `OPEN_OVO_CHAT`, opens `CHAT_VIEW`, and uses stable `activeChatId = "ovo"`.
+- ovO ChatView uses the same chat page structure as other chats, but its composer kind is `ovo`.
+- ovO composer defaults to `world-button`, displays `📍 {currentWorldName}`, and can toggle to text mode through `TOGGLE_COMPOSER_MODE`.
+- ovO control overlay still lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD` for read-only world switching, but it is not the direct ovO click path.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
@@ -179,6 +181,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `NAV_OPEN_ME`
 - `SWITCH_WORLD`
 - `OPEN_CHAT`
+- `OPEN_OVO_CHAT`
 - `NAV_BACK`
 - `OPEN_ADD_MENU`
 - `OPEN_CHAT_MENU`
@@ -209,9 +212,10 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `NAV_OPEN_CONTACTS` | Sets `CONTACTS`, clears active chat/contact, closes overlay and settings. |
 | `NAV_OPEN_ME` | Sets `ME`, clears active chat/contact, closes overlay. |
 | `SWITCH_WORLD` | Sets `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact, closes overlay/settings, and Flow Executor refreshes the shell view. |
-| `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, closes overlay. |
+| `OPEN_CHAT` | Sets `activeChatId`, sets `activeView` to `CHAT_VIEW`, resets to normal text composer, closes overlay. |
 | `NAV_BACK` | From `CONTACT_DETAIL` returns to `CONTACTS`; otherwise returns to `CHAT_LIST` and clears active chat. |
-| `OPEN_OVO_CONTROL` | Forces `CHAT_LIST`, clears active chat, opens `ovo-control` overlay. |
+| `OPEN_OVO_CHAT` | Sets `activeChatId = "ovo"`, opens `CHAT_VIEW`, resets to ovO `world-button` composer, closes overlay/settings. |
+| `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, opens `ovo-control` overlay; not the direct ovO click path. |
 | `OPEN_ADD_MENU` | Opens `add-menu` overlay. |
 | `OPEN_CHAT_MENU` | Opens `chat-menu` overlay. |
 | `OPEN_EMOJI_PICKER` | Opens `emoji-picker` overlay. |
@@ -271,7 +275,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 
 View helpers still derive presentation data from `WorldSnapshot`:
 
-- `createComposer(snapshot, state, controller)` resolves the current normal composer mode through the composer mode state machine.
+- `createComposer(snapshot, state, controller)` resolves `normal` or `ovo` composer kind from `activeChatId`.
+- `isOvoChatId(state.activeChatId)` treats stable `activeChatId = "ovo"` as the ovO special chat route.
 - `chatsFromSnapshot(snapshot, worldId)` reads through `resolveWorldChats(worldId, snapshot)`.
 - `contactsFromSnapshot(snapshot, worldId)` reads through `resolveWorldContacts(worldId, snapshot)`, filters assistant contacts, and removes ovO.
 - Me settings/favorites read direct account-level assistant contacts and do not use `currentWorldId`.
@@ -328,12 +333,12 @@ Current package version: `0.1.0`.
 - Disabled explicit actions exist for creation/settings flows but do not implement product behavior yet.
 - Some visible buttons are unbound or only decorative.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
-- Composer mode state machine exists, but ovO chat composer/world-button UI is not bound yet.
+- ovO world-button composer is bound, but the world-button menu is not implemented yet.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - World-scoped data model foundation exists, but it is read-only and not a create/edit world product flow.
-- ovO overlay supports read-only world switching, but no create/edit world flow is implemented yet.
+- ovO overlay supports read-only world switching when opened by scaffold action, but no create/edit world flow is implemented yet.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.

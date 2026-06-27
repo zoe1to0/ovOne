@@ -11,6 +11,7 @@ import {
 import type { ComposerKind } from "./composer-mode.js";
 import {
   createBehaviorRegistry,
+  OVO_CHAT_ID,
   tabForView
 } from "./behavior-registry.js";
 import { createFlowExecutor } from "./flow-executor.js";
@@ -259,8 +260,9 @@ function createChatView(
   state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
-  const chat = chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
-  const title = chat ? chatTitle(snapshot, chat) : "聊天";
+  const isOvoChat = isOvoChatId(state.activeChatId);
+  const chat = isOvoChat ? null : chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
+  const title = isOvoChat ? "ovO" : chat ? chatTitle(snapshot, chat) : "聊天";
 
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-view";
@@ -273,7 +275,10 @@ function createChatView(
 
   const heading = document.createElement("div");
   heading.className = "mvp-chat-title";
-  heading.append(createAvatarWithStatus(createChatAvatar(snapshot, chat), true), createNameBlock(title, "在线"));
+  heading.append(
+    createAvatarWithStatus(isOvoChat ? createOvoAvatar() : createChatAvatar(snapshot, chat), true),
+    createNameBlock(title, "在线")
+  );
 
   const menu = document.createElement("button");
   menu.type = "button";
@@ -288,7 +293,7 @@ function createChatView(
 
   const messages = document.createElement("ol");
   messages.className = "mvp-message-stream";
-  for (const message of chat?.messages ?? []) {
+  for (const message of isOvoChat ? [] : (chat?.messages ?? [])) {
     messages.append(createMessageItem(snapshot, message));
   }
 
@@ -303,20 +308,26 @@ function createComposer(
 ): HTMLElement {
   const form = document.createElement("form");
   form.className = "mvp-composer";
-  const composerKind: ComposerKind = "normal";
+  const composerKind: ComposerKind = isOvoChatId(state.activeChatId) ? "ovo" : "normal";
   const composerMode = isComposerModeAllowed(composerKind, state.composerMode)
     ? state.composerMode
     : resolveDefaultComposerMode(composerKind);
 
-  const emoji = document.createElement("button");
-  emoji.type = "button";
-  emoji.className = "mvp-inline-action";
-  emoji.textContent = "☺";
-  emoji.setAttribute("aria-label", "表情");
-  bindControllerAction(emoji, controller, { type: "OPEN_EMOJI_PICKER" });
-  form.append(emoji);
+  const left = document.createElement("button");
+  left.type = "button";
+  left.className = "mvp-inline-action";
+  if (composerKind === "ovo" && composerMode === "world-button") {
+    left.textContent = "⌨";
+    left.setAttribute("aria-label", "键盘");
+    bindControllerAction(left, controller, { type: "TOGGLE_COMPOSER_MODE", kind: "ovo" });
+  } else {
+    left.textContent = "☺";
+    left.setAttribute("aria-label", "表情");
+    bindControllerAction(left, controller, { type: "OPEN_EMOJI_PICKER" });
+  }
+  form.append(left);
 
-  {
+  if (composerMode === "text") {
     const action = document.createElement("button");
     action.type = "button";
     action.className = "mvp-inline-action";
@@ -325,9 +336,7 @@ function createComposer(
     action.setAttribute("aria-label", "更多");
     bindControllerAction(action, controller, { type: "OPEN_FILE_PICKER" });
     form.append(action);
-  }
 
-  if (composerMode === "text") {
     const input = document.createElement("input");
     input.name = "message";
     input.autocomplete = "off";
@@ -345,7 +354,7 @@ function createComposer(
     modeButton.type = "button";
     modeButton.className = "mvp-composer-mode-button";
     modeButton.disabled = true;
-    modeButton.textContent = composerMode === "world-button" ? `📍${snapshot.worldMeta.title}` : "按住说话";
+    modeButton.textContent = composerMode === "world-button" ? `📍 ${snapshot.worldMeta.title}` : "按住说话";
     form.append(modeButton);
   }
 
@@ -538,7 +547,7 @@ function createHomeHeader(controller: InteractionController): HTMLElement {
   brand.type = "button";
   brand.className = "mvp-home-brand";
   brand.setAttribute("aria-label", "ovO");
-  bindControllerAction(brand, controller, { type: "OPEN_OVO_CONTROL" });
+  bindControllerAction(brand, controller, { type: "OPEN_OVO_CHAT" });
 
   const title = document.createElement("h1");
   title.textContent = "ovO";
@@ -777,6 +786,13 @@ function createChatAvatar(snapshot: WorldSnapshot, chat: WorldChatSession | null
   return avatar;
 }
 
+function createOvoAvatar(): HTMLElement {
+  const avatar = document.createElement("span");
+  avatar.className = "mvp-avatar";
+  avatar.textContent = "o";
+  return avatar;
+}
+
 function createContactAvatar(contact: WorldContact): HTMLElement {
   const avatar = document.createElement("span");
   avatar.className = "mvp-avatar";
@@ -839,6 +855,10 @@ function chatsFromSnapshot(snapshot: WorldSnapshot, worldId = snapshot.worldMeta
 
 function chatById(snapshot: WorldSnapshot, chatId: string | null): WorldChatSession | null {
   return chatId ? snapshot.chatState.chats.get(chatId) ?? null : null;
+}
+
+function isOvoChatId(chatId: string | null): boolean {
+  return chatId === OVO_CHAT_ID;
 }
 
 function chatTitle(snapshot: WorldSnapshot, chat: WorldChatSession | null): string {

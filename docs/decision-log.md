@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-27: ovO opens as chat with world-button composer
+
+Decision: ovO is now entered as a special chat route before world switch/edit menu behavior is implemented.
+
+Rules:
+
+- Clicking ovO dispatches `OPEN_OVO_CHAT`, not direct world-control overlay opening.
+- `OPEN_OVO_CHAT` sets `activeView = CHAT_VIEW` and stable `activeChatId = "ovo"`.
+- ovO chat uses the same ChatView structure as normal chats.
+- ovO chat composer kind is `ovo`.
+- ovO chat composer defaults to `world-button`.
+- ovO `world-button` displays `📍 {currentWorldName}` and does not open a world menu yet.
+- The left keyboard action toggles ovO composer to text mode through `TOGGLE_COMPOSER_MODE`.
+- Normal chats continue to open with the normal text composer.
+- No world switch/edit menu, create world flow, world editor UI, or world data model change is included in this decision.
+
 ## 2026-06-27: Composer mode state machine foundation added
 
 Decision: ovOne now has a reusable composer mode state machine before ovO chat/world-button behavior is implemented.

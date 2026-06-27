@@ -5,7 +5,7 @@ import {
   resolveDefaultComposerMode,
   toggleComposerMode
 } from "../src/platform/composer-mode.js";
-import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
+import { createBehaviorRegistry, OVO_CHAT_ID } from "../src/platform/behavior-registry.js";
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import { toWorldId } from "../src/world-domain/index.js";
 
@@ -47,6 +47,40 @@ describe("Composer mode state machine", () => {
     assert.equal(result.shouldRender, false);
     assert.equal(state.composerMode, "text");
     assert.equal(state.inputDraft, "hello composer");
+  });
+
+  it("opens ovO chat with world-button composer by default", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.activeView = "CONTACTS";
+    state.activeChatId = "chat";
+    state.selectedContactActorId = "actor";
+    state.overlay = "ovo-control";
+    state.settingsOpen = true;
+    state.composerMode = "text";
+
+    const result = registry.execute({ type: "OPEN_OVO_CHAT" }, state);
+
+    assert.equal(result.shouldRender, true);
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.activeChatId, OVO_CHAT_ID);
+    assert.equal(state.selectedContactActorId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.composerMode, "world-button");
+  });
+
+  it("opens normal chats with normal text composer by default", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.composerMode = "world-button";
+
+    const result = registry.execute({ type: "OPEN_CHAT", chatId: "friend-chat" }, state);
+
+    assert.equal(result.shouldRender, true);
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.activeChatId, "friend-chat");
+    assert.equal(state.composerMode, "text");
   });
 
   it("does not change world switching behavior", () => {

@@ -106,7 +106,7 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(adapter, /screen\.append\(createHomeHeader\(controller\)\)/);
     assert.match(adapter, /function createHomeHeader\(controller: InteractionController\)/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
     assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "OPEN_ADD_MENU" \}\)/);
     assert.match(adapter, /function createAddMenu/);
     assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "CREATE_WORLD" \}\)/);
@@ -151,7 +151,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /export type MobileOverlay = "add-menu" \| "chat-menu" \| "ovo-control" \| "emoji-picker" \| "file-picker" \| null/);
     assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\), createBottomNav\(state, controller\)\)/);
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
-    assert.match(adapter, /bindControllerAction\(emoji, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
+    assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
     assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);
     assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\)/);
     assert.doesNotMatch(adapter, /screen\.append\(createAddMenu\(\)\)/);
@@ -216,22 +216,34 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("provider"), false);
   });
 
-  it("keeps ovO as an inline system controller without chat or world UI", () => {
+  it("opens ovO as a special chat with a world-button composer", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
     assert.match(registry, /export type InteractionAction =/);
+    assert.match(registry, /export const OVO_CHAT_ID = "ovo"/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_OVO_CHAT" \}/);
+    assert.match(registry, /case "OPEN_OVO_CHAT":/);
+    assert.match(registry, /state\.activeChatId = OVO_CHAT_ID/);
+    assert.match(registry, /state\.activeView = "CHAT_VIEW"/);
+    assert.match(registry, /state\.composerMode = resolveDefaultComposerMode\("ovo"\)/);
     assert.match(adapter, /type InteractionController = Readonly/);
     assert.match(adapter, /function createInteractionController\(/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
+    assert.match(adapter, /const isOvoChat = isOvoChatId\(state\.activeChatId\)/);
+    assert.match(adapter, /const title = isOvoChat \? "ovO"/);
+    assert.match(adapter, /createAvatarWithStatus\(isOvoChat \? createOvoAvatar\(\) : createChatAvatar\(snapshot, chat\), true\)/);
+    assert.match(adapter, /const composerKind: ComposerKind = isOvoChatId\(state\.activeChatId\) \? "ovo" : "normal"/);
+    assert.match(adapter, /left\.textContent = "⌨"/);
+    assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "TOGGLE_COMPOSER_MODE", kind: "ovo" \}\)/);
+    assert.match(adapter, /modeButton\.textContent = composerMode === "world-button" \? `📍 \$\{snapshot\.worldMeta\.title\}` : "按住说话"/);
     assert.match(adapter, /controller\.dispatch\(\{ type: "SUBMIT_MESSAGE", text: input\.value \}\)/);
     assert.equal(adapter.includes("MobileInputMode"), false);
     assert.equal(adapter.includes("createWorldComposer"), false);
     assert.equal(adapter.includes("createWorldPanel"), false);
     assert.equal(adapter.includes("world-panel"), false);
     assert.equal(adapter.includes("createWorldPanel"), false);
-    assert.equal(adapter.includes("function isOvoChat"), false);
     assert.equal(adapter.includes("system page"), false);
     assert.equal(html.includes(".mvp-composer.is-world-mode"), false);
   });
@@ -277,7 +289,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /bindControllerAction\(button, controller, actionForTab\(item\.tab\)\)/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_CHAT", chatId: chat\.id \}\)/);
     assert.match(adapter, /bindControllerAction\(back, controller, \{ type: "NAV_BACK" \}\)/);
-    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CONTROL" \}\)/);
+    assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_CONTACT", actorId: contact\.actorId \}\)/);
     assert.match(registry, /state\.selectedContactActorId = action\.actorId/);
     assert.match(adapter, /bindControllerAction\(button, controller, \{ type: "OPEN_SETTINGS" \}\)/);

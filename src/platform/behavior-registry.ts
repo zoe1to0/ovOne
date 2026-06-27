@@ -1,11 +1,12 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import type { WorldId } from "../world-domain/index.js";
-import { isComposerModeAllowed, toggleComposerMode } from "./composer-mode.js";
+import { isComposerModeAllowed, resolveDefaultComposerMode, toggleComposerMode } from "./composer-mode.js";
 import type { ComposerKind, ComposerMode } from "./composer-mode.js";
 
 export type MobileMvpTab = "chats" | "contacts" | "me";
 export type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
 export type MobileOverlay = "add-menu" | "chat-menu" | "ovo-control" | "emoji-picker" | "file-picker" | null;
+export const OVO_CHAT_ID = "ovo";
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -18,6 +19,7 @@ export type InteractionAction =
   | { readonly type: "NAV_OPEN_ME" }
   | { readonly type: "SWITCH_WORLD"; readonly worldId: WorldId }
   | { readonly type: "OPEN_CHAT"; readonly chatId: string }
+  | { readonly type: "OPEN_OVO_CHAT" }
   | { readonly type: "NAV_BACK" }
   | { readonly type: "OPEN_ADD_MENU" }
   | { readonly type: "OPEN_CHAT_MENU" }
@@ -65,6 +67,7 @@ type DisabledInteractionAction = Exclude<
   | "NAV_OPEN_ME"
   | "SWITCH_WORLD"
   | "OPEN_CHAT"
+  | "OPEN_OVO_CHAT"
   | "NAV_BACK"
   | "OPEN_ADD_MENU"
   | "OPEN_CHAT_MENU"
@@ -149,7 +152,17 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "OPEN_CHAT":
         state.activeChatId = action.chatId;
         state.activeView = "CHAT_VIEW";
+        state.composerMode = resolveDefaultComposerMode("normal");
         closeOverlay(state);
+        return RENDER;
+
+      case "OPEN_OVO_CHAT":
+        state.activeChatId = OVO_CHAT_ID;
+        state.activeView = "CHAT_VIEW";
+        state.selectedContactActorId = null;
+        state.composerMode = resolveDefaultComposerMode("ovo");
+        closeOverlay(state);
+        state.settingsOpen = false;
         return RENDER;
 
       case "NAV_BACK":
