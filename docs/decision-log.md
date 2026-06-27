@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-27: ViewRouter owns activeView fallback
+
+Decision: Unknown `activeView` fallback now belongs to ViewRouter route resolution, not `renderShellPage`.
+
+Rules:
+
+- No product rules changed.
+- `ViewRouter.resolve(...)` returns `{ route, fallbackApplied, issue? }`.
+- Known routes resolve with `fallbackApplied: false`.
+- Unknown routes resolve to `CHAT_LIST` with `fallbackApplied: true`.
+- `renderShellPage(...)` consumes the resolved route object and only maps known routes to view factories.
+- Unknown routes must not render Me.
+
 ## 2026-06-27: Behavior Registry scaffold implemented
 
 Decision: ovOne now routes mobile ChatShell UI actions through a Behavior Registry scaffold.

@@ -39,7 +39,7 @@ UI event
   -> local SemanticMobileState transition
   -> optional runtime effect request
   -> ViewRouter.resolve(state.activeView)
-  -> renderShellPage(...)
+  -> renderShellPage(routeState, ...)
   -> DOM
 ```
 
@@ -146,8 +146,9 @@ These actions are named and routed but intentionally do not implement product be
 
 ## Current Temporary Fallbacks
 
-- Unknown `activeView` resolves to `CHAT_LIST`.
-- `renderShellPage(...)` also falls back to Chat list for unknown view values.
+- Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
+- The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
+- `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 - `SUBMIT_MESSAGE` returns a runtime effect request that `InteractionController` executes by calling the existing shell message flow.
 - Emoji and file picker panel items remain decorative after the overlay opens.
 

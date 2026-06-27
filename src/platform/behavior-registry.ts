@@ -3,6 +3,11 @@ import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 export type MobileMvpTab = "chats" | "contacts" | "me";
 export type ViewState = "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME";
 export type MobileOverlay = "add-menu" | "chat-menu" | "ovo-control" | "emoji-picker" | "file-picker" | null;
+export type ViewRouteResolution = Readonly<{
+  readonly route: ViewState;
+  readonly fallbackApplied: boolean;
+  readonly issue?: string;
+}>;
 
 export type InteractionAction =
   | { readonly type: "NAV_OPEN_CHAT_LIST" }
@@ -71,7 +76,7 @@ type DisabledInteractionAction = Exclude<
 
 export type BehaviorRegistry = Readonly<{
   readonly execute: (action: InteractionAction, state: SemanticMobileState) => BehaviorRegistryResult;
-  readonly resolveView: (activeView: string) => ViewState;
+  readonly resolveView: (activeView: string) => ViewRouteResolution;
   readonly currentOverlay: (state: SemanticMobileState) => MobileOverlay;
 }>;
 
@@ -215,7 +220,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
   });
 }
 
-export function resolveView(activeView: string): ViewState {
+export function resolveView(activeView: string): ViewRouteResolution {
   if (
     activeView === "CHAT_LIST" ||
     activeView === "CHAT_VIEW" ||
@@ -223,9 +228,16 @@ export function resolveView(activeView: string): ViewState {
     activeView === "CONTACT_DETAIL" ||
     activeView === "ME"
   ) {
-    return activeView;
+    return Object.freeze({
+      route: activeView,
+      fallbackApplied: false
+    });
   }
-  return "CHAT_LIST";
+  return Object.freeze({
+    route: "CHAT_LIST",
+    fallbackApplied: true,
+    issue: `Unknown activeView '${activeView}' resolved to CHAT_LIST.`
+  });
 }
 
 export function tabForView(activeView: ViewState): MobileMvpTab {

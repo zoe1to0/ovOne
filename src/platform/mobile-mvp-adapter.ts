@@ -9,7 +9,7 @@ import type {
   MobileMvpTab,
   MobileOverlay,
   SemanticMobileState,
-  ViewState
+  ViewRouteResolution
 } from "./behavior-registry.js";
 import type {
   MinimalProductShellRuntime,
@@ -133,7 +133,7 @@ function createChatShell(
   state: SemanticMobileState,
   render: () => void
 ): HTMLElement {
-  const viewState = ViewRouter.resolve(state.activeView);
+  const routeState = ViewRouter.resolve(state.activeView);
   const controller = createInteractionController(shell, state, render);
   const snapshot = state.view.product.snapshot;
   const app = document.createElement("main");
@@ -141,7 +141,7 @@ function createChatShell(
 
   const viewport = document.createElement("section");
   viewport.className = "mvp-viewport";
-  viewport.append(createShellPageFrame(viewState, renderShellPage(viewState, snapshot, state, controller)));
+  viewport.append(createShellPageFrame(routeState, renderShellPage(routeState, snapshot, state, controller)));
 
   app.append(viewport, createOverlayLayer(ViewRouter.currentOverlay(state), controller), createBottomNav(state, controller));
   return app;
@@ -153,32 +153,28 @@ const ViewRouter = Object.freeze({
 });
 
 function renderShellPage(
-  viewState: ViewState,
+  routeState: ViewRouteResolution,
   snapshot: WorldSnapshot,
   state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
-  if (viewState === "CHAT_LIST") {
-    return createChatList(snapshot, controller);
+  switch (routeState.route) {
+    case "CHAT_LIST":
+      return createChatList(snapshot, controller);
+    case "CHAT_VIEW":
+      return createChatView(snapshot, state.activeChatId, controller);
+    case "CONTACTS":
+      return createContactsView(snapshot, controller);
+    case "CONTACT_DETAIL":
+      return createContactDetailView(snapshot, state.selectedContactActorId, controller);
+    case "ME":
+      return createMeView(snapshot, state.settingsOpen, controller);
   }
-  if (viewState === "CHAT_VIEW") {
-    return createChatView(snapshot, state.activeChatId, controller);
-  }
-  if (viewState === "CONTACTS") {
-    return createContactsView(snapshot, controller);
-  }
-  if (viewState === "CONTACT_DETAIL") {
-    return createContactDetailView(snapshot, state.selectedContactActorId, controller);
-  }
-  if (viewState === "ME") {
-    return createMeView(snapshot, state.settingsOpen, controller);
-  }
-  return createChatList(snapshot, controller);
 }
 
-function createShellPageFrame(viewState: ViewState, page: HTMLElement): HTMLElement {
+function createShellPageFrame(routeState: ViewRouteResolution, page: HTMLElement): HTMLElement {
   const frame = document.createElement("section");
-  frame.className = `mvp-page mvp-page-${viewState.toLowerCase().replaceAll("_", "-")}`;
+  frame.className = `mvp-page mvp-page-${routeState.route.toLowerCase().replaceAll("_", "-")}`;
   frame.append(page);
   return frame;
 }

@@ -50,9 +50,9 @@ describe("Product UI Consolidation", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
 
     assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
-    assert.match(registry, /export function resolveView\(activeView: string\): ViewState/);
+    assert.match(registry, /export function resolveView\(activeView: string\): ViewRouteResolution/);
     assert.match(adapter, /function renderShellPage\(/);
-    assert.match(adapter, /function createShellPageFrame\(viewState: ViewState, page: HTMLElement\)/);
+    assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
     assert.match(adapter, /function createChatShell\(/);
     assert.match(adapter, /const controller = createInteractionController\(shell, state, render\)/);
     assert.match(adapter, /const snapshot = state\.view\.product\.snapshot/);

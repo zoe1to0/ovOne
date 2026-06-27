@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { resolveView } from "../src/platform/behavior-registry.js";
 
 describe("Mobile MVP Product Shell", () => {
   it("mounts the semantic mobile MVP from the browser entry without modifying core modules", () => {
@@ -42,7 +43,7 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
 
     assert.match(adapter, /state\.splashVisible = false;[\s\S]*state\.activeView = "CHAT_LIST";[\s\S]*state\.activeChatId = null;/);
-    assert.match(adapter, /const viewState = ViewRouter\.resolve\(state\.activeView\)/);
+    assert.match(adapter, /const routeState = ViewRouter\.resolve\(state\.activeView\)/);
     assert.match(adapter, /state\.activeView = "CHAT_VIEW"/);
   });
 
@@ -53,27 +54,49 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(registry, /export type ViewState = "CHAT_LIST" \| "CHAT_VIEW" \| "CONTACTS" \| "CONTACT_DETAIL" \| "ME"/);
     assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
-    assert.match(adapter, /const viewState = ViewRouter\.resolve\(state\.activeView\)/);
+    assert.match(adapter, /const routeState = ViewRouter\.resolve\(state\.activeView\)/);
     assert.match(adapter, /function commitStateTransition\(state: SemanticMobileState, render: \(\) => void\): void/);
     assert.match(adapter, /commitStateTransition\(state, render\)/);
     assert.match(adapter, /const controller = createInteractionController\(shell, state, render\)/);
     assert.match(adapter, /function createChatShell\(/);
     assert.match(adapter, /const snapshot = state\.view\.product\.snapshot/);
-    assert.match(adapter, /viewport\.append\(createShellPageFrame\(viewState, renderShellPage\(viewState, snapshot, state, controller\)\)\)/);
+    assert.match(adapter, /viewport\.append\(createShellPageFrame\(routeState, renderShellPage\(routeState, snapshot, state, controller\)\)\)/);
     assert.match(adapter, /function renderShellPage\(/);
-    assert.match(adapter, /function renderShellPage\(\s*viewState: ViewState,\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
+    assert.match(adapter, /function renderShellPage\(\s*routeState: ViewRouteResolution,\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
+    assert.match(registry, /export type ViewRouteResolution = Readonly<\{/);
+    assert.match(registry, /readonly route: ViewState;/);
+    assert.match(registry, /readonly fallbackApplied: boolean;/);
+    assert.match(registry, /readonly issue\?: string;/);
     assert.match(adapter, /return createChatList\(snapshot, controller\)/);
     assert.match(adapter, /return createChatView\(snapshot, state\.activeChatId, controller\)/);
     assert.match(adapter, /return createContactsView\(snapshot, controller\)/);
     assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
-    assert.match(adapter, /function createShellPageFrame\(viewState: ViewState, page: HTMLElement\)/);
-    assert.match(adapter, /frame\.className = `mvp-page mvp-page-\$\{viewState\.toLowerCase\(\)\.replaceAll\("_", "-"\)\}`/);
+    assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
+    assert.match(adapter, /frame\.className = `mvp-page mvp-page-\$\{routeState\.route\.toLowerCase\(\)\.replaceAll\("_", "-"\)\}`/);
     assert.doesNotMatch(adapter, /viewport\.append\(state\.activeChatId/);
     assert.doesNotMatch(adapter, /viewport\.append\(createContactsView/);
     assert.doesNotMatch(adapter, /viewport\.append\(createMeView/);
     assert.match(html, /\.mvp-page \{/);
     assert.match(html, /\.mvp-page > \.mvp-screen \{/);
+  });
+
+  it("resolves unknown activeView to Chat list inside ViewRouter only", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
+
+    assert.deepEqual(resolveView("CHAT_LIST"), { route: "CHAT_LIST", fallbackApplied: false });
+    assert.deepEqual(resolveView("CHAT_VIEW"), { route: "CHAT_VIEW", fallbackApplied: false });
+    assert.deepEqual(resolveView("CONTACTS"), { route: "CONTACTS", fallbackApplied: false });
+    assert.deepEqual(resolveView("CONTACT_DETAIL"), { route: "CONTACT_DETAIL", fallbackApplied: false });
+    assert.deepEqual(resolveView("ME"), { route: "ME", fallbackApplied: false });
+    assert.deepEqual(resolveView("UNKNOWN_VIEW"), {
+      route: "CHAT_LIST",
+      fallbackApplied: true,
+      issue: "Unknown activeView 'UNKNOWN_VIEW' resolved to CHAT_LIST."
+    });
+    assert.match(registry, /route: "CHAT_LIST",[\s\S]*fallbackApplied: true/);
+    assert.doesNotMatch(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\);\s*}\s*return createChatList/);
   });
 
   it("renders the chat list as product rows with centered ovO and clickable add menu", () => {

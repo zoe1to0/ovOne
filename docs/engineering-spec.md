@@ -56,7 +56,7 @@ Browser
   -> createInteractionController(shell, state, render)
   -> createBehaviorRegistry()
   -> ViewRouter.resolve(state.activeView)
-  -> renderShellPage(viewState, snapshot, state, controller)
+  -> renderShellPage(routeState, snapshot, state, controller)
   -> createShellPageFrame(...)
   -> createOverlayLayer(...)
   -> createBottomNav(...)
@@ -109,7 +109,7 @@ UI action
 - Legacy UI roots are disabled by throwing `LegacyUiMountDisabledError`.
 - `mountApp`, `mountAppShell`, and `mountMinimalUiShell` are not exported from `src/platform/index.ts`.
 - Render path is centralized through `activeView -> ViewRouter.resolve -> renderShellPage`.
-- `ViewRouter.resolve` delegates to Behavior Registry `resolveView`.
+- `ViewRouter.resolve` delegates to Behavior Registry `resolveView` and returns an explicit route object.
 - Chat list, chat view, contacts, contact detail, Me, overlays, and bottom navigation are all created inside `mobile-mvp-adapter.ts`.
 - Major visible interactive controls dispatch explicit actions through `InteractionController`.
 
@@ -144,7 +144,7 @@ UI action
 - `CONTACT_DETAIL`
 - `ME`
 
-Unknown view values resolve to `CHAT_LIST`. This is a temporary fallback, not final invariant behavior.
+Unknown view values resolve to `CHAT_LIST` inside ViewRouter. This is a temporary fallback, not final invariant behavior.
 
 ## Current Overlay States
 
@@ -213,23 +213,26 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 
 ## Current Router Behavior
 
-`ViewRouter` delegates to Behavior Registry:
+`ViewRouter` delegates route resolution to Behavior Registry:
 
 ```text
-resolve(activeView) -> BehaviorRegistry.resolveView(activeView)
+resolve(activeView) -> {
+  route: "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME",
+  fallbackApplied: boolean,
+  issue?: string
+}
 currentOverlay(state) -> BehaviorRegistry.currentOverlay(state)
 ```
 
-Real page selection is still owned by `renderShellPage(...)`:
+Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: true`. `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
 
-| Resolved view | Rendered view |
+| Resolved route | Rendered view |
 | --- | --- |
 | `CHAT_LIST` | `createChatList(snapshot, controller)` |
 | `CHAT_VIEW` | `createChatView(snapshot, state.activeChatId, controller)` |
 | `CONTACTS` | `createContactsView(snapshot, controller)` |
 | `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
-| any other value | `createChatList(snapshot, controller)` |
 
 ## Current View Derivation
 
@@ -255,6 +258,7 @@ UI event
   -> optional runtime effect handling
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
+  -> resolved route object
   -> render()
   -> mountRoot.replaceChildren(...)
 ```
@@ -287,8 +291,8 @@ Current package version: `0.1.0`.
 - Disabled explicit actions exist for creation/settings flows but do not implement product behavior yet.
 - Some visible buttons are unbound or only decorative.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
-- `ViewRouter` delegates validation but `renderShellPage` still owns real page selection.
-- Unknown `activeView` falls back to `CHAT_LIST`.
+- `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
+- Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.

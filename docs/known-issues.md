@@ -8,8 +8,8 @@ Last audited: 2026-06-27.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
-- `ViewRouter` delegates view validation to Behavior Registry, but `renderShellPage` still owns real page selection.
-- Unknown `activeView` falls back to `CHAT_LIST`. This is temporary fallback behavior.
+- `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
+- Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
@@ -45,6 +45,8 @@ Disabled explicit actions:
 
 - Behavior Registry scaffold exists in `src/platform/behavior-registry.ts`.
 - `InteractionController` delegates local UI state transitions to Behavior Registry.
+- ViewRouter route resolution returns `{ route, fallbackApplied, issue? }`.
+- Unknown active views resolve to `CHAT_LIST` before the view layer renders.
 - Runtime effects and autosave are out of scope for Behavior Registry.
 - `SUBMIT_MESSAGE` currently returns a `SEND_MESSAGE` runtime effect request that the controller executes through the existing shell flow.
 
