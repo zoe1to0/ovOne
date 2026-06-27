@@ -649,8 +649,8 @@ function createCreateWorldDraftView(
     selectedAIModelIds: [],
     nextMode: null,
     detailRoleMode: "random-role",
-    randomParticipantCount: "",
-    randomRelationshipNotes: "",
+    randomRoleSlots: [],
+    selectedUserRoleSlotId: null,
     fixedRoles: []
   };
   const screen = document.createElement("section");
@@ -762,8 +762,8 @@ function createCreateWorldDetailEditView(
     selectedAIModelIds: [],
     nextMode: "detailed-edit" as const,
     detailRoleMode: "random-role" as const,
-    randomParticipantCount: "",
-    randomRelationshipNotes: "",
+    randomRoleSlots: [],
+    selectedUserRoleSlotId: null,
     fixedRoles: []
   };
   const screen = document.createElement("section");
@@ -998,21 +998,58 @@ function createDetailRoleSetup(
   }
 
   const setup = document.createElement("section");
-  setup.className = "mvp-create-world-detail-section";
-  const count = document.createElement("input");
-  count.name = "randomParticipantCount";
-  count.placeholder = "参与人数";
-  count.value = draft.randomParticipantCount;
-  bindCreateWorldDetailInput(count, controller, "randomParticipantCount");
-
-  const notes = document.createElement("textarea");
-  notes.name = "randomRelationshipNotes";
-  notes.placeholder = "粗略关系备注";
-  notes.value = draft.randomRelationshipNotes;
-  bindCreateWorldDetailInput(notes, controller, "randomRelationshipNotes");
-
-  setup.append(count, notes, createDraftNote("暂不生成真实角色；确认后会以占位角色分配创建世界。"));
+  setup.className = "mvp-create-world-random-roles";
+  for (const [index, slot] of randomRoleSlotsForDraft(draft).entries()) {
+    setup.append(createRandomRoleSlotRow(slot, index, draft.selectedUserRoleSlotId, controller));
+  }
+  setup.append(createDraftNote("未选择“分配给我”时，用户和 AI 将在后续随机分配到所有角色。当前只收集占位数据。"));
   return createDraftStage("随机角色设置", setup);
+}
+
+function randomRoleSlotsForDraft(draft: NonNullable<SemanticMobileState["createWorldDraft"]>) {
+  const count = 1 + draft.selectedAIModelIds.length;
+  return Array.from({ length: count }, (_, index) => draft.randomRoleSlots[index] ?? {
+    id: `role-slot:${index + 1}`,
+    roleName: "",
+    personaNotes: ""
+  });
+}
+
+function createRandomRoleSlotRow(
+  slot: ReturnType<typeof randomRoleSlotsForDraft>[number],
+  index: number,
+  selectedUserRoleSlotId: string | null,
+  controller: InteractionController
+): HTMLElement {
+  const row = document.createElement("section");
+  row.className = "mvp-create-world-random-role-row";
+  const title = document.createElement("strong");
+  title.textContent = `Role ${index + 1}`;
+
+  const roleName = document.createElement("input");
+  roleName.name = `randomRoleName:${slot.id}`;
+  roleName.placeholder = "角色名";
+  roleName.value = slot.roleName;
+  bindRandomRoleSlotInput(roleName, controller, slot.id, "roleName");
+
+  const notes = document.createElement("input");
+  notes.name = `randomRoleNotes:${slot.id}`;
+  notes.placeholder = "人设 / 关系备注";
+  notes.value = slot.personaNotes;
+  bindRandomRoleSlotInput(notes, controller, slot.id, "personaNotes");
+
+  const ownRole = document.createElement("label");
+  ownRole.className = "mvp-create-world-role-checkbox";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = selectedUserRoleSlotId === slot.id;
+  bindRandomRoleUserSlot(checkbox, controller, slot.id);
+  const checkboxText = document.createElement("span");
+  checkboxText.textContent = "分配给我";
+  ownRole.append(checkbox, checkboxText);
+
+  row.append(title, roleName, notes, ownRole);
+  return row;
 }
 
 function createFixedRoleSetup(
@@ -1090,10 +1127,31 @@ function bindCreateWorldDraftInput(
 function bindCreateWorldDetailInput(
   input: HTMLInputElement | HTMLTextAreaElement,
   controller: InteractionController,
-  field: "worldName" | "worldviewText" | "randomParticipantCount" | "randomRelationshipNotes"
+  field: "worldName" | "worldviewText"
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_CREATE_WORLD_DETAIL", field, value: input.value });
+  });
+}
+
+function bindRandomRoleSlotInput(
+  input: HTMLInputElement,
+  controller: InteractionController,
+  slotId: string,
+  field: "roleName" | "personaNotes"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT", slotId, field, value: input.value });
+  });
+}
+
+function bindRandomRoleUserSlot(
+  input: HTMLInputElement,
+  controller: InteractionController,
+  slotId: string
+): void {
+  input.addEventListener("change", () => {
+    controller.dispatch({ type: "TOGGLE_RANDOM_ROLE_USER_SLOT", slotId });
   });
 }
 

@@ -36,6 +36,11 @@ export type FixedRoleDraft = Readonly<{
   readonly roleName: string;
   readonly notes: string;
 }>;
+export type RandomRoleSlotDraft = Readonly<{
+  readonly id: string;
+  readonly roleName: string;
+  readonly personaNotes: string;
+}>;
 export type CreateWorldDraft = {
   worldName: string;
   worldviewSourceType: CreateWorldViewSourceType;
@@ -43,8 +48,8 @@ export type CreateWorldDraft = {
   selectedAIModelIds: readonly string[];
   nextMode: CreateWorldNextMode | null;
   detailRoleMode: CreateWorldDetailRoleMode;
-  randomParticipantCount: string;
-  randomRelationshipNotes: string;
+  randomRoleSlots: readonly RandomRoleSlotDraft[];
+  selectedUserRoleSlotId: string | null;
   fixedRoles: readonly FixedRoleDraft[];
 };
 export type ViewRouteResolution = Readonly<{
@@ -83,7 +88,9 @@ export type InteractionAction =
   | { readonly type: "OPEN_CREATE_WORLD_DRAFT" }
   | { readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }
   | { readonly type: "UPDATE_CREATE_WORLD_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
-  | { readonly type: "UPDATE_CREATE_WORLD_DETAIL"; readonly field: "worldName" | "worldviewText" | "randomParticipantCount" | "randomRelationshipNotes"; readonly value: string }
+  | { readonly type: "UPDATE_CREATE_WORLD_DETAIL"; readonly field: "worldName" | "worldviewText"; readonly value: string }
+  | { readonly type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"; readonly slotId: string; readonly field: "roleName" | "personaNotes"; readonly value: string }
+  | { readonly type: "TOGGLE_RANDOM_ROLE_USER_SLOT"; readonly slotId: string }
   | { readonly type: "UPDATE_CREATE_WORLD_FIXED_ROLE"; readonly actorId: string; readonly field: "roleName" | "notes"; readonly value: string }
   | { readonly type: "SELECT_WORLDVIEW_SOURCE"; readonly sourceType: CreateWorldViewSourceType }
   | { readonly type: "TOGGLE_CREATE_WORLD_AI"; readonly aiModelId: string }
@@ -146,6 +153,8 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_CREATE_WORLD_DETAIL_EDIT"
   | "UPDATE_CREATE_WORLD_DRAFT"
   | "UPDATE_CREATE_WORLD_DETAIL"
+  | "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"
+  | "TOGGLE_RANDOM_ROLE_USER_SLOT"
   | "UPDATE_CREATE_WORLD_FIXED_ROLE"
   | "SELECT_WORLDVIEW_SOURCE"
   | "TOGGLE_CREATE_WORLD_AI"
@@ -182,8 +191,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     selectedAIModelIds: [],
     nextMode: null,
     detailRoleMode: "random-role",
-    randomParticipantCount: "",
-    randomRelationshipNotes: "",
+    randomRoleSlots: [createEmptyRandomRoleSlot(0)],
+    selectedUserRoleSlotId: null,
     fixedRoles: []
   });
 
@@ -191,6 +200,22 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     state.createWorldDraft ??= createEmptyWorldDraft();
     return state.createWorldDraft;
   };
+
+  const createEmptyRandomRoleSlot = (index: number): RandomRoleSlotDraft => Object.freeze({
+    id: `role-slot:${index + 1}`,
+    roleName: "",
+    personaNotes: ""
+  });
+
+  const syncRandomRoleSlots = (draft: CreateWorldDraft): readonly RandomRoleSlotDraft[] => {
+    const slotCount = 1 + draft.selectedAIModelIds.length;
+    return Object.freeze(Array.from({ length: slotCount }, (_, index) => draft.randomRoleSlots[index] ?? createEmptyRandomRoleSlot(index)));
+  };
+
+  const syncSelectedUserRoleSlotId = (
+    selectedUserRoleSlotId: string | null,
+    randomRoleSlots: readonly RandomRoleSlotDraft[]
+  ): string | null => randomRoleSlots.some((slot) => slot.id === selectedUserRoleSlotId) ? selectedUserRoleSlotId : null;
 
   const syncFixedRoles = (draft: CreateWorldDraft): readonly FixedRoleDraft[] => {
     const actorIds = ["user", ...draft.selectedAIModelIds];
@@ -368,6 +393,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           nextMode: "detailed-edit",
+          randomRoleSlots: syncRandomRoleSlots(draft),
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(draft.selectedUserRoleSlotId, syncRandomRoleSlots(draft)),
           fixedRoles: syncFixedRoles(draft)
         });
         state.activeView = "CREATE_WORLD_DETAIL_EDIT";
@@ -392,6 +419,31 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           [action.field]: action.value
+        });
+        return RENDER;
+      }
+
+      case "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT": {
+        const draft = ensureCreateWorldDraft(state);
+        const randomRoleSlots = syncRandomRoleSlots(draft).map((slot) =>
+          slot.id === action.slotId
+            ? Object.freeze({ ...slot, [action.field]: action.value })
+            : slot
+        );
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          randomRoleSlots
+        });
+        return RENDER;
+      }
+
+      case "TOGGLE_RANDOM_ROLE_USER_SLOT": {
+        const draft = ensureCreateWorldDraft(state);
+        const randomRoleSlots = syncRandomRoleSlots(draft);
+        state.createWorldDraft = Object.freeze({
+          ...draft,
+          randomRoleSlots,
+          selectedUserRoleSlotId: draft.selectedUserRoleSlotId === action.slotId ? null : action.slotId
         });
         return RENDER;
       }
@@ -424,9 +476,15 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         const selected = draft.selectedAIModelIds.includes(action.aiModelId)
           ? draft.selectedAIModelIds.filter((id) => id !== action.aiModelId)
           : [...draft.selectedAIModelIds, action.aiModelId];
-        state.createWorldDraft = Object.freeze({
+        const nextDraft = Object.freeze({
           ...draft,
           selectedAIModelIds: selected
+        });
+        const randomRoleSlots = syncRandomRoleSlots(nextDraft);
+        state.createWorldDraft = Object.freeze({
+          ...nextDraft,
+          randomRoleSlots,
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(nextDraft.selectedUserRoleSlotId, randomRoleSlots)
         });
         return RENDER;
       }
@@ -446,6 +504,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           ...draft,
           detailRoleMode: action.roleMode,
           nextMode: "detailed-edit",
+          randomRoleSlots: syncRandomRoleSlots(draft),
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotId(draft.selectedUserRoleSlotId, syncRandomRoleSlots(draft)),
           fixedRoles: syncFixedRoles(draft)
         });
         return RENDER;

@@ -128,7 +128,9 @@ UI action
 - Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
 - `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
-- Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; random/fixed role content remains placeholder metadata.
+- Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; role content remains placeholder metadata.
+- Detailed Edit Random Role mode creates scaffold role slots equal to user plus selected AI count.
+- Random Role slots store `roleName` and `personaNotes`; `selectedUserRoleSlotId` optionally marks one slot as the user's role and can be cleared for fully random future assignment.
 - Empty Role creation records role assignment as `none`.
 - Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
 - Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
@@ -216,7 +218,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `UPDATE_CREATE_WORLD_DETAIL`
+- `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT`
 - `UPDATE_CREATE_WORLD_FIXED_ROLE`
+- `TOGGLE_RANDOM_ROLE_USER_SLOT`
 - `SELECT_WORLDVIEW_SOURCE`
 - `TOGGLE_CREATE_WORLD_AI`
 - `SELECT_CREATE_WORLD_NEXT_MODE`
@@ -276,7 +280,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_CREATE_WORLD_DETAIL_EDIT` | Sets draft next mode to `detailed-edit` and opens `CREATE_WORLD_DETAIL_EDIT` scaffold page. |
 | `UPDATE_CREATE_WORLD_DRAFT` | Updates local draft `worldName` or `worldviewText`. |
 | `UPDATE_CREATE_WORLD_DETAIL` | Updates detail scaffold fields in the same local draft. |
+| `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT` | Updates scaffold role name or persona/relationship notes for one random-role slot. |
 | `UPDATE_CREATE_WORLD_FIXED_ROLE` | Updates placeholder fixed role row fields. |
+| `TOGGLE_RANDOM_ROLE_USER_SLOT` | Selects exactly one random-role slot as the user's role, or clears the selection when clicked again. |
 | `SELECT_WORLDVIEW_SOURCE` | Updates local draft worldview source type. |
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |

@@ -133,8 +133,8 @@ describe("FlowExecutor", () => {
       selectedAIModelIds: ["ai:friend"],
       nextMode: "random-role",
       detailRoleMode: "random-role",
-      randomParticipantCount: "",
-      randomRelationshipNotes: "",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
       fixedRoles: []
     };
     const registry = createBehaviorRegistry();
@@ -177,8 +177,8 @@ describe("FlowExecutor", () => {
       selectedAIModelIds: [],
       nextMode: "detailed-edit",
       detailRoleMode: "random-role",
-      randomParticipantCount: "",
-      randomRelationshipNotes: "",
+      randomRoleSlots: [{ id: "role-slot:1", roleName: "", personaNotes: "" }],
+      selectedUserRoleSlotId: null,
       fixedRoles: []
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: detailedEdit }).shouldRender, false);
@@ -191,8 +191,8 @@ describe("FlowExecutor", () => {
       selectedAIModelIds: [],
       nextMode: "random-role",
       detailRoleMode: "random-role",
-      randomParticipantCount: "",
-      randomRelationshipNotes: "",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
       fixedRoles: []
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: missingName }).shouldRender, false);
@@ -221,8 +221,8 @@ describe("FlowExecutor", () => {
       selectedAIModelIds: ["ai:friend"],
       nextMode: "detailed-edit",
       detailRoleMode: "empty-role",
-      randomParticipantCount: "",
-      randomRelationshipNotes: "",
+      randomRoleSlots: [{ id: "role-slot:1", roleName: "Watcher", personaNotes: "quiet" }],
+      selectedUserRoleSlotId: "role-slot:1",
       fixedRoles: []
     };
     const registry = createBehaviorRegistry();

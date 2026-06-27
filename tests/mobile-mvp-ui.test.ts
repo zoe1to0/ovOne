@@ -176,6 +176,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DRAFT" \}/);
     assert.match(registry, /\| \{ readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" \}/);
     assert.match(registry, /\| \{ readonly type: "UPDATE_CREATE_WORLD_DETAIL"/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"/);
+    assert.match(registry, /\| \{ readonly type: "TOGGLE_RANDOM_ROLE_USER_SLOT"/);
     assert.match(registry, /\| \{ readonly type: "SELECT_DETAIL_ROLE_MODE"/);
     assert.match(registry, /\| \{ readonly type: "CONFIRM_CREATE_WORLD_DETAIL" \}/);
     assert.match(registry, /\| \{ readonly type: "CANCEL_CREATE_WORLD_DETAIL" \}/);
@@ -200,6 +202,13 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /roleMode: "random-role"/);
     assert.match(adapter, /roleMode: "fixed-role"/);
     assert.match(adapter, /roleMode: "empty-role"/);
+    assert.match(adapter, /function randomRoleSlotsForDraft/);
+    assert.match(adapter, /function createRandomRoleSlotRow/);
+    assert.match(adapter, /roleName\.placeholder = "角色名"/);
+    assert.match(adapter, /notes\.placeholder = "人设 \/ 关系备注"/);
+    assert.match(adapter, /checkboxText\.textContent = "分配给我"/);
+    assert.match(adapter, /type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"/);
+    assert.match(adapter, /type: "TOGGLE_RANDOM_ROLE_USER_SLOT"/);
     assert.match(adapter, /function createFixedRoleSetup/);
     assert.match(adapter, /function createFixedRoleRow/);
     assert.match(adapter, /不设定角色，进入世界后不会触发主动初始反应。/);
@@ -371,7 +380,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 4);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 5);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

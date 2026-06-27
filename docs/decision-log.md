@@ -1,16 +1,33 @@
 # ovOne Decision Log
 
+## 2026-06-27: Random Role detail scaffold corrected
+
+Decision: Detailed Edit Random Role mode now collects explicit role slots instead of the earlier flat notes scaffold.
+
+This supersedes the earlier flat placeholder behavior.
+
+Rules:
+
+- Random Role detail mode generates scaffold role slots equal to user plus selected AI count.
+- Each random-role slot stores `roleName` and `personaNotes`.
+- `selectedUserRoleSlotId` may mark exactly one slot as the user's role.
+- Selecting the already selected user role slot clears the selection, allowing all participants to be randomly assigned later.
+- Slot data is scaffold metadata only and does not perform real random role assignment.
+- Confirming a valid Detailed Edit draft still creates a custom world through the existing create-world service and switches to the new world `CHAT_LIST`.
+- Fixed Role and Empty Role behavior remain unchanged.
+- Real random role generation, AI initial messages, auto group creation, and detailed validation remain out of scope.
+
 ## 2026-06-27: Create World Detailed Edit scaffold fields added
 
 Decision: Create World Detailed Edit is now an actionable scaffold route instead of a placeholder-only route.
 
-This supersedes earlier notes that described Detailed Edit as non-creating placeholder behavior.
+This supersedes earlier notes that described Detailed Edit as non-creating placeholder behavior. The later Random Role detail scaffold decision supersedes the early flat Random Role placeholder listed here.
 
 Rules:
 
 - `CREATE_WORLD_DETAIL_EDIT` renders world name and worldview text inputs from the same `createWorldDraft` state.
 - Detail edit role modes are `random-role`, `fixed-role`, and `empty-role`.
-- Random Role detail mode exposes placeholder participant count and relationship notes.
+- Random Role detail mode now uses explicit role slots.
 - Fixed Role detail mode exposes placeholder role rows for the user and selected AI friends.
 - Empty Role detail mode explains that no active initial reaction is triggered.
 - `UPDATE_CREATE_WORLD_DETAIL`, `UPDATE_CREATE_WORLD_FIXED_ROLE`, and `SELECT_DETAIL_ROLE_MODE` mutate local draft state only.

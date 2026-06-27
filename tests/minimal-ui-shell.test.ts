@@ -213,8 +213,8 @@ describe("Minimal UI Shell", () => {
       selectedAIModelIds: [],
       nextMode: "detailed-edit",
       detailRoleMode: "empty-role",
-      randomParticipantCount: "",
-      randomRelationshipNotes: "",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
       fixedRoles: []
     });
 

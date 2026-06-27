@@ -153,8 +153,8 @@ function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<
       sourceType: "blank",
       roleAssignment: roleAssignmentForDraft(draft),
       detailRoleMode: draft.detailRoleMode ?? null,
-      randomParticipantCount: draft.randomParticipantCount ?? "",
-      randomRelationshipNotes: draft.randomRelationshipNotes ?? "",
+      randomRoleSlots: draft.randomRoleSlots ?? [],
+      selectedUserRoleSlotId: draft.selectedUserRoleSlotId ?? null,
       fixedRoles: draft.fixedRoles ?? []
     });
   }
@@ -163,8 +163,8 @@ function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<
     text: draft.worldviewText,
     roleAssignment: roleAssignmentForDraft(draft),
     detailRoleMode: draft.detailRoleMode ?? null,
-    randomParticipantCount: draft.randomParticipantCount ?? "",
-    randomRelationshipNotes: draft.randomRelationshipNotes ?? "",
+    randomRoleSlots: draft.randomRoleSlots ?? [],
+    selectedUserRoleSlotId: draft.selectedUserRoleSlotId ?? null,
     fixedRoles: draft.fixedRoles ?? []
   });
 }

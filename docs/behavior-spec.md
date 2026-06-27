@@ -78,6 +78,9 @@ UI event
 - Confirming Create World detailed edit with a non-empty world name creates a custom world through Flow Executor and the shell runtime boundary.
 - Detailed Edit role modes are `random-role`, `fixed-role`, and `empty-role`.
 - `empty-role` records no role assignment and does not trigger active initial reaction behavior.
+- In Detailed Edit, `random-role` generates scaffold role slots equal to the user plus selected AI count.
+- Each random-role slot stores `roleName` and `personaNotes`.
+- `selectedUserRoleSlotId` may mark exactly one random-role slot as the user's role; selecting the same slot again clears it so all participants can be randomly assigned later.
 - `random-role` and `fixed-role` store placeholder role assignment metadata only; no real role generation is performed.
 - Confirming the Create World draft without a required world name does not create a world and leaves the draft open.
 - Blank-world creation keeps selected AI original display names and records no assigned roles.
@@ -128,7 +131,9 @@ UI event
 - `OPEN_WORLD_EDITOR`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `UPDATE_CREATE_WORLD_DETAIL`
+- `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT`
 - `UPDATE_CREATE_WORLD_FIXED_ROLE`
+- `TOGGLE_RANDOM_ROLE_USER_SLOT`
 - `SELECT_WORLDVIEW_SOURCE`
 - `TOGGLE_CREATE_WORLD_AI`
 - `SELECT_CREATE_WORLD_NEXT_MODE`
@@ -158,7 +163,9 @@ UI event
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `UPDATE_CREATE_WORLD_DETAIL`
+- `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT`
 - `UPDATE_CREATE_WORLD_FIXED_ROLE`
+- `TOGGLE_RANDOM_ROLE_USER_SLOT`
 - `SELECT_WORLDVIEW_SOURCE`
 - `TOGGLE_CREATE_WORLD_AI`
 - `SELECT_CREATE_WORLD_NEXT_MODE`
@@ -202,7 +209,9 @@ UI event
 | Open detailed edit | `OPEN_CREATE_WORLD_DETAIL_EDIT` | Opens `CREATE_WORLD_DETAIL_EDIT` scaffold and sets draft next mode to `detailed-edit`. |
 | Update Create World draft text | `UPDATE_CREATE_WORLD_DRAFT` | Updates `worldName` or `worldviewText` in local draft state only. |
 | Update Create World detail text | `UPDATE_CREATE_WORLD_DETAIL` | Updates detail scaffold fields in the same local draft state. |
+| Update random role slot | `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT` | Updates scaffold role name or persona/relationship notes for one random-role slot. |
 | Update fixed role row | `UPDATE_CREATE_WORLD_FIXED_ROLE` | Updates placeholder role name or relationship/persona notes for a fixed-role participant. |
+| Toggle random user role slot | `TOGGLE_RANDOM_ROLE_USER_SLOT` | Selects exactly one random-role slot as the user's role, or clears it when the selected slot is clicked again. |
 | Select worldview source | `SELECT_WORLDVIEW_SOURCE` | Updates local draft `worldviewSourceType`. |
 | Toggle Create World AI | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft `selectedAIModelIds`. |
 | Select Create World next mode | `SELECT_CREATE_WORLD_NEXT_MODE` | Sets local draft `nextMode` to `random-role` or `detailed-edit`. |
@@ -246,7 +255,7 @@ These actions are named and routed but intentionally do not implement product be
 - Emoji and file picker panel items remain decorative after the overlay opens.
 - ovO world-button menu hierarchy is bound, but real world editing is not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
-- Detailed Edit currently exposes scaffold fields only; real generated role content and detailed validation are not implemented.
+- Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 
 ## Remaining Behavior Questions
 

@@ -100,8 +100,12 @@ export type CreateWorldDraftInput = Readonly<{
   readonly selectedAIModelIds: readonly string[];
   readonly nextMode: "random-role" | "detailed-edit" | null;
   readonly detailRoleMode?: "random-role" | "fixed-role" | "empty-role";
-  readonly randomParticipantCount?: string;
-  readonly randomRelationshipNotes?: string;
+  readonly randomRoleSlots?: readonly Readonly<{
+    readonly id: string;
+    readonly roleName: string;
+    readonly personaNotes: string;
+  }>[];
+  readonly selectedUserRoleSlotId?: string | null;
   readonly fixedRoles?: readonly Readonly<{
     readonly actorId: string;
     readonly roleName: string;
