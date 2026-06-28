@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
 import { WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
+import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import { toWorldId } from "../src/world-domain/index.js";
@@ -189,6 +190,75 @@ describe("FlowExecutor", () => {
     assert.equal(flow.shouldRender, false);
     assert.deepEqual(calls, []);
     assert.equal(state.worldEditorDraft?.fieldErrors.worldName, WORLD_EDITOR_NAME_REQUIRED_MESSAGE);
+  });
+
+  it("executes ADD_WORLD_MEMBER through the runtime member boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView(null, toWorldId("reality"));
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      (command) => {
+        calls.push(command);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-add", toWorldId("reality")));
+    state.activeView = "WORLD_EDITOR";
+    state.selectedWorldIdForEditing = targetWorldId;
+    state.activeChatId = "old-chat";
+    state.overlay = "world-editor-selector";
+    state.settingsOpen = true;
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        {
+          worldId: targetWorldId,
+          title: "Studio",
+          type: "custom",
+          memberActorIds: []
+        }
+      ],
+      linkedAIModels: [
+        {
+          globalAILinkId: "link:ai:friend",
+          globalAIModelId: "ai:friend",
+          actorId: "ai:friend",
+          displayName: "Friend"
+        }
+      ]
+    };
+    state.worldEditorDraft = {
+      worldId: targetWorldId,
+      worldName: "Studio",
+      worldviewText: "",
+      originalWorldviewText: "",
+      locked: false,
+      fieldErrors: { worldName: null },
+      warnings: [],
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "ADD_WORLD_MEMBER", worldId: targetWorldId, globalAILinkId: "link:ai:friend" }, state);
+    const flow = executor.run({ type: "ADD_WORLD_MEMBER", worldId: targetWorldId, globalAILinkId: "link:ai:friend" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.equal(flow.executedFlow, "ADD_WORLD_MEMBER");
+    assert.equal(flow.shouldRender, true);
+    assert.deepEqual(calls, [{ worldId: targetWorldId, globalAILinkId: "link:ai:friend" }]);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+    assert.equal(state.activeView, "WORLD_EDITOR");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.selectedWorldIdForEditing, targetWorldId);
+    assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_MEMBER_ADD_SUCCESS_MESSAGE);
   });
 
   it("executes random-role create world flow and clears draft after success", () => {
@@ -529,7 +599,8 @@ function createShell(
   sendMessage: (text: string) => MinimalProductShellView,
   switchWorld: (worldId: string) => MinimalProductShellView = () => createView("initial"),
   createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial"),
-  saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial")
+  saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial"),
+  addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -537,6 +608,7 @@ function createShell(
     switchWorld,
     createWorldFromDraft,
     saveWorldMetadata,
+    addWorldMember,
     sendMessage,
     snapshot: () => view.product.snapshot,
     view: () => view

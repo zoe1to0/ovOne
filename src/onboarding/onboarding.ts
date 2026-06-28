@@ -103,6 +103,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    addWorldMember: (command) => {
+      try {
+        return shell.addWorldMember(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "addWorldMember", worldId: command.worldId });
+        return decorate();
+      }
+    },
     sendMessage: (text) => {
       const trimmed = text.trim();
       if (!trimmed) {

@@ -1,8 +1,10 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   getWorldEditorWarnings,
+  validateWorldAddMemberCommand,
   validateWorldEditorPatch
 } from "../domain/index.js";
+import type { GlobalAILink, GlobalAIModel, WorldContact as DomainWorldContact } from "../domain/index.js";
 import type { WorldId } from "../world-domain/index.js";
 import { isComposerModeAllowed, resolveDefaultComposerMode, toggleComposerMode } from "./composer-mode.js";
 import type { ComposerKind, ComposerMode } from "./composer-mode.js";
@@ -106,6 +108,7 @@ export type InteractionAction =
   | { readonly type: "UPDATE_WORLD_EDITOR_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
   | { readonly type: "CANCEL_WORLD_EDITOR" }
   | { readonly type: "SAVE_WORLD_EDITOR" }
+  | { readonly type: "ADD_WORLD_MEMBER"; readonly worldId: WorldId; readonly globalAILinkId: string }
   | { readonly type: "OPEN_EMOJI_PICKER" }
   | { readonly type: "OPEN_FILE_PICKER" }
   | { readonly type: "CLOSE_OVERLAY" }
@@ -180,6 +183,7 @@ type DisabledInteractionAction = Exclude<
   | "UPDATE_WORLD_EDITOR_DRAFT"
   | "CANCEL_WORLD_EDITOR"
   | "SAVE_WORLD_EDITOR"
+  | "ADD_WORLD_MEMBER"
   | "OPEN_EMOJI_PICKER"
   | "OPEN_FILE_PICKER"
   | "CLOSE_OVERLAY"
@@ -556,6 +560,20 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         }
         return RENDER;
 
+      case "ADD_WORLD_MEMBER": {
+        const validation = validateWorldAddMemberCommand(
+          { worldId: action.worldId, globalAILinkId: action.globalAILinkId },
+          createWorldMemberContractInputFromState(state, action.worldId)
+        );
+        if (state.worldEditorDraft) {
+          state.worldEditorDraft = Object.freeze({
+            ...state.worldEditorDraft,
+            noticeMessage: validation.error
+          });
+        }
+        return RENDER;
+      }
+
       case "CANCEL_WORLD_EDITOR":
         state.activeView = "CHAT_LIST";
         state.selectedWorldIdForEditing = null;
@@ -790,6 +808,27 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
 function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown>>): string {
   return typeof worldView.text === "string" ? worldView.text : JSON.stringify(worldView);
+}
+
+function createWorldMemberContractInputFromState(state: SemanticMobileState, worldId: WorldId) {
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === worldId);
+  const linkedModels = state.view.linkedAIModels ?? [];
+  return {
+    world: {
+      type: selectedWorld?.type === "custom" ? "custom" as const : "reality" as const
+    },
+    contacts: (selectedWorld?.memberActorIds ?? []).map((actorId) => ({ baseModelId: actorId })) as readonly Pick<DomainWorldContact, "baseModelId">[],
+    globalAIModels: linkedModels.map((model) => ({
+      modelId: model.globalAIModelId,
+      displayName: model.displayName
+    })) as readonly GlobalAIModel[],
+    globalAILinks: linkedModels.map((model, index) => ({
+      linkId: model.globalAILinkId,
+      modelId: model.globalAIModelId,
+      connectedAt: index + 1,
+      status: "connected" as const
+    })) as readonly GlobalAILink[]
+  };
 }
 
 export function resolveView(activeView: string): ViewRouteResolution {

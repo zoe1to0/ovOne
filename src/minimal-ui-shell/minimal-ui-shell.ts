@@ -10,8 +10,9 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { WorldEditorPatch } from "../domain/index.js";
+import type { WorldAddMemberCommand, WorldEditorPatch } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
+import { addWorldMember } from "./world-member-service.js";
 
 export const MinimalUiShell = Object.freeze({
   init
@@ -87,6 +88,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const addMember = (command: WorldAddMemberCommand): MinimalProductShellView => {
+    addWorldMember({ app, command });
+    screen = "chat";
+    return view();
+  };
+
   const sendMessage = (text: string): MinimalProductShellView => {
     const trimmed = text.trim();
     if (!trimmed) {
@@ -125,6 +132,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     switchWorld,
     createWorldFromDraft: createWorld,
     saveWorldMetadata,
+    addWorldMember: addMember,
     sendMessage,
     snapshot,
     view

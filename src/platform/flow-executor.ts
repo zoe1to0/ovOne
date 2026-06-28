@@ -1,5 +1,6 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch } from "../domain/index.js";
+import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
 import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
@@ -11,7 +12,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "ADD_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -111,6 +112,36 @@ export function createFlowExecutor(): FlowExecutor {
           noticeMessage: WORLD_EDITOR_SAVE_SUCCESS_MESSAGE
         });
         return Object.freeze({ shouldRender: true, executedFlow: "SAVE_WORLD_METADATA" });
+      }
+      if (action.type === "ADD_WORLD_MEMBER") {
+        const draft = context.state.worldEditorDraft;
+        if (!draft || draft.worldId !== action.worldId || draft.locked) {
+          return NO_FLOW;
+        }
+        try {
+          context.state.view = context.shell.addWorldMember({
+            worldId: action.worldId,
+            globalAILinkId: action.globalAILinkId
+          });
+        } catch (error) {
+          context.state.worldEditorDraft = Object.freeze({
+            ...draft,
+            noticeMessage: error instanceof Error ? error.message : "添加失败"
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "WORLD_EDITOR";
+        context.state.activeChatId = null;
+        context.state.selectedContactActorId = null;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.selectedWorldIdForEditing = action.worldId;
+        context.state.worldEditorDraft = Object.freeze({
+          ...draft,
+          noticeMessage: WORLD_MEMBER_ADD_SUCCESS_MESSAGE
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "ADD_WORLD_MEMBER" });
       }
       return NO_FLOW;
     }

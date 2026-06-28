@@ -954,7 +954,7 @@ function createWorldEditorView(
 
   const memberSection = document.createElement("section");
   memberSection.className = "mvp-world-editor-section";
-  memberSection.append(createWorldEditorAddMemberScaffold(state, draft));
+  memberSection.append(createWorldEditorAddMemberScaffold(state, draft, controller));
 
   const actions = document.createElement("section");
   actions.className = "mvp-world-editor-actions";
@@ -980,7 +980,8 @@ function createWorldEditorView(
 
 function createWorldEditorAddMemberScaffold(
   state: SemanticMobileState,
-  draft: WorldEditorDraft
+  draft: WorldEditorDraft,
+  controller: InteractionController
 ): HTMLElement {
   const section = document.createElement("section");
   section.className = "mvp-world-editor-add-member";
@@ -998,11 +999,14 @@ function createWorldEditorAddMemberScaffold(
   }
 
   for (const candidate of candidates) {
-    const button = createMenuButton(`${candidate.displayName} · 待开放`);
-    button.setAttribute("disabled", "true");
+    const button = createMenuButton(`添加 ${candidate.displayName}`, controller, {
+      type: "ADD_WORLD_MEMBER",
+      worldId: draft.worldId,
+      globalAILinkId: candidate.globalAILinkId
+    });
     section.append(button);
   }
-  section.append(createDraftNote("添加成员暂未开放，不会创建联系人、聊天或记忆。"));
+  section.append(createDraftNote("添加后只会创建当前世界内的联系人、私聊和独立记忆占位。"));
   return section;
 }
 

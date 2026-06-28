@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / ADD_WORLD_MEMBER
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -65,10 +65,12 @@ UI event
 - Custom worldview can be cleared and shows `清空世界观会使该世界更接近空白世界`.
 - Substantial worldview changes show `大幅修改世界观可能影响该世界内角色表现和后续体验`.
 - Reality name/worldview cannot be edited and Reality save remains disabled.
-- World Editor add-member scaffold applies only to custom worlds.
+- World Editor Add Member applies only to custom worlds.
 - Add-member candidates come from connected Global AI Links and exclude AI already present in the selected custom world.
 - Reality shows locked add-member state.
-- Add-member candidate controls are disabled/no-op in this scaffold and do not create contacts, chats, memory, groups, provider connections, or initial messages.
+- `ADD_WORLD_MEMBER` validates the selected candidate through the add-member contract, then Flow Executor calls `shell.addWorldMember(...)`.
+- Successful Add Member creates only the selected custom world's `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata.
+- Add Member does not mutate Reality, other worlds, existing contacts/chats/memory, groups, provider connections, Global AI Links, or initial messages.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -162,6 +164,7 @@ UI event
 - `UPDATE_WORLD_EDITOR_DRAFT`
 - `CANCEL_WORLD_EDITOR`
 - `SAVE_WORLD_EDITOR`
+- `ADD_WORLD_MEMBER`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `UPDATE_CREATE_WORLD_DETAIL`
 - `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT`
@@ -227,6 +230,7 @@ UI event
 | Select world to edit | `OPEN_WORLD_EDITOR` | Opens `WORLD_EDITOR` page scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and closes overlay without switching worlds. |
 | Update world editor draft | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
 | Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract; valid custom worlds update metadata name/worldview and remain on `WORLD_EDITOR`. |
+| Add world member | `ADD_WORLD_MEMBER` | Validates a linked AI candidate and, for valid custom worlds, creates a world-scoped contact, private chat, and isolated memory placeholder while keeping the editor open. |
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
@@ -287,11 +291,11 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE` and `SWITCH_WORLD` are currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, and `ADD_WORLD_MEMBER` are currently handled by Flow Executor.
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, and World Editor can save custom world metadata only; roles, members, contacts, chats, and memory editing are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, and Add Member can create custom-world contact/chat/memory placeholder data. Role editing, group membership, initial member messages, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

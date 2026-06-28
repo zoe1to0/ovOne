@@ -137,9 +137,9 @@ UI action
 - `WorldAddMemberCommand` contains `worldId` and `globalAILinkId`.
 - `resolveAddMemberCandidates(...)` returns connected Global AI Links that are not already represented in the selected custom world.
 - `canAddMemberToWorld(...)` rejects Reality.
-- Future add-member mutation may create only `WorldContact`, `WorldChat`, and `WorldMemoryScope` for the selected custom world.
-- Add-member contract forbids Reality, other worlds, existing contacts/chats/memory, `GlobalAIModel`, `GlobalAILink`, group chats, and provider connections.
-- Current World Editor UI shows the candidate scaffold only; add action remains disabled and performs no mutation.
+- `ADD_WORLD_MEMBER` validates through the add-member contract and Flow Executor calls `shell.addWorldMember(...)` for valid custom worlds.
+- Add-member execution creates only a new world-scoped `WorldContact`, private `WorldChat`, and isolated `WorldMemoryScope` placeholder metadata for the selected custom world.
+- Add-member execution does not switch `currentWorldId`, does not mutate Reality, does not mutate other worlds, does not mutate existing contacts/chats/memory, does not mutate `GlobalAIModel` or `GlobalAILink`, does not create group chats, and does not trigger initial messages.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
 - Create World validation state lives in `createWorldDraft.validationError`, `createWorldDraft.fieldErrors`, and `createWorldDraft.noticeMessage`.
@@ -256,6 +256,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `UPDATE_WORLD_EDITOR_DRAFT`
 - `CANCEL_WORLD_EDITOR`
 - `SAVE_WORLD_EDITOR`
+- `ADD_WORLD_MEMBER`
 - `OPEN_CREATE_WORLD_DRAFT`
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
@@ -337,6 +338,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
 | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
 | `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract; valid custom worlds are saved through Flow Executor and `shell.saveWorldMetadata(...)`. |
+| `ADD_WORLD_MEMBER` | Validates the selected linked AI against the add-member contract; Flow Executor creates the custom-world contact/chat/memory placeholder through `shell.addWorldMember(...)` and leaves the editor open. |
 | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -382,6 +384,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name, selected AI, and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
+| `ADD_WORLD_MEMBER` with a valid custom-world linked AI candidate | Calls `shell.addWorldMember(command)`, updates `state.view`, keeps `currentWorldId` unchanged, keeps `activeView = WORLD_EDITOR`, clears active chat/contact/overlay/settings state, and shows `已添加`. |
+| `ADD_WORLD_MEMBER` with Reality, unlinked AI, or existing world member | No world mutation; shows validation notice in the World Editor draft. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -410,7 +414,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / ADD_WORLD_MEMBER
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -426,7 +430,7 @@ Exceptions:
 - Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 - Create World draft edit actions mutate only local `createWorldDraft` state.
-- Random-role Create World draft confirmation and valid Detailed Edit confirmation are the Create World actions with Flow Executor runtime effects.
+- Random-role Create World draft confirmation, valid Detailed Edit confirmation, and valid custom-world Add Member are the world actions with Flow Executor runtime effects.
 - Create World transition is currently immediate scaffold state with an explicit completion action; no real animation timing or generated role identity exists yet.
 
 ## Current Test/Verification Surface
@@ -463,7 +467,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, and `CONFIRM_CREATE_WORLD_DETAIL` are the UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

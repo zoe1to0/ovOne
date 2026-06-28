@@ -382,8 +382,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /WORLD_MEMBER_REALITY_LOCKED_MESSAGE/);
     assert.match(adapter, /linkedAIModels/);
     assert.match(adapter, /memberActorIds/);
-    assert.match(adapter, /button\.setAttribute\("disabled", "true"\)/);
-    assert.match(contract, /保存暂未开放/);
+    assert.match(adapter, /type: "ADD_WORLD_MEMBER"/);
+    assert.match(adapter, /globalAILinkId: candidate\.globalAILinkId/);
+    assert.match(adapter, /只会创建当前世界内的联系人、私聊和独立记忆占位/);
     assert.match(contract, /WorldContact/);
     assert.match(contract, /WorldChat/);
     assert.match(contract, /WorldMemory/);
