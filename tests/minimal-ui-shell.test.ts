@@ -266,6 +266,34 @@ describe("Minimal UI Shell", () => {
     assert.equal(savedNonCurrent.availableWorlds.find((world) => world.worldId === customWorldId)?.worldView?.text, "Next worldview");
   });
 
+  it("exposes add-member scaffold candidates without mutating world data", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const reality = shell.switchWorld(realityWorldId);
+    const beforeContacts = reality.product.snapshot.contacts;
+    const beforeChats = reality.product.snapshot.chatState.chats;
+    const beforeMemory = reality.product.snapshot.memorySummary;
+
+    const view = shell.view();
+
+    assert.equal(view.linkedAIModels?.some((model) => model.actorId === "ai:friend"), true);
+    assert.equal(view.availableWorlds.find((world) => world.worldId === realityWorldId)?.memberActorIds?.includes("ai:friend"), true);
+    assert.deepEqual(shell.view().product.snapshot.contacts, beforeContacts);
+    assert.deepEqual([...shell.view().product.snapshot.chatState.chats], [...beforeChats]);
+    assert.deepEqual(shell.view().product.snapshot.memorySummary, beforeMemory);
+  });
+
   it("rejects Reality metadata saves", () => {
     const shell = MinimalUiShell.init(App.init());
 

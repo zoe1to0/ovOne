@@ -133,6 +133,13 @@ UI action
 - Cleared custom worldview shows `清空世界观会使该世界更接近空白世界`.
 - Changed custom worldview shows `大幅修改世界观可能影响该世界内角色表现和后续体验`.
 - Reality name/worldview fields are locked and Reality save is disabled.
+- World Editor add-member contract lives in `src/domain/world-member-contract.ts`.
+- `WorldAddMemberCommand` contains `worldId` and `globalAILinkId`.
+- `resolveAddMemberCandidates(...)` returns connected Global AI Links that are not already represented in the selected custom world.
+- `canAddMemberToWorld(...)` rejects Reality.
+- Future add-member mutation may create only `WorldContact`, `WorldChat`, and `WorldMemoryScope` for the selected custom world.
+- Add-member contract forbids Reality, other worlds, existing contacts/chats/memory, `GlobalAIModel`, `GlobalAILink`, group chats, and provider connections.
+- Current World Editor UI shows the candidate scaffold only; add action remains disabled and performs no mutation.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
 - Create World validation state lives in `createWorldDraft.validationError`, `createWorldDraft.fieldErrors`, and `createWorldDraft.noticeMessage`.

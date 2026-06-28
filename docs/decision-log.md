@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-28: World Editor add-member contract scaffold added
+
+Decision: World Editor add-member behavior is defined as a contract and read-only UI scaffold before real mutation is implemented.
+
+Rules:
+
+- Add Member inside World Editor applies only to custom worlds.
+- Reality cannot add members through World Editor.
+- Add-member candidates come from existing connected Global AI Links.
+- Candidate resolution excludes AI models already represented in the selected custom world.
+- Future add-member mutation may create only a new `WorldContact`, `WorldChat`, and `WorldMemoryScope` for that custom world.
+- Future add-member mutation must not inherit memory from Reality or any other world.
+- Future add-member mutation must not affect Reality, other worlds, existing contacts/chats/memory, `GlobalAIModel`, `GlobalAILink`, group chats, or provider connections.
+- Initial message after adding a member is desired later via bootstrap-like logic, but remains out of scope.
+- Current UI shows disabled scaffold controls only and performs no mutation.
+
 ## 2026-06-28: World Editor metadata save implemented
 
 Decision: `SAVE_WORLD_EDITOR` now persists custom world metadata through the runtime boundary.

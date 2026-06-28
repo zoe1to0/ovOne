@@ -91,6 +91,13 @@ export type MinimalProductShellView = Readonly<{
     readonly title: string;
     readonly type: string;
     readonly worldView?: Readonly<Record<string, unknown>>;
+    readonly memberActorIds?: readonly string[];
+  }>[];
+  readonly linkedAIModels?: readonly Readonly<{
+    readonly globalAILinkId: string;
+    readonly globalAIModelId: string;
+    readonly actorId: string;
+    readonly displayName: string;
   }>[];
   readonly product: MinimalProductView;
 }>;

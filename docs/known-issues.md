@@ -12,7 +12,7 @@ Last audited: 2026-06-28.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, and custom world metadata saving.
+- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, custom world metadata saving, and add-member contract/candidate scaffold.
 - Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
@@ -27,8 +27,9 @@ Last audited: 2026-06-28.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching and custom world metadata saving, but no role/member/contact/chat/memory editing flow yet.
+- ovO panel has read-only world switching, custom world metadata saving, and add-member candidate scaffold, but no actual role/member/contact/chat/memory mutation flow yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata only; it must not be treated as contact, role, member, chat, memory, GlobalAIModel, or GlobalAILink editing.
+- World Editor add-member candidate controls are disabled/no-op; they must not be treated as implemented member creation.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.

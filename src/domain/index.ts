@@ -47,3 +47,19 @@ export type {
   WorldEditorPatch,
   WorldEditorPatchValidation
 } from "./world-editor-contract.js";
+export {
+  WORLD_MEMBER_ALREADY_EXISTS_MESSAGE,
+  WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
+  WORLD_MEMBER_UNLINKED_AI_MESSAGE,
+  canAddMemberToWorld,
+  getForbiddenWorldMemberMutations,
+  resolveAddMemberCandidates,
+  validateWorldAddMemberCommand
+} from "./world-member-contract.js";
+export type {
+  WorldAddMemberCandidate,
+  WorldAddMemberCommand,
+  WorldAddMemberValidation,
+  WorldMemberAllowedFutureMutation,
+  WorldMemberForbiddenMutation
+} from "./world-member-contract.js";

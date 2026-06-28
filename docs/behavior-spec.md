@@ -65,6 +65,10 @@ UI event
 - Custom worldview can be cleared and shows `清空世界观会使该世界更接近空白世界`.
 - Substantial worldview changes show `大幅修改世界观可能影响该世界内角色表现和后续体验`.
 - Reality name/worldview cannot be edited and Reality save remains disabled.
+- World Editor add-member scaffold applies only to custom worlds.
+- Add-member candidates come from connected Global AI Links and exclude AI already present in the selected custom world.
+- Reality shows locked add-member state.
+- Add-member candidate controls are disabled/no-op in this scaffold and do not create contacts, chats, memory, groups, provider connections, or initial messages.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.

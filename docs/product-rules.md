@@ -20,6 +20,8 @@
 - The same base AI model can appear in multiple worlds, but each world owns an independent contact/chat/memory instance.
 - Deleting an AI contact in one world deletes only that world's contact/chat/memory for that AI.
 - Deleting a contact does not disconnect the AI model globally.
+- Deleting an AI friend in Reality deletes only that AI model's Reality contact/chat/memory.
+- If the Global AI Link still exists, the user can add that AI back through the `+` entry without reconnecting provider credentials.
 - Re-adding the same AI model to that world creates a new clean instance.
 - Disconnecting a linked AI model only happens in Me -> Settings -> Linked AI.
 - Newly linked AI models do not automatically appear in custom worlds.
@@ -33,6 +35,9 @@
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, and add-member/role editing are not implemented yet.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.
+- World Editor add-member contract scaffold: custom world add-member candidates come from existing Global AI Links and exclude AI already in the selected world.
+- World Editor add-member scaffold does not create `WorldContact`, `WorldChat`, `WorldMemoryScope`, group membership, provider connections, or initial messages yet.
+- Reality cannot use World Editor to add members.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 

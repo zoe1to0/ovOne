@@ -378,6 +378,11 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createDraftStage\("角色 \/ 成员", roleSection\)/);
     assert.match(adapter, /createDraftStage\("添加 AI 成员", memberSection\)/);
     assert.match(adapter, /现实世界世界观不可修改/);
+    assert.match(adapter, /function createWorldEditorAddMemberScaffold/);
+    assert.match(adapter, /WORLD_MEMBER_REALITY_LOCKED_MESSAGE/);
+    assert.match(adapter, /linkedAIModels/);
+    assert.match(adapter, /memberActorIds/);
+    assert.match(adapter, /button\.setAttribute\("disabled", "true"\)/);
     assert.match(contract, /保存暂未开放/);
     assert.match(contract, /WorldContact/);
     assert.match(contract, /WorldChat/);

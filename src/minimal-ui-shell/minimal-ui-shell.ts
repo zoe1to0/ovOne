@@ -1,6 +1,7 @@
 import type { AppRuntime } from "../app/index.js";
 import { toChatEventId, toMessageId, transition } from "../chat-kernel/index.js";
 import type { ChatId, MessageId } from "../chat-kernel/index.js";
+import { toWorldId } from "../world-domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 import { renderMinimalProductView } from "./views.js";
 import type {
@@ -40,9 +41,13 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
           worldId,
           title: worldSnapshot.worldMeta.title,
           type: worldSnapshot.worldMeta.type,
-          worldView: worldSnapshot.runtimeState.metadata.worldView
+          worldView: worldSnapshot.runtimeState.metadata.worldView,
+          memberActorIds: worldSnapshot.contacts
+            .filter((contact) => contact.kind === "assistant" && contact.actorId !== worldSnapshot.worldMeta.assistantActorId)
+            .map((contact) => contact.actorId)
         });
       }),
+      linkedAIModels: linkedAIModels(app.worldDomain.generateSnapshot(toWorldId("reality"))),
       product: renderMinimalProductView(activeSnapshot, {
         showEntryMoment: entryWorldId === activeWorldId
       })
@@ -124,6 +129,22 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     snapshot,
     view
   });
+}
+
+function linkedAIModels(realitySnapshot: WorldSnapshot): readonly Readonly<{
+  readonly globalAILinkId: string;
+  readonly globalAIModelId: string;
+  readonly actorId: string;
+  readonly displayName: string;
+}>[] {
+  return Object.freeze(realitySnapshot.contacts
+    .filter((contact) => contact.kind === "assistant" && contact.actorId !== realitySnapshot.worldMeta.assistantActorId)
+    .map((contact) => Object.freeze({
+      globalAILinkId: `link:${contact.actorId}`,
+      globalAIModelId: contact.actorId,
+      actorId: contact.actorId,
+      displayName: contact.displayName
+    })));
 }
 
 function uniqueWorldIds(worldIds: readonly WorldId[]): WorldId[] {

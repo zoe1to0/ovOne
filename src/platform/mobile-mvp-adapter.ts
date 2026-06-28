@@ -3,6 +3,7 @@ import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
+  WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
   resolveWorldChats,
   resolveWorldContacts
 } from "../domain/index.js";
@@ -953,7 +954,7 @@ function createWorldEditorView(
 
   const memberSection = document.createElement("section");
   memberSection.className = "mvp-world-editor-section";
-  memberSection.append(createDraftNote("添加 AI 成员暂未开放"));
+  memberSection.append(createWorldEditorAddMemberScaffold(state, draft));
 
   const actions = document.createElement("section");
   actions.className = "mvp-world-editor-actions";
@@ -975,6 +976,34 @@ function createWorldEditorView(
     actions
   );
   return screen;
+}
+
+function createWorldEditorAddMemberScaffold(
+  state: SemanticMobileState,
+  draft: WorldEditorDraft
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-world-editor-add-member";
+  if (draft.locked) {
+    section.append(createDraftNote(WORLD_MEMBER_REALITY_LOCKED_MESSAGE));
+    return section;
+  }
+
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === draft.worldId);
+  const existingActorIds = new Set(selectedWorld?.memberActorIds ?? []);
+  const candidates = (state.view.linkedAIModels ?? []).filter((candidate) => !existingActorIds.has(candidate.actorId));
+  if (candidates.length === 0) {
+    section.append(createDraftNote("暂无可添加 AI 成员"));
+    return section;
+  }
+
+  for (const candidate of candidates) {
+    const button = createMenuButton(`${candidate.displayName} · 待开放`);
+    button.setAttribute("disabled", "true");
+    section.append(button);
+  }
+  section.append(createDraftNote("添加成员暂未开放，不会创建联系人、聊天或记忆。"));
+  return section;
 }
 
 function createWorldEditorFallbackDraft(
