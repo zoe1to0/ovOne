@@ -16,8 +16,14 @@ export {
   resolveWorldScope
 } from "./world-scope-resolver.js";
 export type { ResolvableWorldSnapshot } from "./world-scope-resolver.js";
-export { planWorldBootstrap } from "./world-bootstrap-planner.js";
+export {
+  isBootstrapItemExecutable,
+  isBootstrapItemFinal,
+  markBootstrapItemStubGenerated,
+  planWorldBootstrap
+} from "./world-bootstrap-planner.js";
 export type {
+  BootstrapExecutionStatus,
   InitialGroupPlan,
   InitialPrivateMessagePlan,
   WorldBootstrapPlan,

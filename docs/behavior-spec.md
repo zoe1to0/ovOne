@@ -87,7 +87,8 @@ UI event
 - After successful Create World confirmation, the create-world service produces a deterministic `WorldBootstrapPlan`.
 - Non-empty role worlds create one scaffold initial private message per selected AI contact.
 - Scaffold initial messages use explicit placeholder text and are not final generated AI content.
-- Created scaffold initial private message plans are marked `generated-stub`.
+- Created scaffold initial private message plans are marked `stub-generated`.
+- Bootstrap execution statuses are `planned`, `stub-generated`, `generated`, `skipped`, and `failed`; current runtime does not mark any item `generated` because no real LLM generation exists.
 - Empty Role worlds create zero active initial private messages and zero groups.
 - Bootstrap execution does not call an LLM, mutate memory, or create group chats.
 - Confirming Create World without a required world name does not create a world, leaves the current create page open, and sets `validationError = "请输入世界名称"`.

@@ -1,7 +1,7 @@
 import type { AppRuntime } from "../app/index.js";
 import { toChatEventId, toChatId, toMessageId, transition } from "../chat-kernel/index.js";
 import type { ChatId, MessageId } from "../chat-kernel/index.js";
-import { planWorldBootstrap } from "../domain/index.js";
+import { markBootstrapItemStubGenerated, planWorldBootstrap } from "../domain/index.js";
 import type { WorldBootstrapPlan, WorldBootstrapRoleMode } from "../domain/index.js";
 import { createPatchQueue } from "../patch-queue/index.js";
 import type {
@@ -42,7 +42,7 @@ export function createWorldFromDraft(input: Readonly<{
     roleMode: bootstrapRoleModeForDraft(input.draft),
     sourceType: input.draft.worldviewSourceType
   });
-  const storedBootstrapPlan = markBootstrapPlanGeneratedStub(bootstrapPlan);
+  const storedBootstrapPlan = markBootstrapPlanStubGenerated(bootstrapPlan);
   const initialState = createInitialWorldState(worldId, title, input.sourceSnapshot, contacts, input.draft, storedBootstrapPlan);
   input.app.worldDomain.commitState(initialState);
 
@@ -91,16 +91,13 @@ function executeBootstrapInitialMessageStubs(state: WorldState, bootstrapPlan: W
   return nextState;
 }
 
-function markBootstrapPlanGeneratedStub(bootstrapPlan: WorldBootstrapPlan): WorldBootstrapPlan {
+function markBootstrapPlanStubGenerated(bootstrapPlan: WorldBootstrapPlan): WorldBootstrapPlan {
   if (bootstrapPlan.privateMessages.length === 0) {
     return bootstrapPlan;
   }
   return Object.freeze({
     ...bootstrapPlan,
-    privateMessages: Object.freeze(bootstrapPlan.privateMessages.map((plan) => Object.freeze({
-      ...plan,
-      status: "generated-stub" as const
-    })))
+    privateMessages: Object.freeze(bootstrapPlan.privateMessages.map((plan) => markBootstrapItemStubGenerated(plan)))
   }) satisfies WorldBootstrapPlan;
 }
 

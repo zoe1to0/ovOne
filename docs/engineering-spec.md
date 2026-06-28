@@ -141,7 +141,8 @@ UI action
 - Create World service calls World Bootstrap Planner during custom world creation and stores the deterministic `bootstrapPlan` in world metadata.
 - `bootstrapPlan` contains private initial message and group plan metadata; it does not call an LLM, create memory, or create group chats.
 - Non-empty role worlds create one scaffold initial private message per selected AI contact using explicit placeholder text.
-- Created scaffold initial private message plans are marked `generated-stub`.
+- Created scaffold initial private message plans are marked `stub-generated`.
+- Bootstrap execution statuses are `planned`, `stub-generated`, `generated`, `skipped`, and `failed`; current runtime uses only `planned` and `stub-generated`.
 - Empty Role worlds create zero active initial private messages and zero groups.
 - CSS production namespace is `.mvp-*`.
 

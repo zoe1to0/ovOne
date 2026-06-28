@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test, { describe } from "node:test";
-import { planWorldBootstrap } from "../src/domain/index.js";
+import {
+  isBootstrapItemExecutable,
+  isBootstrapItemFinal,
+  markBootstrapItemStubGenerated,
+  planWorldBootstrap
+} from "../src/domain/index.js";
+import type { InitialPrivateMessagePlan } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 
 describe("World Bootstrap Planner", () => {
@@ -39,6 +45,41 @@ describe("World Bootstrap Planner", () => {
 
     assert.deepEqual(plan.privateMessages, []);
     assert.deepEqual(plan.groups, []);
+    assert.equal(plan.privateMessages.some((item) => isBootstrapItemExecutable(item)), false);
+  });
+
+  test("marks planned bootstrap items as stub-generated after stub execution", () => {
+    const worldId = toWorldId("custom:status-planner-world");
+    const plan = planWorldBootstrap({
+      worldId,
+      selectedAIContactIds: ["ai:one"],
+      roleMode: "random-role",
+      sourceType: "text"
+    });
+
+    const planned = plan.privateMessages[0]!;
+    const stub = markBootstrapItemStubGenerated(planned);
+
+    assert.equal(planned.status, "planned");
+    assert.equal(isBootstrapItemExecutable(planned), true);
+    assert.equal(stub.status, "stub-generated");
+    assert.equal(isBootstrapItemExecutable(stub), false);
+    assert.equal(isBootstrapItemFinal(stub), true);
+  });
+
+  test("recognizes future terminal statuses without marking stubs as generated", () => {
+    const worldId = toWorldId("custom:future-status-world");
+    const base: Omit<InitialPrivateMessagePlan, "status"> = {
+      worldId,
+      contactId: "ai:one",
+      reason: "status model coverage"
+    };
+
+    assert.equal(isBootstrapItemFinal({ ...base, status: "stub-generated" }), true);
+    assert.equal(isBootstrapItemFinal({ ...base, status: "generated" }), true);
+    assert.equal(isBootstrapItemFinal({ ...base, status: "skipped" }), true);
+    assert.equal(isBootstrapItemFinal({ ...base, status: "failed" }), true);
+    assert.equal(markBootstrapItemStubGenerated({ ...base, status: "planned" }).status, "stub-generated");
   });
 
   test("does not plan groups just because many AI are selected and caps explicit group candidates at two", () => {

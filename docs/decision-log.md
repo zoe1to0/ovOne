@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-28: Bootstrap execution status model formalized
+
+Decision: Bootstrap plan items now use a formal execution status model before real LLM generation is introduced.
+
+Rules:
+
+- Valid bootstrap execution statuses are `planned`, `stub-generated`, `generated`, `skipped`, and `failed`.
+- `planned` means the planner created the item and it has not executed yet.
+- `stub-generated` means the current scaffold executor created an explicit placeholder message.
+- `generated` is reserved for future real AI generation and is not used by current stub execution.
+- `skipped` and `failed` are valid future terminal states but are not produced by the current create-world runtime.
+- Empty Role worlds continue to create zero executable private message plans.
+- No visible UI behavior, LLM call, memory write, or group chat creation was added.
+
 ## 2026-06-28: Bootstrap initial message stubs added
 
 Decision: Create World now turns planned private bootstrap messages into scaffold chat messages.
@@ -9,7 +23,7 @@ Rules:
 - Non-empty role worlds create one scaffold initial private message per selected AI private chat.
 - Scaffold initial message text is explicit placeholder content and must not be treated as final generated AI output.
 - Empty Role worlds create zero active initial private messages.
-- Bootstrap private message plans that produce scaffold messages are marked `generated-stub`.
+- Bootstrap private message plans that produce scaffold messages are marked `stub-generated`.
 - Reality chats/messages remain unchanged by custom world bootstrap execution.
 - No LLM call, real prompt generation, memory write, loading animation, or group chat creation is implemented.
 

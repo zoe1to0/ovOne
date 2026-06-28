@@ -164,7 +164,7 @@ describe("Minimal UI Shell", () => {
     assert.equal(createWorldSettings(created).roleAssignment, "none");
     assert.equal(createWorldBootstrapPlan(created).privateMessages.length, 1);
     assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.contactId, friend.actorId);
-    assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.status, "generated-stub");
+    assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.status, "stub-generated");
     assert.deepEqual(createWorldBootstrapPlan(created).groups, []);
     assert.equal(created.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId && contact.worldId === created.activeWorldId), true);
     assert.equal(created.product.snapshot.chatState.chats.size, 1);

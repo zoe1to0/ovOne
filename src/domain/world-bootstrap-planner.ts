@@ -1,12 +1,18 @@
 import type { WorldId } from "../world-domain/index.js";
 
 export type WorldBootstrapRoleMode = "random-role" | "fixed-role" | "empty-role";
+export type BootstrapExecutionStatus =
+  | "planned"
+  | "stub-generated"
+  | "generated"
+  | "skipped"
+  | "failed";
 
 export type InitialPrivateMessagePlan = Readonly<{
   readonly worldId: WorldId;
   readonly contactId: string;
   readonly reason: string;
-  readonly status: "planned" | "generated-stub";
+  readonly status: BootstrapExecutionStatus;
 }>;
 
 export type InitialGroupPlan = Readonly<{
@@ -14,7 +20,7 @@ export type InitialGroupPlan = Readonly<{
   readonly proposedGroupName: string;
   readonly memberContactIds: readonly string[];
   readonly reason: string;
-  readonly status: "planned";
+  readonly status: BootstrapExecutionStatus;
 }>;
 
 export type WorldBootstrapPlan = Readonly<{
@@ -51,6 +57,28 @@ export function planWorldBootstrap(input: WorldBootstrapPlanInput): WorldBootstr
     roleMode: input.roleMode,
     sourceType: input.sourceType
   });
+}
+
+export function markBootstrapItemStubGenerated(item: InitialPrivateMessagePlan): InitialPrivateMessagePlan;
+export function markBootstrapItemStubGenerated(item: InitialGroupPlan): InitialGroupPlan;
+export function markBootstrapItemStubGenerated(
+  item: InitialPrivateMessagePlan | InitialGroupPlan
+): InitialPrivateMessagePlan | InitialGroupPlan {
+  return Object.freeze({
+    ...item,
+    status: "stub-generated" as const
+  });
+}
+
+export function isBootstrapItemExecutable(item: InitialPrivateMessagePlan | InitialGroupPlan): boolean {
+  return item.status === "planned";
+}
+
+export function isBootstrapItemFinal(item: InitialPrivateMessagePlan | InitialGroupPlan): boolean {
+  return item.status === "stub-generated" ||
+    item.status === "generated" ||
+    item.status === "skipped" ||
+    item.status === "failed";
 }
 
 function planInitialGroups(input: WorldBootstrapPlanInput): readonly InitialGroupPlan[] {
