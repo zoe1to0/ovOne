@@ -210,6 +210,75 @@ describe("Minimal UI Shell", () => {
     assert.equal(created.product.snapshot.chatState.chats.values().next().value?.messages[0]?.text, "初始消息待生成");
   });
 
+  it("saves custom world metadata without mutating contacts, chats, memory, or current world selection", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+    const created = shell.createWorldFromDraft({
+      worldName: "Editable World",
+      worldviewSourceType: "text",
+      worldviewText: "Original worldview",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const contactsBefore = created.product.snapshot.contacts;
+    const chatsBefore = created.product.snapshot.chatState.chats;
+    const memoryBefore = created.product.snapshot.memorySummary;
+
+    const savedCurrent = shell.saveWorldMetadata({
+      worldId: customWorldId,
+      name: "Edited World",
+      worldview: ""
+    });
+
+    assert.equal(savedCurrent.activeWorldId, customWorldId);
+    assert.equal(savedCurrent.product.snapshot.worldMeta.title, "Edited World");
+    assert.equal(savedCurrent.product.snapshot.runtimeState.metadata.title, "Edited World");
+    assert.deepEqual(savedCurrent.product.snapshot.runtimeState.metadata.worldView, {});
+    assert.equal(savedCurrent.availableWorlds.find((world) => world.worldId === customWorldId)?.title, "Edited World");
+    assert.deepEqual(savedCurrent.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual([...savedCurrent.product.snapshot.chatState.chats], [...chatsBefore]);
+    assert.deepEqual(savedCurrent.product.snapshot.memorySummary, memoryBefore);
+
+    const realityActive = shell.switchWorld(realityWorldId);
+    const savedNonCurrent = shell.saveWorldMetadata({
+      worldId: customWorldId,
+      name: "Edited Again",
+      worldview: "Next worldview"
+    });
+
+    assert.equal(realityActive.activeWorldId, realityWorldId);
+    assert.equal(savedNonCurrent.activeWorldId, realityWorldId);
+    assert.equal(savedNonCurrent.availableWorlds.find((world) => world.worldId === customWorldId)?.title, "Edited Again");
+    assert.equal(savedNonCurrent.availableWorlds.find((world) => world.worldId === customWorldId)?.worldView?.text, "Next worldview");
+  });
+
+  it("rejects Reality metadata saves", () => {
+    const shell = MinimalUiShell.init(App.init());
+
+    assert.throws(() =>
+      shell.saveWorldMetadata({
+        worldId: toWorldId("reality"),
+        name: "Edited Reality",
+        worldview: "Changed"
+      })
+    );
+    assert.equal(shell.switchWorld(toWorldId("reality")).product.snapshot.worldMeta.title, "Reality");
+  });
+
   it("creates a custom world from detailed edit empty role without active initial messages", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

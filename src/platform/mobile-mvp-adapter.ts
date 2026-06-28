@@ -989,11 +989,13 @@ function createWorldEditorFallbackDraft(
       readonly worldView?: Readonly<Record<string, unknown>>;
     };
   };
+  const worldView = selectedWorld?.worldView ?? runtimeState.metadata?.worldView ?? {};
+  const worldviewText = worldEditorTextFromWorldView(worldView);
   return {
     worldId,
     worldName: selectedWorld?.title ?? snapshot.worldMeta.title,
-    worldviewText: JSON.stringify(runtimeState.metadata?.worldView ?? {}),
-    originalWorldviewText: JSON.stringify(runtimeState.metadata?.worldView ?? {}),
+    worldviewText,
+    originalWorldviewText: worldviewText,
     locked: isReality,
     fieldErrors: {
       worldName: null
@@ -1001,6 +1003,10 @@ function createWorldEditorFallbackDraft(
     warnings: [],
     noticeMessage: null
   };
+}
+
+function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown>>): string {
+  return typeof worldView.text === "string" ? worldView.text : JSON.stringify(worldView);
 }
 
 const CHAT_PANEL_ACTIONS = Object.freeze([

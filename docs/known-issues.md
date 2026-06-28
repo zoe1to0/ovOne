@@ -1,6 +1,6 @@
 # ovOne Known Issues
 
-Last audited: 2026-06-27.
+Last audited: 2026-06-28.
 
 ## Current Known Engineering Issues
 
@@ -12,7 +12,7 @@ Last audited: 2026-06-27.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, and World Editor save contract validation, but does not implement real edit-world saving.
+- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, and custom world metadata saving.
 - Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
@@ -27,12 +27,12 @@ Last audited: 2026-06-27.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching and a World Editor page scaffold, but no real world mutation flow yet.
-- `SAVE_WORLD_EDITOR` validates the local World Editor draft and can show warnings/errors, but remains a scaffold/no-op action and does not persist world edits yet.
+- ovO panel has read-only world switching and custom world metadata saving, but no role/member/contact/chat/memory editing flow yet.
+- `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata only; it must not be treated as contact, role, member, chat, memory, GlobalAIModel, or GlobalAILink editing.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, and valid `CONFIRM_CREATE_WORLD_DETAIL` are the UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, and valid custom-world `SAVE_WORLD_EDITOR` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning

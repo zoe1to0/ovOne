@@ -95,6 +95,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveWorldMetadata: (patch) => {
+      try {
+        return shell.saveWorldMetadata(patch);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveWorldMetadata", worldId: patch.worldId });
+        return decorate();
+      }
+    },
     sendMessage: (text) => {
       const trimmed = text.trim();
       if (!trimmed) {

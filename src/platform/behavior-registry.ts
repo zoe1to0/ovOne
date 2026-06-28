@@ -1,6 +1,5 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
-  WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE,
   getWorldEditorWarnings,
   validateWorldEditorPatch
 } from "../domain/index.js";
@@ -298,7 +297,7 @@ function validateWorldEditorDraftForSave(draft: WorldEditorDraft): WorldEditorDr
     fieldErrors: Object.freeze({
       worldName: validation.fieldErrors.name
     }),
-    noticeMessage: validation.valid ? WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE : null
+    noticeMessage: null
   }));
 }
 
@@ -455,7 +454,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
             readonly worldView?: Readonly<Record<string, unknown>>;
           };
         };
-        const worldView = isCurrentWorld ? runtimeState.metadata?.worldView ?? {} : {};
+        const worldView = isCurrentWorld ? runtimeState.metadata?.worldView ?? {} : selectedWorld?.worldView ?? {};
+        const worldviewText = worldEditorTextFromWorldView(worldView);
         state.activeView = "WORLD_EDITOR";
         state.activeChatId = null;
         state.selectedContactActorId = null;
@@ -463,8 +463,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.worldEditorDraft = Object.freeze({
           worldId: action.worldId,
           worldName: selectedWorld?.title ?? (isCurrentWorld ? state.view.product.snapshot.worldMeta.title : "未命名世界"),
-          worldviewText: JSON.stringify(worldView),
-          originalWorldviewText: JSON.stringify(worldView),
+          worldviewText,
+          originalWorldviewText: worldviewText,
           locked: isReality,
           fieldErrors: Object.freeze({
             worldName: null
@@ -786,6 +786,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     resolveView,
     currentOverlay: (state) => state.overlay
   });
+}
+
+function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown>>): string {
+  return typeof worldView.text === "string" ? worldView.text : JSON.stringify(worldView);
 }
 
 export function resolveView(activeView: string): ViewRouteResolution {

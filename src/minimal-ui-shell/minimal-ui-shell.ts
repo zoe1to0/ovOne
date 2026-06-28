@@ -9,6 +9,7 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
+import type { WorldEditorPatch } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 
 export const MinimalUiShell = Object.freeze({
@@ -38,7 +39,8 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
         return Object.freeze({
           worldId,
           title: worldSnapshot.worldMeta.title,
-          type: worldSnapshot.worldMeta.type
+          type: worldSnapshot.worldMeta.type,
+          worldView: worldSnapshot.runtimeState.metadata.worldView
         });
       }),
       product: renderMinimalProductView(activeSnapshot, {
@@ -70,6 +72,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     worldIds.push(created.worldId);
     activeWorldId = created.worldId;
     entryWorldId = null;
+    screen = "chat";
+    return view();
+  };
+
+  const saveWorldMetadata = (patch: WorldEditorPatch): MinimalProductShellView => {
+    app.worldDomain.applyWorldEditorPatch(patch);
     screen = "chat";
     return view();
   };
@@ -111,6 +119,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     openScreen,
     switchWorld,
     createWorldFromDraft: createWorld,
+    saveWorldMetadata,
     sendMessage,
     snapshot,
     view

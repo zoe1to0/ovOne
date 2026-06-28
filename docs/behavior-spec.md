@@ -60,7 +60,7 @@ UI event
 - Edit World opens the world editor selector list and selecting a world dispatches `OPEN_WORLD_EDITOR`.
 - `OPEN_WORLD_EDITOR` opens the route/page-like `WORLD_EDITOR` scaffold; it does not mutate world data.
 - Reality appears in the editor selector and World Editor page as locked; no Reality worldview editing is allowed.
-- World Editor save contract currently validates custom world `name` and `worldview` only.
+- World Editor save contract validates and saves custom world `name` and `worldview` only.
 - Custom world name cannot be empty and shows `请输入世界名称` when invalid.
 - Custom worldview can be cleared and shows `清空世界观会使该世界更接近空白世界`.
 - Substantial worldview changes show `大幅修改世界观可能影响该世界内角色表现和后续体验`.
@@ -222,7 +222,7 @@ UI event
 | Open world editor selector | `OPEN_WORLD_EDITOR_SELECTOR` | Opens world editor selector list. Reality is marked locked. |
 | Select world to edit | `OPEN_WORLD_EDITOR` | Opens `WORLD_EDITOR` page scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and closes overlay without switching worlds. |
 | Update world editor draft | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
-| Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract, shows scaffold/validation notices, and performs no world mutation. |
+| Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract; valid custom worlds update metadata name/worldview and remain on `WORLD_EDITOR`. |
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
@@ -287,7 +287,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, and World Editor opens as a page scaffold, but real world saving/editing is not implemented yet.
+- ovO world-button menu hierarchy is bound, and World Editor can save custom world metadata only; roles, members, contacts, chats, and memory editing are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

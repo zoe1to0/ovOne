@@ -1,4 +1,5 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
+import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch } from "../domain/index.js";
 import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
@@ -10,7 +11,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -66,6 +67,50 @@ export function createFlowExecutor(): FlowExecutor {
         });
         context.state.createWorldDraft = null;
         return Object.freeze({ shouldRender: true, executedFlow: "CREATE_WORLD" });
+      }
+      if (action.type === "SAVE_WORLD_EDITOR") {
+        const draft = context.state.worldEditorDraft;
+        if (!draft || draft.locked) {
+          return NO_FLOW;
+        }
+        const validation = validateWorldEditorPatch(
+          {
+            worldId: draft.worldId,
+            name: draft.worldName,
+            worldview: draft.worldviewText
+          },
+          { worldType: "custom" }
+        );
+        context.state.worldEditorDraft = Object.freeze({
+          ...draft,
+          fieldErrors: Object.freeze({
+            worldName: validation.fieldErrors.name
+          }),
+          noticeMessage: null
+        });
+        if (!validation.valid || !validation.patch) {
+          return NO_FLOW;
+        }
+        context.state.view = context.shell.saveWorldMetadata(validation.patch);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "WORLD_EDITOR";
+        context.state.activeChatId = null;
+        context.state.selectedContactActorId = null;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.selectedWorldIdForEditing = validation.patch.worldId;
+        context.state.worldEditorDraft = Object.freeze({
+          ...draft,
+          worldName: validation.patch.name,
+          worldviewText: validation.patch.worldview,
+          originalWorldviewText: validation.patch.worldview,
+          fieldErrors: Object.freeze({
+            worldName: null
+          }),
+          warnings: Object.freeze([]),
+          noticeMessage: WORLD_EDITOR_SAVE_SUCCESS_MESSAGE
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "SAVE_WORLD_METADATA" });
       }
       return NO_FLOW;
     }

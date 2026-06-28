@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
+import { WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import { toWorldId } from "../src/world-domain/index.js";
@@ -106,6 +107,88 @@ describe("FlowExecutor", () => {
     assert.equal(state.selectedContactActorId, null);
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
+  });
+
+  it("executes SAVE_WORLD_EDITOR through the runtime metadata save boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView(null, toWorldId("reality"));
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      (patch) => {
+        calls.push(patch);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-save", toWorldId("reality")));
+    state.activeView = "WORLD_EDITOR";
+    state.selectedWorldIdForEditing = targetWorldId;
+    state.activeChatId = "old-chat";
+    state.overlay = "world-editor-selector";
+    state.settingsOpen = true;
+    state.worldEditorDraft = {
+      worldId: targetWorldId,
+      worldName: " Studio ",
+      worldviewText: "Next worldview",
+      originalWorldviewText: "Old worldview",
+      locked: false,
+      fieldErrors: { worldName: null },
+      warnings: [],
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
+    const flow = executor.run({ type: "SAVE_WORLD_EDITOR" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.equal(flow.executedFlow, "SAVE_WORLD_METADATA");
+    assert.equal(flow.shouldRender, true);
+    assert.deepEqual(calls, [{ worldId: targetWorldId, name: "Studio", worldview: "Next worldview" }]);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+    assert.equal(state.activeView, "WORLD_EDITOR");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.selectedWorldIdForEditing, targetWorldId);
+    assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE);
+    assert.equal(state.worldEditorDraft?.originalWorldviewText, "Next worldview");
+  });
+
+  it("does not execute metadata save when World Editor validation fails", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      (patch) => {
+        calls.push(patch);
+        return createView("unused");
+      }
+    );
+    const state = createState(createView("chat-before-save"));
+    state.activeView = "WORLD_EDITOR";
+    state.worldEditorDraft = {
+      worldId: toWorldId("custom:studio"),
+      worldName: " ",
+      worldviewText: "",
+      originalWorldviewText: "Old",
+      locked: false,
+      fieldErrors: { worldName: null },
+      warnings: [],
+      noticeMessage: null
+    };
+
+    createBehaviorRegistry().execute({ type: "SAVE_WORLD_EDITOR" }, state);
+    const flow = createFlowExecutor().run({ type: "SAVE_WORLD_EDITOR" }, { shell, state });
+
+    assert.equal(flow.shouldRender, false);
+    assert.deepEqual(calls, []);
+    assert.equal(state.worldEditorDraft?.fieldErrors.worldName, WORLD_EDITOR_NAME_REQUIRED_MESSAGE);
   });
 
   it("executes random-role create world flow and clears draft after success", () => {
@@ -445,13 +528,15 @@ function emptyFieldErrors() {
 function createShell(
   sendMessage: (text: string) => MinimalProductShellView,
   switchWorld: (worldId: string) => MinimalProductShellView = () => createView("initial"),
-  createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial")
+  createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial"),
+  saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
     openScreen: () => view,
     switchWorld,
     createWorldFromDraft,
+    saveWorldMetadata,
     sendMessage,
     snapshot: () => view.product.snapshot,
     view: () => view

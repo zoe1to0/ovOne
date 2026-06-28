@@ -16,6 +16,8 @@ import type {
   WorldSnapshot,
   WorldState
 } from "./types.js";
+import { validateWorldEditorPatch } from "../domain/world-editor-contract.js";
+import type { WorldEditorPatch } from "../domain/world-editor-contract.js";
 
 export type WorldDomainInit = Readonly<{
   readonly reality: RealityDefinition;
@@ -123,6 +125,39 @@ export class WorldDomain {
       value: event.overlay
     }, event.timestamp));
 
+    return queue.reduce();
+  }
+
+  applyWorldEditorPatch(patch: WorldEditorPatch): WorldState {
+    const state = this.getWorldState(patch.worldId);
+    assertWorldAcceptsPatches(state);
+    const validation = validateWorldEditorPatch(patch, { worldType: state.world.type });
+    if (!validation.valid || !validation.patch) {
+      throw new Error(`WorldDomain: invalid World Editor patch for world "${patch.worldId}".`);
+    }
+    if (state.world.type === "reality") {
+      throw new Error("WorldDomain: Reality name and worldview cannot be modified.");
+    }
+
+    const queue = this.getQueue(patch.worldId);
+    queue.enqueue({
+      source: "ovo",
+      targetField: "world.title",
+      operation: "set",
+      value: validation.patch.name
+    });
+    queue.enqueue({
+      source: "ovo",
+      targetField: "metadata.title",
+      operation: "set",
+      value: validation.patch.name
+    });
+    queue.enqueue({
+      source: "ovo",
+      targetField: "metadata.worldView.replace",
+      operation: "replace",
+      value: worldViewFromEditorText(validation.patch.worldview)
+    });
     return queue.reduce();
   }
 
@@ -312,6 +347,11 @@ function assertWorldAcceptsPatches(state: WorldState): void {
   if (state.world.lifecycle === "archived") {
     throw new Error("WorldDomain: archived worlds do not accept new patches.");
   }
+}
+
+function worldViewFromEditorText(worldview: string): Readonly<Record<string, unknown>> {
+  const text = worldview.trim();
+  return text ? Object.freeze({ text }) : Object.freeze({});
 }
 
 function deepFreeze<T>(value: T): T {

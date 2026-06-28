@@ -1,8 +1,22 @@
 # ovOne Decision Log
 
+## 2026-06-28: World Editor metadata save implemented
+
+Decision: `SAVE_WORLD_EDITOR` now persists custom world metadata through the runtime boundary.
+
+Rules:
+
+- Valid custom world saves update only world name/title and worldview metadata.
+- Save execution flows through `UI -> BehaviorRegistry validation -> FlowExecutor -> shell.saveWorldMetadata(...) -> WorldDomain`.
+- Saving keeps the app on `WORLD_EDITOR`.
+- Saving the current world refreshes current world labels.
+- Saving a non-current world updates `availableWorlds` without switching `currentWorldId`.
+- Reality name/worldview remain locked and cannot be mutated.
+- Contacts, roles, members, chats, memory, `GlobalAIModel`, and `GlobalAILink` remain outside World Editor save scope.
+
 ## 2026-06-28: World Editor save contract defined
 
-Decision: World Editor save behavior is now governed by a pure save contract before real mutation is implemented.
+Decision: World Editor save behavior is governed by a pure save contract. At this decision point mutation was not implemented; this was later superseded by the metadata save implementation above.
 
 Rules:
 
@@ -12,7 +26,7 @@ Rules:
 - Substantial worldview edits warn: `大幅修改世界观可能影响该世界内角色表现和后续体验`.
 - Reality name and worldview cannot be edited.
 - The contract explicitly forbids mutation to `WorldContact`, `WorldChat`, `WorldMemory`, `GlobalAIModel`, `GlobalAILink`, and Reality name/worldview.
-- `SAVE_WORLD_EDITOR` validates local draft state but still performs no world mutation.
+- At this decision point, `SAVE_WORLD_EDITOR` validated local draft state but performed no world mutation; this is superseded by metadata save implementation.
 
 ## 2026-06-28: World Editor page scaffold added
 
@@ -25,7 +39,7 @@ Rules:
 - Opening World Editor does not switch `currentWorldId`.
 - Reality can be opened in World Editor but shows locked worldview state.
 - Custom worlds show editable-looking world name and worldview fields.
-- `SAVE_WORLD_EDITOR` shows `保存暂未开放` and performs no world mutation.
+- At this scaffold stage, `SAVE_WORLD_EDITOR` showed `保存暂未开放` and performed no world mutation; this is superseded by metadata save implementation.
 - Role/member editing, add member, memory mutation, and real saving remain unimplemented.
 
 ## 2026-06-28: v0.2.1-create-world-lifecycle milestone tagged

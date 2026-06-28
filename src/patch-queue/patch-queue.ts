@@ -109,6 +109,33 @@ function applyPatch(state: WorldState | null, patch: StatePatch): WorldState {
         }
       };
 
+    case "metadata.worldView.replace":
+      return {
+        ...state,
+        metadata: {
+          ...state.metadata,
+          worldView: replaceRecord(patch.value)
+        }
+      };
+
+    case "metadata.title":
+      return {
+        ...state,
+        metadata: {
+          ...state.metadata,
+          title: patch.value as string
+        }
+      };
+
+    case "world.title":
+      return {
+        ...state,
+        world: {
+          ...state.world,
+          title: patch.value as string
+        }
+      };
+
     case "metadata.settings":
       return {
         ...state,
@@ -195,6 +222,13 @@ function mergeRecord(
     ...current,
     ...(patch as Readonly<Record<string, unknown>>)
   };
+}
+
+function replaceRecord(value: unknown): Readonly<Record<string, unknown>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("PatchQueue: replace patch must be an object.");
+  }
+  return { ...(value as Readonly<Record<string, unknown>>) };
 }
 
 function freezeWorldState(state: WorldState): WorldState {

@@ -3,6 +3,7 @@ import type { WorldId } from "../world-domain/index.js";
 export const WORLD_EDITOR_NAME_REQUIRED_MESSAGE = "请输入世界名称";
 export const WORLD_EDITOR_REALITY_LOCKED_MESSAGE = "现实世界世界观不可修改";
 export const WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE = "保存暂未开放";
+export const WORLD_EDITOR_SAVE_SUCCESS_MESSAGE = "已保存";
 export const WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING = "清空世界观会使该世界更接近空白世界";
 export const WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING = "大幅修改世界观可能影响该世界内角色表现和后续体验";
 

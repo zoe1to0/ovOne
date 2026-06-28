@@ -10,8 +10,7 @@ import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
-  WORLD_EDITOR_NAME_REQUIRED_MESSAGE,
-  WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE
+  WORLD_EDITOR_NAME_REQUIRED_MESSAGE
 } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 
@@ -164,7 +163,7 @@ describe("Composer mode state machine", () => {
     assert.equal(state.view.product.snapshot.worldMeta.title, "Reality");
 
     registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
-    assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE);
+    assert.equal(state.worldEditorDraft?.noticeMessage, null);
     assert.equal(state.view.product.snapshot.worldMeta.title, "Reality");
   });
 

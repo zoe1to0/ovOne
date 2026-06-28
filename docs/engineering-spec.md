@@ -125,7 +125,8 @@ UI action
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches `OPEN_WORLD_EDITOR`.
 - `OPEN_WORLD_EDITOR` routes to the page-like `WORLD_EDITOR` scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and does not switch worlds.
 - World Editor shows world name, worldview/world setting, role/member scaffold, add AI member scaffold, and a Reality lock note when editing Reality.
-- `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` contract, may show validation/warning state, and still does not mutate world data.
+- `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` contract, then Flow Executor calls `shell.saveWorldMetadata(...)` for custom worlds.
+- Valid custom world saves update only world metadata name/title and worldview; the app remains on `WORLD_EDITOR`.
 - World Editor save contract permits only `worldId`, `name`, and `worldview` fields for custom worlds.
 - World Editor save contract forbids mutation to `WorldContact`, `WorldChat`, `WorldMemory`, `GlobalAIModel`, `GlobalAILink`, and Reality name/worldview.
 - Empty custom world names show `请输入世界名称`.
@@ -328,7 +329,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
 | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
-| `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract, shows scaffold/validation notices, and performs no world mutation. |
+| `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract; valid custom worlds are saved through Flow Executor and `shell.saveWorldMetadata(...)`. |
 | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
