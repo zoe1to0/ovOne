@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-28: v0.2-create-world-core milestone tagged
+
+Decision: `v0.2-create-world-core` marks the completed Create World Core milestone.
+
+Rules:
+
+- The milestone includes the Create World Draft route/page.
+- The milestone includes the Detailed Edit scaffold.
+- The milestone includes Random Role, Fixed Role, and Empty Role scaffold behavior.
+- The milestone includes Create World validation.
+- The milestone includes world-scoped creation.
+- The milestone includes Bootstrap Planner.
+- The milestone includes initial message stubs.
+- The milestone includes the welcome transition scaffold.
+- No new product behavior is introduced by this tag record.
+
 ## 2026-06-28: Create World welcome transition scaffold added
 
 Decision: Successful Create World confirmation now sets local loading/welcome transition scaffold state before showing the new world's chat list.
