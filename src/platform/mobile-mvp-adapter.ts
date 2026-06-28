@@ -61,6 +61,7 @@ export function mountChatShell(
     inputDraft: "",
     settingsOpen: false,
     createWorldDraft: null,
+    worldCreationTransition: null,
     splashVisible: true,
     view: initialView
   };
@@ -156,7 +157,12 @@ function createChatShell(
   viewport.className = "mvp-viewport";
   viewport.append(createShellPageFrame(routeState, renderShellPage(routeState, snapshot, state, controller)));
 
-  app.append(viewport, createOverlayLayer(ViewRouter.currentOverlay(state), state, controller), createBottomNav(state, controller));
+  app.append(
+    viewport,
+    createWorldCreationTransitionLayer(state),
+    createOverlayLayer(ViewRouter.currentOverlay(state), state, controller),
+    createBottomNav(state, controller)
+  );
   return app;
 }
 
@@ -591,6 +597,29 @@ function createOverlayLayer(
   if (overlay) {
     layer.append(overlay);
   }
+  return layer;
+}
+
+function createWorldCreationTransitionLayer(state: SemanticMobileState): HTMLElement {
+  const layer = document.createElement("section");
+  layer.className = "mvp-world-creation-transition-layer";
+  layer.setAttribute("aria-label", "世界载入");
+  const transition = state.worldCreationTransition;
+  if (!transition || transition.phase === "done") {
+    return layer;
+  }
+
+  const panel = document.createElement("section");
+  panel.className = "mvp-world-creation-transition";
+
+  const loading = document.createElement("p");
+  loading.textContent = transition.loadingText;
+
+  const welcome = document.createElement("strong");
+  welcome.textContent = transition.welcomeText;
+
+  panel.append(loading, welcome);
+  layer.append(panel);
   return layer;
 }
 

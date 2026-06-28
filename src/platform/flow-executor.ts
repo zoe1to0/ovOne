@@ -1,6 +1,7 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import { sanitizeCreateWorldDraft, validateCreateWorldDraft } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
+import { createWorldCreationTransition } from "./world-creation-transition.js";
 
 export type FlowExecutorContext = Readonly<{
   readonly shell: MinimalProductShellRuntime;
@@ -57,6 +58,10 @@ export function createFlowExecutor(): FlowExecutor {
         context.state.selectedContactActorId = null;
         context.state.overlay = null;
         context.state.settingsOpen = false;
+        context.state.worldCreationTransition = createWorldCreationTransition({
+          worldId: context.state.currentWorldId,
+          draft: sanitized
+        });
         context.state.createWorldDraft = null;
         return Object.freeze({ shouldRender: true, executedFlow: "CREATE_WORLD" });
       }

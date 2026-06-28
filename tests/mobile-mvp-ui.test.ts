@@ -155,7 +155,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| "ovo-world-menu"/);
     assert.match(registry, /\| "world-switcher"/);
     assert.match(registry, /\| "world-editor-selector"/);
-    assert.match(adapter, /app\.append\(viewport, createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\), createBottomNav\(state, controller\)\)/);
+    assert.match(adapter, /app\.append\([\s\S]*viewport,[\s\S]*createWorldCreationTransitionLayer\(state\),[\s\S]*createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\),[\s\S]*createBottomNav\(state, controller\)[\s\S]*\)/);
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
     assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);

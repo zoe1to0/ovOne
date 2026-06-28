@@ -131,6 +131,9 @@ UI action
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
 - `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - `CONFIRM_CREATE_WORLD_DRAFT` and `CONFIRM_CREATE_WORLD_DETAIL` both pass through the same validation/sanitization gate before runtime creation.
+- Successful Create World confirmation sets local `worldCreationTransition` scaffold state with loading and welcome text, then lands on the new world's `CHAT_LIST`.
+- Create World welcome text is resolved by `src/platform/world-creation-transition.ts` from the draft identity scaffold only; it does not call an LLM or generate real roles.
+- Empty Role, Blank World, and project-document worlds use no-identity welcome text; worldview/official/text worlds use explicit user role names when present or safe placeholder `新世界中的你`.
 - Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; role content remains placeholder metadata.
 - Detailed Edit Random Role mode creates scaffold role slots equal to user plus selected AI count.
 - Random Role slots store `roleName` and `personaNotes`; `selectedUserRoleSlotId` optionally marks one slot as the user's role and can be cleared for fully random future assignment.
@@ -179,6 +182,7 @@ UI action
 - `inputDraft`
 - `settingsOpen`
 - `createWorldDraft`
+- `worldCreationTransition`
 - `splashVisible`
 - `view`
 
@@ -297,8 +301,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
 | `SELECT_DETAIL_ROLE_MODE` | Updates detail scaffold role assignment mode. |
-| `CONFIRM_CREATE_WORLD_DRAFT` | Registry validates/sanitizes draft state; Flow Executor creates a world only for `random-role` with a non-empty name, then clears draft/overlay and lands on `CHAT_LIST`. |
-| `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` | Registry validates/sanitizes draft state; Flow Executor creates a world only for `random-role` with a non-empty name, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
@@ -341,9 +345,9 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `SUBMIT_MESSAGE` with non-empty trimmed text | Calls `shell.sendMessage(text)`, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. |
 | `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
 | `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
-| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and non-empty name | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and non-empty name | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
-| `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
@@ -390,6 +394,7 @@ Exceptions:
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 - Create World draft edit actions mutate only local `createWorldDraft` state.
 - Random-role Create World draft confirmation and valid Detailed Edit confirmation are the Create World actions with Flow Executor runtime effects.
+- Create World transition is currently immediate scaffold state; no real animation timing or generated role identity exists yet.
 
 ## Current Test/Verification Surface
 

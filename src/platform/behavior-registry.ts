@@ -53,6 +53,13 @@ export type CreateWorldDraft = {
   fixedRoles: readonly FixedRoleDraft[];
   validationError: string | null;
 };
+export type WorldCreationTransition = Readonly<{
+  readonly worldId: WorldId;
+  readonly worldName: string;
+  readonly phase: "loading" | "welcome" | "done";
+  readonly loadingText: string;
+  readonly welcomeText: string;
+}>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -116,6 +123,7 @@ export type SemanticMobileState = {
   inputDraft: string;
   settingsOpen: boolean;
   createWorldDraft: CreateWorldDraft | null;
+  worldCreationTransition: WorldCreationTransition | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
 };

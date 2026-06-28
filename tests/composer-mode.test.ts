@@ -272,6 +272,7 @@ function createState(): SemanticMobileState {
     inputDraft: "",
     settingsOpen: false,
     createWorldDraft: null,
+    worldCreationTransition: null,
     splashVisible: false,
     view: {
       screen: "chat",

@@ -157,6 +157,11 @@ describe("FlowExecutor", () => {
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
     assert.equal(state.createWorldDraft, null);
+    assert.equal(state.worldCreationTransition?.worldId, targetWorldId);
+    assert.equal(state.worldCreationTransition?.worldName, "New World");
+    assert.equal(state.worldCreationTransition?.loadingText, "New World 载入中…");
+    assert.equal(state.worldCreationTransition?.welcomeText, "欢迎来到 New World。");
+    assert.equal(state.worldCreationTransition?.phase, "welcome");
   });
 
   it("does not create worlds for detailed-edit or missing-name draft confirmation", () => {
@@ -247,6 +252,7 @@ describe("FlowExecutor", () => {
     assert.equal(state.activeView, "CHAT_LIST");
     assert.equal(state.activeChatId, null);
     assert.equal(state.createWorldDraft, null);
+    assert.equal(state.worldCreationTransition?.welcomeText, "欢迎来到 Detail World。");
   });
 
   it("validates detail confirmation and sanitizes invalid random user role slots", () => {
@@ -305,6 +311,57 @@ describe("FlowExecutor", () => {
     assert.equal(validFlow.executedFlow, "CREATE_WORLD");
     assert.equal((calls[calls.length - 1] as unknown as { selectedUserRoleSlotId: string | null }).selectedUserRoleSlotId, null);
   });
+
+  it("creates identity welcome transition from explicit and scaffold roles", () => {
+    const targetWorldId = toWorldId("custom:identity-world");
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView(null, targetWorldId)
+    );
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const fixedRole = createState(createView("chat-before-detail-create"));
+    fixedRole.activeView = "CREATE_WORLD_DETAIL_EDIT";
+    fixedRole.createWorldDraft = {
+      worldName: "Identity World",
+      worldviewSourceType: "text",
+      worldviewText: "has role context",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "detailed-edit",
+      detailRoleMode: "fixed-role",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
+      fixedRoles: [{ actorId: "user", roleName: "旅人", notes: "" }],
+      validationError: null
+    };
+
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, fixedRole);
+    executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state: fixedRole });
+
+    assert.equal(fixedRole.activeView, "CHAT_LIST");
+    assert.equal(fixedRole.worldCreationTransition?.welcomeText, "你是 旅人，今天是你来到 Identity World 的第一天。");
+
+    const scaffoldRole = createState(createView("chat-before-create"));
+    scaffoldRole.createWorldDraft = {
+      worldName: "Scaffold World",
+      worldviewSourceType: "official",
+      worldviewText: "",
+      selectedAIModelIds: [],
+      nextMode: "random-role",
+      detailRoleMode: "random-role",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
+      fixedRoles: [],
+      validationError: null
+    };
+
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, scaffoldRole);
+    executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: scaffoldRole });
+
+    assert.equal(scaffoldRole.worldCreationTransition?.welcomeText, "你是 新世界中的你，今天是你来到 Scaffold World 的第一天。");
+  });
 });
 
 function createState(view: MinimalProductShellView): SemanticMobileState {
@@ -318,6 +375,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     inputDraft: "draft",
     settingsOpen: false,
     createWorldDraft: null,
+    worldCreationTransition: null,
     splashVisible: false,
     view
   };

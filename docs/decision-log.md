@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-06-28: Create World welcome transition scaffold added
+
+Decision: Successful Create World confirmation now sets local loading/welcome transition scaffold state before showing the new world's chat list.
+
+Rules:
+
+- No real animation timing, LLM call, generated role identity, memory write, or group chat creation is implemented.
+- Loading text is `{worldName} 载入中…`.
+- Empty Role, Blank World, and project-document worlds do not imply user identity and use `欢迎来到 {worldName}。`.
+- Identity worlds use `你是 {roleName}，今天是你来到 {worldName} 的第一天。`.
+- Explicit detail scaffold user role names are used when present.
+- If identity exists but no generated role name exists yet, the scaffold placeholder is `新世界中的你`.
+- After successful creation, the app still lands on the new world's `CHAT_LIST`.
+- Reality remains unchanged.
+
 ## 2026-06-28: Bootstrap execution status model formalized
 
 Decision: Bootstrap plan items now use a formal execution status model before real LLM generation is introduced.
