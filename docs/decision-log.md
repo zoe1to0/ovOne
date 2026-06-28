@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-28: World Bootstrap Planner scaffold added
+
+Decision: Create World now produces a deterministic bootstrap plan after custom world creation.
+
+Rules:
+
+- `src/domain/world-bootstrap-planner.ts` owns bootstrap planning.
+- The planner returns `WorldBootstrapPlan` with `privateMessages`, `groups`, `roleMode`, and `sourceType`.
+- Non-empty role worlds plan one private initial message per selected AI contact.
+- Empty Role worlds plan zero private initial messages and zero groups.
+- Group plans are capped at two and are never created just because many AI are selected.
+- The create-world service stores the plan in world metadata for later runtime work.
+- The planner does not call an LLM, generate message text, create memory, create messages, or create group chats.
+
 ## 2026-06-27: Create World validation hardened
 
 Decision: Existing Create World confirmation now uses an explicit validation and sanitization gate before runtime creation.

@@ -161,6 +161,9 @@ describe("Minimal UI Shell", () => {
     assert.equal(created.product.snapshot.worldMeta.type, "custom");
     assert.equal(created.product.snapshot.worldMeta.title, "Blank Test World");
     assert.equal(createWorldSettings(created).roleAssignment, "none");
+    assert.equal(createWorldBootstrapPlan(created).privateMessages.length, 1);
+    assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.contactId, friend.actorId);
+    assert.deepEqual(createWorldBootstrapPlan(created).groups, []);
     assert.equal(created.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId && contact.worldId === created.activeWorldId), true);
     assert.equal(created.product.snapshot.chatState.chats.size, 1);
     assert.equal(created.product.snapshot.chatState.chats.values().next().value?.title, friend.displayName);
@@ -196,6 +199,7 @@ describe("Minimal UI Shell", () => {
 
     assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "placeholder");
     assert.equal(createWorldSettings(created).roleAssignment, "placeholder");
+    assert.equal(createWorldBootstrapPlan(created).privateMessages.length, 1);
   });
 
   it("creates a custom world from detailed edit empty role without changing Reality", () => {
@@ -225,6 +229,8 @@ describe("Minimal UI Shell", () => {
     assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "none");
     assert.equal(createWorldSettings(created).roleAssignment, "none");
     assert.equal(createWorldSettings(created).detailRoleMode, "empty-role");
+    assert.deepEqual(createWorldBootstrapPlan(created).privateMessages, []);
+    assert.deepEqual(createWorldBootstrapPlan(created).groups, []);
 
     const realityAfter = shell.switchWorld(realityWorldId);
     assert.equal(realityAfter.product.snapshot.contacts.length, beforeRealityContactCount);
@@ -233,4 +239,14 @@ describe("Minimal UI Shell", () => {
 
 function createWorldSettings(view: ReturnType<MinimalProductShellRuntime["view"]>): Record<string, unknown> {
   return view.product.snapshot.runtimeState.metadata.settings.createWorld as Record<string, unknown>;
+}
+
+function createWorldBootstrapPlan(view: ReturnType<MinimalProductShellRuntime["view"]>): {
+  privateMessages: { contactId: string }[];
+  groups: unknown[];
+} {
+  return createWorldSettings(view).bootstrapPlan as {
+    privateMessages: { contactId: string }[];
+    groups: unknown[];
+  };
 }

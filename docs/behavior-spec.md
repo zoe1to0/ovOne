@@ -84,6 +84,10 @@ UI event
 - `selectedUserRoleSlotId` may mark exactly one random-role slot as the user's role; selecting the same slot again clears it so all participants can be randomly assigned later.
 - Invalid `selectedUserRoleSlotId` values are cleared during registry state transitions and again before Flow Executor calls the create-world service.
 - `random-role` and `fixed-role` store placeholder role assignment metadata only; no real role generation is performed.
+- After successful Create World confirmation, the create-world service produces a deterministic `WorldBootstrapPlan`.
+- Non-empty role worlds plan one private initial message per selected AI contact.
+- Empty Role worlds plan zero private initial messages and zero groups.
+- Bootstrap planning stores metadata only; it does not generate text, call an LLM, mutate memory, or create group chats.
 - Confirming Create World without a required world name does not create a world, leaves the current create page open, and sets `validationError = "请输入世界名称"`.
 - Blank-world creation keeps selected AI original display names and records no assigned roles.
 - Non-blank source creation records role assignment as a placeholder only; it is not real random generation.

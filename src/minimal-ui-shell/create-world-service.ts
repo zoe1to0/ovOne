@@ -1,6 +1,8 @@
 import type { AppRuntime } from "../app/index.js";
 import { toChatEventId, toChatId, transition } from "../chat-kernel/index.js";
 import type { ChatId } from "../chat-kernel/index.js";
+import { planWorldBootstrap } from "../domain/index.js";
+import type { WorldBootstrapPlan, WorldBootstrapRoleMode } from "../domain/index.js";
 import { createPatchQueue } from "../patch-queue/index.js";
 import type {
   WorldContact,
@@ -14,6 +16,7 @@ import type { CreateWorldDraftInput } from "./types.js";
 export type CreatedWorldResult = Readonly<{
   readonly worldId: WorldId;
   readonly state: WorldState;
+  readonly bootstrapPlan: WorldBootstrapPlan;
 }>;
 
 export function createWorldFromDraft(input: Readonly<{
@@ -32,11 +35,17 @@ export function createWorldFromDraft(input: Readonly<{
 
   const worldId = createStableWorldId(title, input.existingWorldIds);
   const contacts = createContacts(worldId, input.sourceSnapshot, input.draft);
-  const initialState = createInitialWorldState(worldId, title, input.sourceSnapshot, contacts, input.draft);
+  const selectedContacts = contacts.filter((contact) => input.draft.selectedAIModelIds.includes(contact.actorId));
+  const bootstrapPlan = planWorldBootstrap({
+    worldId,
+    selectedAIContactIds: selectedContacts.map((contact) => contact.actorId),
+    roleMode: bootstrapRoleModeForDraft(input.draft),
+    sourceType: input.draft.worldviewSourceType
+  });
+  const initialState = createInitialWorldState(worldId, title, input.sourceSnapshot, contacts, input.draft, bootstrapPlan);
   input.app.worldDomain.commitState(initialState);
 
   let state = input.app.worldDomain.getWorldState(worldId);
-  const selectedContacts = contacts.filter((contact) => input.draft.selectedAIModelIds.includes(contact.actorId));
   for (const [index, contact] of selectedContacts.entries()) {
     state = transition(state, {
       id: toChatEventId(`event:create-world:${worldId}:chat:${contact.actorId}`),
@@ -53,7 +62,8 @@ export function createWorldFromDraft(input: Readonly<{
 
   return Object.freeze({
     worldId,
-    state: input.app.worldDomain.getWorldState(worldId)
+    state: input.app.worldDomain.getWorldState(worldId),
+    bootstrapPlan
   });
 }
 
@@ -62,7 +72,8 @@ function createInitialWorldState(
   title: string,
   sourceSnapshot: WorldSnapshot,
   contacts: readonly WorldContact[],
-  draft: CreateWorldDraftInput
+  draft: CreateWorldDraftInput,
+  bootstrapPlan: WorldBootstrapPlan
 ): WorldState {
   const rawState = {
     world: {
@@ -82,12 +93,13 @@ function createInitialWorldState(
     metadata: {
       title,
       type: "custom" as const,
-      worldView: createWorldViewMetadata(draft),
+      worldView: createWorldViewMetadata(draft, bootstrapPlan),
       settings: {
         createWorld: {
           sourceType: draft.worldviewSourceType,
           roleAssignment: roleAssignmentForDraft(draft),
-          detailRoleMode: draft.detailRoleMode ?? null
+          detailRoleMode: draft.detailRoleMode ?? null,
+          bootstrapPlan
         }
       },
       personaOverlays: {}
@@ -147,7 +159,7 @@ function toWorldContact(
   }) as WorldContact;
 }
 
-function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<string, unknown>> {
+function createWorldViewMetadata(draft: CreateWorldDraftInput, bootstrapPlan?: WorldBootstrapPlan): Readonly<Record<string, unknown>> {
   if (draft.worldviewSourceType === "blank") {
     return Object.freeze({
       sourceType: "blank",
@@ -155,7 +167,8 @@ function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<
       detailRoleMode: draft.detailRoleMode ?? null,
       randomRoleSlots: draft.randomRoleSlots ?? [],
       selectedUserRoleSlotId: draft.selectedUserRoleSlotId ?? null,
-      fixedRoles: draft.fixedRoles ?? []
+      fixedRoles: draft.fixedRoles ?? [],
+      bootstrapPlan
     });
   }
   return Object.freeze({
@@ -165,8 +178,16 @@ function createWorldViewMetadata(draft: CreateWorldDraftInput): Readonly<Record<
     detailRoleMode: draft.detailRoleMode ?? null,
     randomRoleSlots: draft.randomRoleSlots ?? [],
     selectedUserRoleSlotId: draft.selectedUserRoleSlotId ?? null,
-    fixedRoles: draft.fixedRoles ?? []
+    fixedRoles: draft.fixedRoles ?? [],
+    bootstrapPlan
   });
+}
+
+function bootstrapRoleModeForDraft(draft: CreateWorldDraftInput): WorldBootstrapRoleMode {
+  if (draft.nextMode === "detailed-edit") {
+    return draft.detailRoleMode ?? "random-role";
+  }
+  return "random-role";
 }
 
 function roleAssignmentForDraft(draft: CreateWorldDraftInput): "none" | "placeholder" {

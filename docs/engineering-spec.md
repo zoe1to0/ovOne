@@ -90,6 +90,7 @@ UI action
 - Composer mode state machine: `src/platform/composer-mode.ts`.
 - World-scoped data model foundation: `src/domain/world-model.ts`.
 - Read-only world scope resolver: `src/domain/world-scope-resolver.ts`.
+- World Bootstrap Planner scaffold: `src/domain/world-bootstrap-planner.ts`.
 - Runtime bootstrap used by UI: `createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell`.
 - Initial UI state:
   - `splashVisible: true`
@@ -137,6 +138,10 @@ UI action
 - Empty Role creation records role assignment as `none`.
 - Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
 - Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
+- Create World service calls World Bootstrap Planner during custom world creation and stores the deterministic `bootstrapPlan` in world metadata.
+- `bootstrapPlan` contains planned private initial message metadata and planned group metadata only; it does not create messages, call an LLM, create memory, or create group chats.
+- Non-empty role worlds plan one initial private message per selected AI contact.
+- Empty Role worlds plan zero initial private messages and zero groups.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core
