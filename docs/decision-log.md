@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-28: v0.2.1-create-world-lifecycle milestone tagged
+
+Decision: `v0.2.1-create-world-lifecycle` marks the Create World lifecycle milestone after v0.2 Create World Core.
+
+Rules:
+
+- The milestone includes v0.2 Create World Core.
+- The milestone includes Create World validation UX.
+- The milestone includes explicit `worldCreationTransition` lifecycle handling.
+- The milestone includes `COMPLETE_WORLD_CREATION_TRANSITION`.
+- The milestone preserves stable landing in the new world's `CHAT_LIST` after transition completion.
+- No new product behavior is introduced by this tag record.
+
 ## 2026-06-28: Create World transition lifecycle made explicit
 
 Decision: The local Create World loading/welcome scaffold now has an explicit completion action.
