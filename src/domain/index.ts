@@ -30,3 +30,19 @@ export type {
   WorldBootstrapPlanInput,
   WorldBootstrapRoleMode
 } from "./world-bootstrap-planner.js";
+export {
+  WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
+  WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
+  WORLD_EDITOR_NAME_REQUIRED_MESSAGE,
+  WORLD_EDITOR_REALITY_LOCKED_MESSAGE,
+  WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE,
+  canEditWorld,
+  getForbiddenWorldEditorPatchFields,
+  getWorldEditorWarnings,
+  validateWorldEditorPatch
+} from "./world-editor-contract.js";
+export type {
+  WorldEditorForbiddenPatchField,
+  WorldEditorPatch,
+  WorldEditorPatchValidation
+} from "./world-editor-contract.js";

@@ -60,6 +60,11 @@ UI event
 - Edit World opens the world editor selector list and selecting a world dispatches `OPEN_WORLD_EDITOR`.
 - `OPEN_WORLD_EDITOR` opens the route/page-like `WORLD_EDITOR` scaffold; it does not mutate world data.
 - Reality appears in the editor selector and World Editor page as locked; no Reality worldview editing is allowed.
+- World Editor save contract currently validates custom world `name` and `worldview` only.
+- Custom world name cannot be empty and shows `请输入世界名称` when invalid.
+- Custom worldview can be cleared and shows `清空世界观会使该世界更接近空白世界`.
+- Substantial worldview changes show `大幅修改世界观可能影响该世界内角色表现和后续体验`.
+- Reality name/worldview cannot be edited and Reality save remains disabled.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -217,7 +222,7 @@ UI event
 | Open world editor selector | `OPEN_WORLD_EDITOR_SELECTOR` | Opens world editor selector list. Reality is marked locked. |
 | Select world to edit | `OPEN_WORLD_EDITOR` | Opens `WORLD_EDITOR` page scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and closes overlay without switching worlds. |
 | Update world editor draft | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
-| Save world editor | `SAVE_WORLD_EDITOR` | Shows scaffold notice `保存暂未开放` and performs no world mutation. |
+| Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract, shows scaffold/validation notices, and performs no world mutation. |
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
@@ -292,7 +297,7 @@ These actions are named and routed but intentionally do not implement product be
 - Should unknown `activeView` eventually fail loudly in tests instead of falling back to Chat list?
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
-- What should `SAVE_WORLD_EDITOR` persist once real world editing behavior is in scope?
+- What storage path should persist valid `WorldEditorPatch` once real world editing behavior is in scope?
 - What additional validation should Create World Detailed Edit require after real role generation exists?
 - What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?

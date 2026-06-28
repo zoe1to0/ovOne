@@ -1,6 +1,8 @@
 ﻿import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
+  WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
+  WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   resolveWorldChats,
   resolveWorldContacts
 } from "../domain/index.js";
@@ -916,6 +918,7 @@ function createWorldEditorView(
   name.placeholder = "世界名称";
   name.value = draft.worldName;
   name.disabled = isReality;
+  markFieldInvalid(name, draft.fieldErrors.worldName);
   bindWorldEditorInput(name, controller, "worldName");
 
   const worldview = document.createElement("textarea");
@@ -931,6 +934,18 @@ function createWorldEditorView(
   if (isReality) {
     worldSection.append(createValidationNote("现实世界世界观不可修改"));
   }
+  if (draft.fieldErrors.worldName) {
+    worldSection.append(createValidationNote(draft.fieldErrors.worldName));
+  }
+  for (const warning of draft.warnings) {
+    worldSection.append(createDraftNote(warning));
+  }
+  if (!isReality && !draft.warnings.includes(WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING)) {
+    worldSection.append(createDraftNote(WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING));
+  }
+  if (!isReality && !draft.worldviewText.trim() && !draft.warnings.includes(WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING)) {
+    worldSection.append(createDraftNote(WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING));
+  }
 
   const roleSection = document.createElement("section");
   roleSection.className = "mvp-world-editor-section";
@@ -942,10 +957,11 @@ function createWorldEditorView(
 
   const actions = document.createElement("section");
   actions.className = "mvp-world-editor-actions";
-  actions.append(
-    createMenuButton("取消", controller, { type: "CANCEL_WORLD_EDITOR" }),
-    createMenuButton("保存", controller, { type: "SAVE_WORLD_EDITOR" })
-  );
+  const saveButton = createMenuButton("保存", controller, { type: "SAVE_WORLD_EDITOR" });
+  if (isReality) {
+    saveButton.setAttribute("disabled", "true");
+  }
+  actions.append(createMenuButton("取消", controller, { type: "CANCEL_WORLD_EDITOR" }), saveButton);
   if (draft.noticeMessage) {
     actions.append(createValidationNote(draft.noticeMessage));
   }
@@ -977,7 +993,12 @@ function createWorldEditorFallbackDraft(
     worldId,
     worldName: selectedWorld?.title ?? snapshot.worldMeta.title,
     worldviewText: JSON.stringify(runtimeState.metadata?.worldView ?? {}),
+    originalWorldviewText: JSON.stringify(runtimeState.metadata?.worldView ?? {}),
     locked: isReality,
+    fieldErrors: {
+      worldName: null
+    },
+    warnings: [],
     noticeMessage: null
   };
 }

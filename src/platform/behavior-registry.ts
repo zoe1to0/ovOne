@@ -1,4 +1,9 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
+import {
+  WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE,
+  getWorldEditorWarnings,
+  validateWorldEditorPatch
+} from "../domain/index.js";
 import type { WorldId } from "../world-domain/index.js";
 import { isComposerModeAllowed, resolveDefaultComposerMode, toggleComposerMode } from "./composer-mode.js";
 import type { ComposerKind, ComposerMode } from "./composer-mode.js";
@@ -70,7 +75,12 @@ export type WorldEditorDraft = Readonly<{
   readonly worldId: WorldId;
   readonly worldName: string;
   readonly worldviewText: string;
+  readonly originalWorldviewText: string;
   readonly locked: boolean;
+  readonly fieldErrors: Readonly<{
+    readonly worldName: string | null;
+  }>;
+  readonly warnings: readonly string[];
   readonly noticeMessage: string | null;
 }>;
 export type ViewRouteResolution = Readonly<{
@@ -263,6 +273,35 @@ function syncFixedRolesForDraft(draft: CreateWorldDraft): readonly FixedRoleDraf
   })));
 }
 
+function withWorldEditorWarnings(draft: WorldEditorDraft): WorldEditorDraft {
+  return Object.freeze({
+    ...draft,
+    warnings: getWorldEditorWarnings({
+      locked: draft.locked,
+      originalWorldview: draft.originalWorldviewText,
+      nextWorldview: draft.worldviewText
+    })
+  });
+}
+
+function validateWorldEditorDraftForSave(draft: WorldEditorDraft): WorldEditorDraft {
+  const validation = validateWorldEditorPatch(
+    {
+      worldId: draft.worldId,
+      name: draft.worldName,
+      worldview: draft.worldviewText
+    },
+    { worldType: draft.locked ? "reality" : "custom" }
+  );
+  return withWorldEditorWarnings(Object.freeze({
+    ...draft,
+    fieldErrors: Object.freeze({
+      worldName: validation.fieldErrors.name
+    }),
+    noticeMessage: validation.valid ? WORLD_EDITOR_SAVE_UNAVAILABLE_MESSAGE : null
+  }));
+}
+
 export function createBehaviorRegistry(): BehaviorRegistry {
   const closeOverlay = (state: SemanticMobileState): void => {
     state.overlay = null;
@@ -425,7 +464,12 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           worldId: action.worldId,
           worldName: selectedWorld?.title ?? (isCurrentWorld ? state.view.product.snapshot.worldMeta.title : "未命名世界"),
           worldviewText: JSON.stringify(worldView),
+          originalWorldviewText: JSON.stringify(worldView),
           locked: isReality,
+          fieldErrors: Object.freeze({
+            worldName: null
+          }),
+          warnings: Object.freeze([]),
           noticeMessage: null
         });
         closeOverlay(state);
@@ -495,19 +539,20 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         if (!state.worldEditorDraft || state.worldEditorDraft.locked) {
           return RENDER;
         }
-        state.worldEditorDraft = Object.freeze({
+        state.worldEditorDraft = withWorldEditorWarnings(Object.freeze({
           ...state.worldEditorDraft,
           [action.field]: action.value,
+          fieldErrors: Object.freeze({
+            ...state.worldEditorDraft.fieldErrors,
+            worldName: action.field === "worldName" && action.value.trim() ? null : state.worldEditorDraft.fieldErrors.worldName
+          }),
           noticeMessage: null
-        });
+        }));
         return RENDER;
 
       case "SAVE_WORLD_EDITOR":
         if (state.worldEditorDraft) {
-          state.worldEditorDraft = Object.freeze({
-            ...state.worldEditorDraft,
-            noticeMessage: "保存暂未开放"
-          });
+          state.worldEditorDraft = validateWorldEditorDraftForSave(state.worldEditorDraft);
         }
         return RENDER;
 

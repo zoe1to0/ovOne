@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-28: World Editor save contract defined
+
+Decision: World Editor save behavior is now governed by a pure save contract before real mutation is implemented.
+
+Rules:
+
+- Custom worlds may edit only `worldId`, `name`, and `worldview` patch fields.
+- Custom world name cannot be empty.
+- Custom worldview can be cleared, but the UI warns: `清空世界观会使该世界更接近空白世界`.
+- Substantial worldview edits warn: `大幅修改世界观可能影响该世界内角色表现和后续体验`.
+- Reality name and worldview cannot be edited.
+- The contract explicitly forbids mutation to `WorldContact`, `WorldChat`, `WorldMemory`, `GlobalAIModel`, `GlobalAILink`, and Reality name/worldview.
+- `SAVE_WORLD_EDITOR` validates local draft state but still performs no world mutation.
+
 ## 2026-06-28: World Editor page scaffold added
 
 Decision: Selecting a world from the ovO editor selector now opens a route/page-like World Editor scaffold.

@@ -12,7 +12,7 @@ Last audited: 2026-06-27.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, and World Editor page scaffold, but does not implement real edit-world saving.
+- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, and World Editor save contract validation, but does not implement real edit-world saving.
 - Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
@@ -28,7 +28,7 @@ Last audited: 2026-06-27.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching and a World Editor page scaffold, but no real world mutation flow yet.
-- `SAVE_WORLD_EDITOR` is a scaffold/no-op action and does not persist world edits yet.
+- `SAVE_WORLD_EDITOR` validates the local World Editor draft and can show warnings/errors, but remains a scaffold/no-op action and does not persist world edits yet.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.

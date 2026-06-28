@@ -51,6 +51,7 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
+    const contract = readFileSync("src/domain/world-editor-contract.ts", "utf8");
 
     assert.match(registry, /export type ViewState =[\s\S]*\| "CHAT_LIST"[\s\S]*\| "CHAT_VIEW"[\s\S]*\| "CONTACTS"[\s\S]*\| "CONTACT_DETAIL"[\s\S]*\| "ME"[\s\S]*\| "CREATE_WORLD_DRAFT"[\s\S]*\| "CREATE_WORLD_DETAIL_EDIT"[\s\S]*\| "WORLD_EDITOR"/);
     assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
@@ -335,6 +336,7 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
+    const contract = readFileSync("src/domain/world-editor-contract.ts", "utf8");
 
     assert.match(registry, /\| \{ readonly type: "OPEN_OVO_WORLD_MENU" \}/);
     assert.match(registry, /\| \{ readonly type: "OPEN_WORLD_SWITCHER" \}/);
@@ -376,8 +378,14 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createDraftStage\("角色 \/ 成员", roleSection\)/);
     assert.match(adapter, /createDraftStage\("添加 AI 成员", memberSection\)/);
     assert.match(adapter, /现实世界世界观不可修改/);
-    assert.match(registry, /保存暂未开放/);
+    assert.match(contract, /保存暂未开放/);
+    assert.match(contract, /WorldContact/);
+    assert.match(contract, /WorldChat/);
+    assert.match(contract, /WorldMemory/);
+    assert.match(contract, /GlobalAIModel/);
+    assert.match(contract, /GlobalAILink/);
     assert.match(adapter, /type: "SAVE_WORLD_EDITOR"/);
+    assert.match(adapter, /saveButton\.setAttribute\("disabled", "true"\)/);
     assert.match(adapter, /type: "CANCEL_WORLD_EDITOR"/);
     assert.equal(adapter.includes("EDIT_WORLD"), false);
   });
