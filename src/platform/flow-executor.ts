@@ -1,5 +1,5 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
-import { sanitizeCreateWorldDraft, validateCreateWorldDraft } from "./behavior-registry.js";
+import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
 
@@ -33,9 +33,11 @@ export function createFlowExecutor(): FlowExecutor {
           return NO_FLOW;
         }
         const sanitized = sanitizeCreateWorldDraft(draft);
+        const fieldErrors = validateCreateWorldDraftFields(sanitized);
         const validationError = validateCreateWorldDraft(sanitized);
         context.state.createWorldDraft = Object.freeze({
           ...sanitized,
+          fieldErrors,
           validationError
         });
         if (validationError) {

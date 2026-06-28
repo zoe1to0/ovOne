@@ -79,6 +79,11 @@ function createDraft(overrides: Partial<CreateWorldDraft>): CreateWorldDraft {
     selectedUserRoleSlotId: null,
     fixedRoles: [],
     validationError: null,
+    fieldErrors: {
+      worldName: null,
+      selectedAI: null
+    },
+    noticeMessage: null,
     ...overrides
   };
 }

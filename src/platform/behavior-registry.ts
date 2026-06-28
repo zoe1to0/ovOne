@@ -52,6 +52,11 @@ export type CreateWorldDraft = {
   selectedUserRoleSlotId: string | null;
   fixedRoles: readonly FixedRoleDraft[];
   validationError: string | null;
+  fieldErrors: Readonly<{
+    readonly worldName: string | null;
+    readonly selectedAI: string | null;
+  }>;
+  noticeMessage: string | null;
 };
 export type WorldCreationTransition = Readonly<{
   readonly worldId: WorldId;
@@ -184,6 +189,8 @@ export type BehaviorRegistry = Readonly<{
 const RENDER: BehaviorRegistryResult = Object.freeze({ shouldRender: true });
 const SKIP_RENDER: BehaviorRegistryResult = Object.freeze({ shouldRender: false });
 export const CREATE_WORLD_NAME_REQUIRED_MESSAGE = "请输入世界名称";
+export const CREATE_WORLD_AI_REQUIRED_MESSAGE = "请选择至少一个 AI 朋友";
+export const CREATE_WORLD_IMPORT_UNAVAILABLE_MESSAGE = "文档导入暂未开放";
 
 export function sanitizeCreateWorldDraft(draft: CreateWorldDraft): CreateWorldDraft {
   const randomRoleSlots = syncRandomRoleSlotsForDraft(draft);
@@ -196,7 +203,15 @@ export function sanitizeCreateWorldDraft(draft: CreateWorldDraft): CreateWorldDr
 }
 
 export function validateCreateWorldDraft(draft: CreateWorldDraft): string | null {
-  return draft.worldName.trim() ? null : CREATE_WORLD_NAME_REQUIRED_MESSAGE;
+  const fieldErrors = validateCreateWorldDraftFields(draft);
+  return fieldErrors.worldName ?? fieldErrors.selectedAI;
+}
+
+export function validateCreateWorldDraftFields(draft: CreateWorldDraft): CreateWorldDraft["fieldErrors"] {
+  return Object.freeze({
+    worldName: draft.worldName.trim() ? null : CREATE_WORLD_NAME_REQUIRED_MESSAGE,
+    selectedAI: draft.selectedAIModelIds.length > 0 ? null : CREATE_WORLD_AI_REQUIRED_MESSAGE
+  });
 }
 
 function createEmptyRandomRoleSlot(index: number): RandomRoleSlotDraft {
@@ -248,7 +263,12 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     randomRoleSlots: [createEmptyRandomRoleSlot(0)],
     selectedUserRoleSlotId: null,
     fixedRoles: [],
-    validationError: null
+    validationError: null,
+    fieldErrors: Object.freeze({
+      worldName: null,
+      selectedAI: null
+    }),
+    noticeMessage: null
   });
 
   const ensureCreateWorldDraft = (state: SemanticMobileState): CreateWorldDraft => {
@@ -423,6 +443,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           ...draft,
           nextMode: "detailed-edit",
           validationError: null,
+          noticeMessage: null,
           randomRoleSlots: syncRandomRoleSlotsForDraft(draft),
           selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(draft.selectedUserRoleSlotId, syncRandomRoleSlotsForDraft(draft)),
           fixedRoles: syncFixedRolesForDraft(draft)
@@ -440,6 +461,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           [action.field]: action.value,
+          fieldErrors: Object.freeze({
+            ...draft.fieldErrors,
+            worldName: action.field === "worldName" && action.value.trim() ? null : draft.fieldErrors.worldName
+          }),
           validationError: action.field === "worldName" && action.value.trim() ? null : draft.validationError
         });
         return RENDER;
@@ -450,6 +475,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...draft,
           [action.field]: action.value,
+          fieldErrors: Object.freeze({
+            ...draft.fieldErrors,
+            worldName: action.field === "worldName" && action.value.trim() ? null : draft.fieldErrors.worldName
+          }),
           validationError: action.field === "worldName" && action.value.trim() ? null : draft.validationError
         });
         return RENDER;
@@ -499,9 +528,17 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "SELECT_WORLDVIEW_SOURCE": {
         const draft = ensureCreateWorldDraft(state);
+        if (action.sourceType === "worldview-document" || action.sourceType === "project-document") {
+          state.createWorldDraft = Object.freeze({
+            ...draft,
+            noticeMessage: CREATE_WORLD_IMPORT_UNAVAILABLE_MESSAGE
+          });
+          return RENDER;
+        }
         state.createWorldDraft = Object.freeze({
           ...draft,
-          worldviewSourceType: action.sourceType
+          worldviewSourceType: action.sourceType,
+          noticeMessage: null
         });
         return RENDER;
       }
@@ -519,7 +556,12 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.createWorldDraft = Object.freeze({
           ...nextDraft,
           randomRoleSlots,
-          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(nextDraft.selectedUserRoleSlotId, randomRoleSlots)
+          selectedUserRoleSlotId: syncSelectedUserRoleSlotIdForSlots(nextDraft.selectedUserRoleSlotId, randomRoleSlots),
+          fieldErrors: Object.freeze({
+            ...nextDraft.fieldErrors,
+            selectedAI: selected.length > 0 ? null : nextDraft.fieldErrors.selectedAI
+          }),
+          validationError: selected.length > 0 ? null : nextDraft.validationError
         });
         return RENDER;
       }
@@ -554,9 +596,11 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           return RENDER;
         }
         const sanitized = sanitizeCreateWorldDraft(draft);
-        const validationError = validateCreateWorldDraft(sanitized);
+        const fieldErrors = validateCreateWorldDraftFields(sanitized);
+        const validationError = fieldErrors.worldName ?? fieldErrors.selectedAI;
         state.createWorldDraft = Object.freeze({
           ...sanitized,
+          fieldErrors,
           validationError
         });
         return RENDER;

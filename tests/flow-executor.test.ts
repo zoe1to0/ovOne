@@ -136,7 +136,9 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -181,13 +183,15 @@ describe("FlowExecutor", () => {
       worldName: "Future Edit",
       worldviewSourceType: "text",
       worldviewText: "placeholder",
-      selectedAIModelIds: [],
+      selectedAIModelIds: ["ai:friend"],
       nextMode: "detailed-edit",
       detailRoleMode: "random-role",
       randomRoleSlots: [{ id: "role-slot:1", roleName: "", personaNotes: "" }],
       selectedUserRoleSlotId: null,
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: detailedEdit }).shouldRender, false);
 
@@ -202,10 +206,48 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     assert.equal(executor.run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state: missingName }).shouldRender, false);
     assert.equal(missingName.createWorldDraft.validationError, "请输入世界名称");
+    assert.deepEqual(calls, []);
+  });
+
+  it("does not create worlds when no AI friend is selected", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      (draft) => {
+        calls.push(draft);
+        return createView(null, toWorldId("custom:unexpected"));
+      }
+    );
+    const state = createState(createView("chat-before-create"));
+    state.activeView = "CREATE_WORLD_DRAFT";
+    state.createWorldDraft = {
+      worldName: "No AI World",
+      worldviewSourceType: "text",
+      worldviewText: "placeholder",
+      selectedAIModelIds: [],
+      nextMode: "random-role",
+      detailRoleMode: "random-role",
+      randomRoleSlots: [],
+      selectedUserRoleSlotId: null,
+      fixedRoles: [],
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
+    };
+
+    const flow = createFlowExecutor().run({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, { shell, state });
+
+    assert.equal(flow.shouldRender, false);
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.createWorldDraft.validationError, "请选择至少一个 AI 朋友");
+    assert.equal(state.createWorldDraft.fieldErrors.selectedAI, "请选择至少一个 AI 朋友");
     assert.deepEqual(calls, []);
   });
 
@@ -234,7 +276,9 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [{ id: "role-slot:1", roleName: "Watcher", personaNotes: "quiet" }],
       selectedUserRoleSlotId: "role-slot:1",
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -280,7 +324,9 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [{ id: "role-slot:1", roleName: "Lead", personaNotes: "" }],
       selectedUserRoleSlotId: "role-slot:missing",
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, missingName);
     const missingFlow = executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state: missingName });
@@ -303,7 +349,9 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [{ id: "role-slot:1", roleName: "Lead", personaNotes: "" }],
       selectedUserRoleSlotId: "role-slot:missing",
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, valid);
     const validFlow = executor.run({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, { shell, state: valid });
@@ -334,7 +382,9 @@ describe("FlowExecutor", () => {
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
       fixedRoles: [{ actorId: "user", roleName: "旅人", notes: "" }],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
 
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DETAIL" }, fixedRole);
@@ -348,13 +398,15 @@ describe("FlowExecutor", () => {
       worldName: "Scaffold World",
       worldviewSourceType: "official",
       worldviewText: "",
-      selectedAIModelIds: [],
+      selectedAIModelIds: ["ai:friend"],
       nextMode: "random-role",
       detailRoleMode: "random-role",
       randomRoleSlots: [],
       selectedUserRoleSlotId: null,
       fixedRoles: [],
-      validationError: null
+      validationError: null,
+      fieldErrors: emptyFieldErrors(),
+      noticeMessage: null
     };
 
     registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, scaffoldRole);
@@ -378,6 +430,13 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     worldCreationTransition: null,
     splashVisible: false,
     view
+  };
+}
+
+function emptyFieldErrors() {
+  return {
+    worldName: null,
+    selectedAI: null
   };
 }
 

@@ -188,12 +188,15 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /validateCreateWorldDraft/);
     assert.match(adapter, /function createCreateWorldDraftView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /screen\.className = "mvp-screen mvp-create-world-draft"/);
-    assert.match(adapter, /createDraftStage\("世界名称", draft\.validationError \? createFieldWithValidation\(name, draft\.validationError\) : name\)/);
+    assert.match(adapter, /createDraftStage\("世界名称", draft\.fieldErrors\.worldName \? createFieldWithValidation\(name, draft\.fieldErrors\.worldName\) : name\)/);
     assert.match(adapter, /createDraftStage\("世界观", worldviewBlock\)/);
     assert.match(adapter, /createDraftStage\("选择 AI 好友", aiList\)/);
     assert.match(adapter, /createDraftStage\("下一步", nextMode\)/);
     assert.match(adapter, /sourceControls\.className = "mvp-create-world-source-controls"/);
     assert.match(adapter, /officialChips\.className = "mvp-create-world-official-chips"/);
+    assert.match(adapter, /draft\.noticeMessage/);
+    assert.match(adapter, /draft\.fieldErrors\.selectedAI/);
+    assert.match(adapter, /markFieldInvalid\(name, draft\.fieldErrors\.worldName\)/);
     assert.match(adapter, /createDraftChip\("魔法学院"/);
     assert.match(adapter, /createDraftChip\("修仙世界"/);
     assert.match(adapter, /type: "OPEN_CREATE_WORLD_DETAIL_EDIT"/);
@@ -212,6 +215,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /checkboxText\.textContent = "分配给我"/);
     assert.match(adapter, /type: "UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT"/);
     assert.match(adapter, /type: "TOGGLE_RANDOM_ROLE_USER_SLOT"/);
+    assert.match(adapter, /未填写的角色将由系统随机补全/);
+    assert.match(adapter, /角色信息可稍后继续完善/);
     assert.match(adapter, /function createValidationNote/);
     assert.match(adapter, /mvp-create-world-validation/);
     assert.match(adapter, /function createFixedRoleSetup/);

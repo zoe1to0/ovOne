@@ -18,7 +18,7 @@ Last audited: 2026-06-27.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or create group chats yet.
 - Create World loading/welcome transition is scaffold state only; no polished animation timing, real generated identity, or loading process exists yet.
-- Create World missing-name validation is now explicit, but broader validation beyond required world name is not implemented yet.
+- Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
 - ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
@@ -29,7 +29,7 @@ Last audited: 2026-06-27.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - `OPEN_WORLD_EDITOR` is a disabled/no-op scaffold and does not open a real editor yet.
-- Create World import document options and official quick world options are placeholders only.
+- Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector, but no real worldview edit prevention is needed yet because editing is not implemented.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
 - `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, and valid `CONFIRM_CREATE_WORLD_DETAIL` are the UI actions currently handled by Flow Executor.

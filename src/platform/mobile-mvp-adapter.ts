@@ -681,7 +681,12 @@ function createCreateWorldDraftView(
     randomRoleSlots: [],
     selectedUserRoleSlotId: null,
     fixedRoles: [],
-    validationError: null
+    validationError: null,
+    fieldErrors: {
+      worldName: null,
+      selectedAI: null
+    },
+    noticeMessage: null
   };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-draft";
@@ -696,6 +701,7 @@ function createCreateWorldDraftView(
   name.name = "worldName";
   name.placeholder = "世界名称";
   name.value = draft.worldName;
+  markFieldInvalid(name, draft.fieldErrors.worldName);
   bindCreateWorldDraftInput(name, controller, "worldName");
 
   const worldview = document.createElement("textarea");
@@ -735,6 +741,9 @@ function createCreateWorldDraftView(
   const worldviewBlock = document.createElement("section");
   worldviewBlock.className = "mvp-create-world-worldview-block";
   worldviewBlock.append(worldview, sourceControls, officialChips);
+  if (draft.noticeMessage) {
+    worldviewBlock.append(createValidationNote(draft.noticeMessage));
+  }
 
   const aiList = document.createElement("section");
   aiList.className = "mvp-create-world-section";
@@ -748,6 +757,9 @@ function createCreateWorldDraftView(
   }
   if (aiList.childElementCount === 0) {
     aiList.append(createDraftNote("暂无可选 AI 好友"));
+  }
+  if (draft.fieldErrors.selectedAI) {
+    aiList.append(createValidationNote(draft.fieldErrors.selectedAI));
   }
 
   const nextMode = document.createElement("section");
@@ -771,7 +783,7 @@ function createCreateWorldDraftView(
 
   screen.append(
     createScreenHeader("创建世界", back),
-    createDraftStage("世界名称", draft.validationError ? createFieldWithValidation(name, draft.validationError) : name),
+    createDraftStage("世界名称", draft.fieldErrors.worldName ? createFieldWithValidation(name, draft.fieldErrors.worldName) : name),
     createDraftStage("世界观", worldviewBlock),
     createDraftStage("选择 AI 好友", aiList),
     createDraftStage("下一步", nextMode),
@@ -795,7 +807,12 @@ function createCreateWorldDetailEditView(
     randomRoleSlots: [],
     selectedUserRoleSlotId: null,
     fixedRoles: [],
-    validationError: null
+    validationError: null,
+    fieldErrors: {
+      worldName: null,
+      selectedAI: null
+    },
+    noticeMessage: null
   };
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-create-world-detail-edit";
@@ -810,6 +827,7 @@ function createCreateWorldDetailEditView(
   name.name = "worldName";
   name.placeholder = "世界名称";
   name.value = draft.worldName;
+  markFieldInvalid(name, draft.fieldErrors.worldName);
   bindCreateWorldDetailInput(name, controller, "worldName");
 
   const worldview = document.createElement("textarea");
@@ -821,8 +839,11 @@ function createCreateWorldDetailEditView(
   const worldSection = document.createElement("section");
   worldSection.className = "mvp-create-world-detail-section";
   worldSection.append(name, worldview);
-  if (draft.validationError) {
-    worldSection.append(createValidationNote(draft.validationError));
+  if (draft.fieldErrors.worldName) {
+    worldSection.append(createValidationNote(draft.fieldErrors.worldName));
+  }
+  if (draft.fieldErrors.selectedAI) {
+    worldSection.append(createValidationNote(draft.fieldErrors.selectedAI));
   }
 
   const roleModes = document.createElement("section");
@@ -1032,6 +1053,15 @@ function createFieldWithValidation(field: HTMLElement, message: string): HTMLEle
   return wrapper;
 }
 
+function markFieldInvalid(field: HTMLInputElement | HTMLTextAreaElement, message: string | null): void {
+  if (!message) {
+    return;
+  }
+  field.classList.add("is-invalid");
+  field.setAttribute("aria-invalid", "true");
+  field.autofocus = true;
+}
+
 function createDetailRoleSetup(
   snapshot: WorldSnapshot,
   draft: NonNullable<SemanticMobileState["createWorldDraft"]>,
@@ -1049,7 +1079,7 @@ function createDetailRoleSetup(
   for (const [index, slot] of randomRoleSlotsForDraft(draft).entries()) {
     setup.append(createRandomRoleSlotRow(slot, index, draft.selectedUserRoleSlotId, controller));
   }
-  setup.append(createDraftNote("未选择“分配给我”时，用户和 AI 将在后续随机分配到所有角色。当前只收集占位数据。"));
+  setup.append(createDraftNote("未填写的角色将由系统随机补全"));
   return createDraftStage("随机角色设置", setup);
 }
 
@@ -1110,6 +1140,7 @@ function createFixedRoleSetup(
   for (const contact of assistantContacts(snapshot).filter((item) => draft.selectedAIModelIds.includes(item.actorId))) {
     rows.append(createFixedRoleRow(contact.actorId, contactDisplayName(contact), draft, controller));
   }
+  rows.append(createDraftNote("角色信息可稍后继续完善"));
   return createDraftStage("固定角色", rows);
 }
 

@@ -123,14 +123,16 @@ UI action
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
-- Create World validation state lives in `createWorldDraft.validationError`.
+- Create World validation state lives in `createWorldDraft.validationError`, `createWorldDraft.fieldErrors`, and `createWorldDraft.noticeMessage`.
 - Create World draft view is a staged vertical flow: world name, worldview text area with attached source controls, small official quick-world chips, AI selection, and next mode.
 - `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a scaffold route for reviewing/editing world name, worldview text, and role assignment mode.
-- `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
+- `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"`, a non-empty world name, and at least one selected AI runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - Minimal random-role creation creates a custom world from selected AI ids, appends it to `availableWorlds`, switches to the new world, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears the draft.
 - `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or a missing world name does not create a world yet and keeps the draft open.
-- `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name runs through Flow Executor and `shell.createWorldFromDraft(...)`.
+- `CONFIRM_CREATE_WORLD_DETAIL` with a non-empty world name and at least one selected AI runs through Flow Executor and `shell.createWorldFromDraft(...)`.
 - `CONFIRM_CREATE_WORLD_DRAFT` and `CONFIRM_CREATE_WORLD_DETAIL` both pass through the same validation/sanitization gate before runtime creation.
+- Missing world name shows `请输入世界名称`; missing AI selection shows `请选择至少一个 AI 朋友`; document import source controls show `文档导入暂未开放` without changing source state.
+- Fixed Role incomplete rows and Random Role empty slots do not block creation; they show helper text only.
 - Successful Create World confirmation sets local `worldCreationTransition` scaffold state with loading and welcome text, then lands on the new world's `CHAT_LIST`.
 - Create World welcome text is resolved by `src/platform/world-creation-transition.ts` from the draft identity scaffold only; it does not call an LLM or generate real roles.
 - Empty Role, Blank World, and project-document worlds use no-identity welcome text; worldview/official/text worlds use explicit user role names when present or safe placeholder `新世界中的你`.
@@ -301,8 +303,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft selected AI list. |
 | `SELECT_CREATE_WORLD_NEXT_MODE` | Updates local draft next mode. |
 | `SELECT_DETAIL_ROLE_MODE` | Updates detail scaffold role assignment mode. |
-| `CONFIRM_CREATE_WORLD_DRAFT` | Registry validates/sanitizes draft state; Flow Executor creates a world only for `random-role` with a non-empty name, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
-| `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` | Registry validates/sanitizes draft state; Flow Executor creates a world only for `random-role` with a non-empty name and selected AI, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts with selected AI, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
@@ -345,9 +347,9 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `SUBMIT_MESSAGE` with non-empty trimmed text | Calls `shell.sendMessage(text)`, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. |
 | `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
 | `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
-| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"` and non-empty name | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"`, non-empty name, and selected AI | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
-| `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
+| `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name, selected AI, and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |

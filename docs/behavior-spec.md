@@ -72,11 +72,11 @@ UI event
 - The draft view is staged vertically: world name, worldview area, attached source controls, official quick-world chips, AI selection, and next mode.
 - Official quick worlds render as small chips.
 - Create World draft state is stored in `SemanticMobileState.createWorldDraft`, not in `WorldScopedSnapshot`.
-- Create World draft validation state is stored locally as `validationError`.
+- Create World draft validation state is stored locally as `validationError`, `fieldErrors`, and `noticeMessage`.
 - `OPEN_CREATE_WORLD_DETAIL_EDIT` routes to `CREATE_WORLD_DETAIL_EDIT`, a scaffold page for world text review and role assignment mode selection.
-- Confirming the Create World draft with `nextMode = "random-role"` and a non-empty name creates a custom world through Flow Executor and the shell runtime boundary.
+- Confirming the Create World draft with `nextMode = "random-role"`, a non-empty name, and at least one selected AI creates a custom world through Flow Executor and the shell runtime boundary.
 - Confirming the Create World draft with `nextMode = "detailed-edit"` does not create a world yet.
-- Confirming Create World detailed edit with a non-empty world name creates a custom world through Flow Executor and the shell runtime boundary.
+- Confirming Create World detailed edit with a non-empty world name and at least one selected AI creates a custom world through Flow Executor and the shell runtime boundary.
 - Successful Create World confirmation sets a local loading/welcome transition scaffold and then lands on the new world's `CHAT_LIST`.
 - Transition loading text is `{worldName} 载入中…`.
 - Transition welcome text uses draft identity metadata only: Empty Role, Blank World, and project-document worlds use `欢迎来到 {worldName}。`; identity worlds use `你是 {roleName}，今天是你来到 {worldName} 的第一天。`.
@@ -95,7 +95,11 @@ UI event
 - Bootstrap execution statuses are `planned`, `stub-generated`, `generated`, `skipped`, and `failed`; current runtime does not mark any item `generated` because no real LLM generation exists.
 - Empty Role worlds create zero active initial private messages and zero groups.
 - Bootstrap execution does not call an LLM, mutate memory, or create group chats.
-- Confirming Create World without a required world name does not create a world, leaves the current create page open, and sets `validationError = "请输入世界名称"`.
+- Confirming Create World without a required world name does not create a world, leaves the current create page open, and sets world-name validation to `请输入世界名称`.
+- Confirming Create World without a selected AI does not create a world, leaves the current create page open, and sets selected-AI validation to `请选择至少一个 AI 朋友`.
+- Document import source controls show `文档导入暂未开放` and do not switch the draft into a fake imported source state.
+- Fixed Role incomplete rows show `角色信息可稍后继续完善` and do not block creation.
+- Random Role empty slots show `未填写的角色将由系统随机补全` and do not block creation.
 - Blank-world creation keeps selected AI original display names and records no assigned roles.
 - Non-blank source creation records role assignment as a placeholder only; it is not real random generation.
 - Cancelling the Create World draft clears the draft and returns to `CHAT_LIST`.
@@ -229,8 +233,8 @@ UI event
 | Toggle Create World AI | `TOGGLE_CREATE_WORLD_AI` | Adds/removes an AI id in local draft `selectedAIModelIds`. |
 | Select Create World next mode | `SELECT_CREATE_WORLD_NEXT_MODE` | Sets local draft `nextMode` to `random-role` or `detailed-edit`. |
 | Select detail role mode | `SELECT_DETAIL_ROLE_MODE` | Sets detail role mode to `random-role`, `fixed-role`, or `empty-role`. |
-| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry sanitizes/validates draft state; Flow Executor creates a world only for valid `random-role`, sets transition scaffold state, then switches into it and clears draft/overlay. |
-| Confirm Create World detail | `CONFIRM_CREATE_WORLD_DETAIL` | Registry sanitizes/validates draft state; Flow Executor creates a world for valid detail edit drafts, sets transition scaffold state, then switches into it and clears draft/overlay. |
+| Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry sanitizes/validates draft state; Flow Executor creates a world only for valid `random-role` with selected AI, sets transition scaffold state, then switches into it and clears draft/overlay. |
+| Confirm Create World detail | `CONFIRM_CREATE_WORLD_DETAIL` | Registry sanitizes/validates draft state; Flow Executor creates a world for valid detail edit drafts with selected AI, sets transition scaffold state, then switches into it and clears draft/overlay. |
 | Cancel Create World draft | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft state and returns to `CHAT_LIST`. |
 | Cancel Create World detail | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft state and returns to `CHAT_LIST`. |
 | Group members | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -277,8 +281,7 @@ These actions are named and routed but intentionally do not implement product be
 - Should more runtime effects move into Flow Executor as explicit flows?
 - What exact actions should ovO overlay expose for world edit?
 - What should the real `OPEN_WORLD_EDITOR` implementation display after world editor behavior is in scope?
-- What validation UI should missing Create World name display?
-- What validation details should Create World Detailed Edit require before confirmation?
+- What additional validation should Create World Detailed Edit require after real role generation exists?
 - What should the normal `voice-button` mode do before real voice sending exists?
 - What are the concrete product flows for the disabled creation/settings actions?
 

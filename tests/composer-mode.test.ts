@@ -241,6 +241,40 @@ describe("Composer mode state machine", () => {
     assert.equal(state.currentWorldId, toWorldId("reality"));
   });
 
+  it("keeps create world draft visible when no AI is selected", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
+    registry.execute({ type: "UPDATE_CREATE_WORLD_DRAFT", field: "worldName", value: "valid world" }, state);
+    registry.execute({ type: "SELECT_CREATE_WORLD_NEXT_MODE", nextMode: "random-role" }, state);
+    registry.execute({ type: "CONFIRM_CREATE_WORLD_DRAFT" }, state);
+
+    assert.equal(state.activeView, "CREATE_WORLD_DRAFT");
+    assert.equal(state.createWorldDraft?.worldName, "valid world");
+    assert.equal(state.createWorldDraft?.selectedAIModelIds.length, 0);
+    assert.equal(state.createWorldDraft?.fieldErrors.selectedAI, "请选择至少一个 AI 朋友");
+
+    registry.execute({ type: "TOGGLE_CREATE_WORLD_AI", aiModelId: "ai:friend" }, state);
+    assert.equal(state.createWorldDraft?.fieldErrors.selectedAI, null);
+  });
+
+  it("shows unavailable import notice without changing source state", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    registry.execute({ type: "OPEN_CREATE_WORLD_DRAFT" }, state);
+    registry.execute({ type: "SELECT_WORLDVIEW_SOURCE", sourceType: "blank" }, state);
+    registry.execute({ type: "SELECT_WORLDVIEW_SOURCE", sourceType: "worldview-document" }, state);
+
+    assert.equal(state.createWorldDraft?.worldviewSourceType, "blank");
+    assert.equal(state.createWorldDraft?.noticeMessage, "文档导入暂未开放");
+
+    registry.execute({ type: "SELECT_WORLDVIEW_SOURCE", sourceType: "official" }, state);
+    assert.equal(state.createWorldDraft?.worldviewSourceType, "official");
+    assert.equal(state.createWorldDraft?.noticeMessage, null);
+  });
+
   it("does not change world switching behavior", () => {
     const registry = createBehaviorRegistry();
     const state = createState();

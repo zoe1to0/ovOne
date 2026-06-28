@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-28: Create World validation UX improved
+
+Decision: Existing Create World validation now exposes clearer inline feedback without changing create-world core logic.
+
+Rules:
+
+- Missing world name shows `请输入世界名称` near the world name field.
+- Missing selected AI shows `请选择至少一个 AI 朋友` near the AI selection section.
+- Document import controls show `文档导入暂未开放` and do not switch into fake imported source state.
+- Fixed Role incomplete rows show helper text only and do not block creation.
+- Random Role empty slots show helper text only and do not block creation.
+- Validation keeps the current create route and preserves draft state.
+- No real role generation, loading animation, LLM call, memory engine, or create-world core logic change is included.
+
 ## 2026-06-28: v0.2-create-world-core milestone tagged
 
 Decision: `v0.2-create-world-core` marks the completed Create World Core milestone.
