@@ -12,14 +12,14 @@ Last audited: 2026-06-27.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation now supports minimal random-role world creation and detailed edit scaffold creation, but does not implement edit world flows.
+- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, and World Editor page scaffold, but does not implement real edit-world saving.
 - Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or create group chats yet.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
-- ovO world menu supports read-only world switching and a world editor selector scaffold.
+- ovO world menu supports read-only world switching and a World Editor page scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
 - Real AI provider integration is not implemented; `GlobalAIModel` and `GlobalAILink` are foundation types.
@@ -27,10 +27,10 @@ Last audited: 2026-06-27.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching but no world edit control flow yet.
-- `OPEN_WORLD_EDITOR` is a disabled/no-op scaffold and does not open a real editor yet.
+- ovO panel has read-only world switching and a World Editor page scaffold, but no real world mutation flow yet.
+- `SAVE_WORLD_EDITOR` is a scaffold/no-op action and does not persist world edits yet.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
-- Reality is shown as locked in the editor selector, but no real worldview edit prevention is needed yet because editing is not implemented.
+- Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
 - `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, and valid `CONFIRM_CREATE_WORLD_DETAIL` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
@@ -43,7 +43,6 @@ Disabled explicit actions:
 
 - `CREATE_AI_FRIEND`
 - `CREATE_GROUP`
-- `OPEN_WORLD_EDITOR`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`

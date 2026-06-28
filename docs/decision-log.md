@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-28: World Editor page scaffold added
+
+Decision: Selecting a world from the ovO editor selector now opens a route/page-like World Editor scaffold.
+
+Rules:
+
+- `OPEN_WORLD_EDITOR(worldId)` opens `WORLD_EDITOR` and stores `selectedWorldIdForEditing`.
+- World Editor uses local `worldEditorDraft` state only.
+- Opening World Editor does not switch `currentWorldId`.
+- Reality can be opened in World Editor but shows locked worldview state.
+- Custom worlds show editable-looking world name and worldview fields.
+- `SAVE_WORLD_EDITOR` shows `保存暂未开放` and performs no world mutation.
+- Role/member editing, add member, memory mutation, and real saving remain unimplemented.
+
 ## 2026-06-28: v0.2.1-create-world-lifecycle milestone tagged
 
 Decision: `v0.2.1-create-world-lifecycle` marks the Create World lifecycle milestone after v0.2 Create World Core.
@@ -224,7 +238,7 @@ Rules:
 - World switcher lists existing worlds, marks the current world, and selecting a world dispatches `SWITCH_WORLD`.
 - Edit World dispatches `OPEN_WORLD_EDITOR_SELECTOR`.
 - World editor selector lists existing worlds, marks the current world, and marks Reality as locked.
-- Selecting a world to edit dispatches disabled scaffold action `OPEN_WORLD_EDITOR`.
+- At this decision point, selecting a world to edit dispatched disabled scaffold action `OPEN_WORLD_EDITOR`; this was superseded by the later World Editor page scaffold decision.
 - No create world flow, real edit world page, memory editing, or world data model change is included in this decision.
 
 ## 2026-06-27: ovO opens as chat with world-button composer

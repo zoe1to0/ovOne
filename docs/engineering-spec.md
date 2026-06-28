@@ -99,10 +99,12 @@ UI action
   - `activeChatId: null`
   - `overlay: null`
   - `selectedContactActorId: null`
+  - `selectedWorldIdForEditing: null`
   - `composerMode: resolveDefaultComposerMode("normal")`
   - `inputDraft: ""`
   - `settingsOpen: false`
   - `createWorldDraft: null`
+  - `worldEditorDraft: null`
   - `view: enterRealityContext(shell)`
 - Splash timeout:
   - waits 900 ms
@@ -120,7 +122,10 @@ UI action
 - ovO composer defaults to `world-button`, displays `📍 {currentWorldName}`, opens the first-level ovO world menu, and can toggle to text mode through `TOGGLE_COMPOSER_MODE`.
 - First-level ovO world menu contains sibling options `OPEN_WORLD_SWITCHER` and `OPEN_WORLD_EDITOR_SELECTOR`.
 - World switcher lists `state.view.availableWorlds`, marks the current world, and dispatches `SWITCH_WORLD`.
-- World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches disabled scaffold `OPEN_WORLD_EDITOR`.
+- World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches `OPEN_WORLD_EDITOR`.
+- `OPEN_WORLD_EDITOR` routes to the page-like `WORLD_EDITOR` scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and does not switch worlds.
+- World Editor shows world name, worldview/world setting, role/member scaffold, add AI member scaffold, and a Reality lock note when editing Reality.
+- `SAVE_WORLD_EDITOR` is a scaffold action that shows `保存暂未开放` and does not mutate world data.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
 - Create World validation state lives in `createWorldDraft.validationError`, `createWorldDraft.fieldErrors`, and `createWorldDraft.noticeMessage`.
@@ -181,10 +186,12 @@ UI action
 - `activeChatId`
 - `overlay`
 - `selectedContactActorId`
+- `selectedWorldIdForEditing`
 - `composerMode`
 - `inputDraft`
 - `settingsOpen`
 - `createWorldDraft`
+- `worldEditorDraft`
 - `worldCreationTransition`
 - `splashVisible`
 - `view`
@@ -198,6 +205,7 @@ UI action
 - `ME`
 - `CREATE_WORLD_DRAFT`
 - `CREATE_WORLD_DETAIL_EDIT`
+- `WORLD_EDITOR`
 
 Unknown view values resolve to `CHAT_LIST` inside ViewRouter. This is a temporary fallback, not final invariant behavior.
 
@@ -231,6 +239,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_WORLD_SWITCHER`
 - `OPEN_WORLD_EDITOR_SELECTOR`
 - `OPEN_WORLD_EDITOR`
+- `UPDATE_WORLD_EDITOR_DRAFT`
+- `CANCEL_WORLD_EDITOR`
+- `SAVE_WORLD_EDITOR`
 - `OPEN_CREATE_WORLD_DRAFT`
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
@@ -278,7 +289,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_OVO_WORLD_MENU` | Opens first-level ovO world menu with Switch World and Edit World as sibling options. |
 | `OPEN_WORLD_SWITCHER` | Opens world switcher list. |
 | `OPEN_WORLD_EDITOR_SELECTOR` | Opens world editor selector list and marks Reality locked. |
-| `OPEN_WORLD_EDITOR` | Explicit disabled/no-op scaffold; closes overlay and performs no real editing. |
+| `OPEN_WORLD_EDITOR` | Opens `WORLD_EDITOR` page scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and closes overlay without switching worlds. |
 | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, opens first-level ovO world menu; not the direct ovO click path. |
 | `OPEN_ADD_MENU` | Opens `add-menu` overlay. |
 | `OPEN_CHAT_MENU` | Opens `chat-menu` overlay. |
@@ -310,7 +321,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
-| `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
+| `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
+| `SAVE_WORLD_EDITOR` | Shows scaffold notice `保存暂未开放` and performs no world mutation. |
+| `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_BACKGROUND_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -322,7 +335,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 
 ```text
 resolve(activeView) -> {
-  route: "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME" | "CREATE_WORLD_DRAFT" | "CREATE_WORLD_DETAIL_EDIT",
+  route: "CHAT_LIST" | "CHAT_VIEW" | "CONTACTS" | "CONTACT_DETAIL" | "ME" | "CREATE_WORLD_DRAFT" | "CREATE_WORLD_DETAIL_EDIT" | "WORLD_EDITOR",
   fallbackApplied: boolean,
   issue?: string
 }
@@ -340,6 +353,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
 | `CREATE_WORLD_DRAFT` | `createCreateWorldDraftView(snapshot, state, controller)` |
 | `CREATE_WORLD_DETAIL_EDIT` | `createCreateWorldDetailEditView(snapshot, state, controller)` |
+| `WORLD_EDITOR` | `createWorldEditorView(snapshot, state, controller)` |
 
 ## Current Flow Executor Behavior
 

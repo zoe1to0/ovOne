@@ -52,7 +52,7 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(registry, /export type ViewState =[\s\S]*\| "CHAT_LIST"[\s\S]*\| "CHAT_VIEW"[\s\S]*\| "CONTACTS"[\s\S]*\| "CONTACT_DETAIL"[\s\S]*\| "ME"[\s\S]*\| "CREATE_WORLD_DRAFT"[\s\S]*\| "CREATE_WORLD_DETAIL_EDIT"/);
+    assert.match(registry, /export type ViewState =[\s\S]*\| "CHAT_LIST"[\s\S]*\| "CHAT_VIEW"[\s\S]*\| "CONTACTS"[\s\S]*\| "CONTACT_DETAIL"[\s\S]*\| "ME"[\s\S]*\| "CREATE_WORLD_DRAFT"[\s\S]*\| "CREATE_WORLD_DETAIL_EDIT"[\s\S]*\| "WORLD_EDITOR"/);
     assert.match(adapter, /const ViewRouter = Object\.freeze\(\{[\s\S]*resolve: createBehaviorRegistry\(\)\.resolveView,[\s\S]*currentOverlay: createBehaviorRegistry\(\)\.currentOverlay[\s\S]*\}\)/);
     assert.match(adapter, /const routeState = ViewRouter\.resolve\(state\.activeView\)/);
     assert.match(adapter, /function commitStateTransition\(state: SemanticMobileState, render: \(\) => void\): void/);
@@ -94,6 +94,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.deepEqual(resolveView("ME"), { route: "ME", fallbackApplied: false });
     assert.deepEqual(resolveView("CREATE_WORLD_DRAFT"), { route: "CREATE_WORLD_DRAFT", fallbackApplied: false });
     assert.deepEqual(resolveView("CREATE_WORLD_DETAIL_EDIT"), { route: "CREATE_WORLD_DETAIL_EDIT", fallbackApplied: false });
+    assert.deepEqual(resolveView("WORLD_EDITOR"), { route: "WORLD_EDITOR", fallbackApplied: false });
     assert.deepEqual(resolveView("UNKNOWN_VIEW"), {
       route: "CHAT_LIST",
       fallbackApplied: true,
@@ -346,6 +347,11 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /case "OPEN_WORLD_EDITOR_SELECTOR":/);
     assert.match(registry, /openOverlay\(state, "world-editor-selector"\)/);
     assert.match(registry, /case "OPEN_WORLD_EDITOR":/);
+    assert.match(registry, /state\.activeView = "WORLD_EDITOR"/);
+    assert.match(registry, /state\.selectedWorldIdForEditing = action\.worldId/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_WORLD_EDITOR_DRAFT"/);
+    assert.match(registry, /\| \{ readonly type: "CANCEL_WORLD_EDITOR" \}/);
+    assert.match(registry, /\| \{ readonly type: "SAVE_WORLD_EDITOR" \}/);
     assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
     assert.match(adapter, /createMenuButton\("切换世界", controller, \{ type: "OPEN_WORLD_SWITCHER" \}\)/);
     assert.match(adapter, /createMenuButton\("编辑世界", controller, \{ type: "OPEN_WORLD_EDITOR_SELECTOR" \}\)/);
@@ -362,7 +368,17 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /: \{ type: "OPEN_WORLD_EDITOR", worldId: world\.worldId \}/);
     assert.match(html, /\.mvp-ovo-world-row\.is-current \{[\s\S]*border-color: #d3382f;[\s\S]*font-weight: 700;/);
     assert.equal(html.includes(".mvp-ovo-world-menu,\n      .mvp-create-world-draft"), false);
-    assert.equal(adapter.includes("function createWorldEditor("), false);
+    assert.match(adapter, /return createWorldEditorView\(snapshot, state, controller\)/);
+    assert.match(adapter, /function createWorldEditorView/);
+    assert.match(adapter, /screen\.className = "mvp-screen mvp-world-editor"/);
+    assert.match(adapter, /createDraftStage\("世界名称", name\)/);
+    assert.match(adapter, /createDraftStage\("世界观 \/ 世界设定", worldSection\)/);
+    assert.match(adapter, /createDraftStage\("角色 \/ 成员", roleSection\)/);
+    assert.match(adapter, /createDraftStage\("添加 AI 成员", memberSection\)/);
+    assert.match(adapter, /现实世界世界观不可修改/);
+    assert.match(registry, /保存暂未开放/);
+    assert.match(adapter, /type: "SAVE_WORLD_EDITOR"/);
+    assert.match(adapter, /type: "CANCEL_WORLD_EDITOR"/);
     assert.equal(adapter.includes("EDIT_WORLD"), false);
   });
 
@@ -371,7 +387,7 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(registry, /export type ViewState =[\s\S]*"CREATE_WORLD_DRAFT"[\s\S]*"CREATE_WORLD_DETAIL_EDIT"/);
+    assert.match(registry, /export type ViewState =[\s\S]*"CREATE_WORLD_DRAFT"[\s\S]*"CREATE_WORLD_DETAIL_EDIT"[\s\S]*"WORLD_EDITOR"/);
     assert.match(adapter, /\{ tab: "chats", label: "聊天" \}/);
     assert.match(adapter, /\{ tab: "contacts", label: "联系人" \}/);
     assert.match(adapter, /\{ tab: "me", label: "我的" \}/);
@@ -406,7 +422,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 5);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 6);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

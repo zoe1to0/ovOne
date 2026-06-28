@@ -62,11 +62,11 @@ describe("FlowExecutor", () => {
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
 
-    const transition = registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, state);
-    const flow = executor.run({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, { shell, state });
+    const transition = registry.execute({ type: "CHAT_OPEN_SETTINGS" }, state);
+    const flow = executor.run({ type: "CHAT_OPEN_SETTINGS" }, { shell, state });
 
     assert.equal(transition.shouldRender, true);
-    assert.equal(transition.disabledAction, "OPEN_WORLD_EDITOR");
+    assert.equal(transition.disabledAction, "CHAT_OPEN_SETTINGS");
     assert.equal(flow.shouldRender, false);
     assert.deepEqual(calls, []);
     assert.equal(state.activeChatId, "chat-before-disabled");
@@ -423,10 +423,12 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     activeChatId: view.product.snapshot.chatState.activeChatId,
     overlay: "add-menu",
     selectedContactActorId: null,
+    selectedWorldIdForEditing: null,
     composerMode: "text",
     inputDraft: "draft",
     settingsOpen: false,
     createWorldDraft: null,
+    worldEditorDraft: null,
     worldCreationTransition: null,
     splashVisible: false,
     view

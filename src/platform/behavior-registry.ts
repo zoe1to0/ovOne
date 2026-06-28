@@ -11,7 +11,8 @@ export type ViewState =
   | "CONTACT_DETAIL"
   | "ME"
   | "CREATE_WORLD_DRAFT"
-  | "CREATE_WORLD_DETAIL_EDIT";
+  | "CREATE_WORLD_DETAIL_EDIT"
+  | "WORLD_EDITOR";
 export type MobileOverlay =
   | "add-menu"
   | "chat-menu"
@@ -65,6 +66,13 @@ export type WorldCreationTransition = Readonly<{
   readonly loadingText: string;
   readonly welcomeText: string;
 }>;
+export type WorldEditorDraft = Readonly<{
+  readonly worldId: WorldId;
+  readonly worldName: string;
+  readonly worldviewText: string;
+  readonly locked: boolean;
+  readonly noticeMessage: string | null;
+}>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -86,6 +94,9 @@ export type InteractionAction =
   | { readonly type: "OPEN_WORLD_SWITCHER" }
   | { readonly type: "OPEN_WORLD_EDITOR_SELECTOR" }
   | { readonly type: "OPEN_WORLD_EDITOR"; readonly worldId: WorldId }
+  | { readonly type: "UPDATE_WORLD_EDITOR_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
+  | { readonly type: "CANCEL_WORLD_EDITOR" }
+  | { readonly type: "SAVE_WORLD_EDITOR" }
   | { readonly type: "OPEN_EMOJI_PICKER" }
   | { readonly type: "OPEN_FILE_PICKER" }
   | { readonly type: "CLOSE_OVERLAY" }
@@ -125,10 +136,12 @@ export type SemanticMobileState = {
   activeChatId: string | null;
   overlay: MobileOverlay;
   selectedContactActorId: string | null;
+  selectedWorldIdForEditing: WorldId | null;
   composerMode: ComposerMode;
   inputDraft: string;
   settingsOpen: boolean;
   createWorldDraft: CreateWorldDraft | null;
+  worldEditorDraft: WorldEditorDraft | null;
   worldCreationTransition: WorldCreationTransition | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
@@ -154,6 +167,10 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_OVO_WORLD_MENU"
   | "OPEN_WORLD_SWITCHER"
   | "OPEN_WORLD_EDITOR_SELECTOR"
+  | "OPEN_WORLD_EDITOR"
+  | "UPDATE_WORLD_EDITOR_DRAFT"
+  | "CANCEL_WORLD_EDITOR"
+  | "SAVE_WORLD_EDITOR"
   | "OPEN_EMOJI_PICKER"
   | "OPEN_FILE_PICKER"
   | "CLOSE_OVERLAY"
@@ -296,6 +313,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -304,6 +323,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CONTACTS";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -312,6 +333,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "ME";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -321,6 +344,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -329,6 +354,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = action.chatId;
         state.activeView = "CHAT_VIEW";
         state.composerMode = resolveDefaultComposerMode("normal");
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         return RENDER;
 
@@ -336,6 +363,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = OVO_CHAT_ID;
         state.activeView = "CHAT_VIEW";
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         state.composerMode = resolveDefaultComposerMode("ovo");
         closeOverlay(state);
         state.settingsOpen = false;
@@ -349,6 +378,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.activeView = "CREATE_WORLD_DRAFT";
         } else if (state.activeView === "CREATE_WORLD_DRAFT") {
           state.activeView = "CHAT_LIST";
+        } else if (state.activeView === "WORLD_EDITOR") {
+          state.activeView = "CHAT_LIST";
+          state.selectedWorldIdForEditing = null;
+          state.worldEditorDraft = null;
         } else {
           state.activeView = "CHAT_LIST";
           state.activeChatId = null;
@@ -373,6 +406,32 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "OPEN_WORLD_EDITOR_SELECTOR":
         openOverlay(state, "world-editor-selector");
         return RENDER;
+
+      case "OPEN_WORLD_EDITOR": {
+        const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === action.worldId);
+        const isCurrentWorld = action.worldId === state.view.product.snapshot.worldMeta.id;
+        const isReality = selectedWorld?.type === "reality" || (isCurrentWorld && state.view.product.snapshot.worldMeta.type === "reality");
+        const runtimeState = state.view.product.snapshot.runtimeState as {
+          readonly metadata?: {
+            readonly worldView?: Readonly<Record<string, unknown>>;
+          };
+        };
+        const worldView = isCurrentWorld ? runtimeState.metadata?.worldView ?? {} : {};
+        state.activeView = "WORLD_EDITOR";
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = action.worldId;
+        state.worldEditorDraft = Object.freeze({
+          worldId: action.worldId,
+          worldName: selectedWorld?.title ?? (isCurrentWorld ? state.view.product.snapshot.worldMeta.title : "未命名世界"),
+          worldviewText: JSON.stringify(worldView),
+          locked: isReality,
+          noticeMessage: null
+        });
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+      }
 
       case "OPEN_ADD_MENU":
         openOverlay(state, "add-menu");
@@ -427,7 +486,39 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "OPEN_CONTACT":
         state.activeView = "CONTACT_DETAIL";
         state.selectedContactActorId = action.actorId;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
+        return RENDER;
+
+      case "UPDATE_WORLD_EDITOR_DRAFT":
+        if (!state.worldEditorDraft || state.worldEditorDraft.locked) {
+          return RENDER;
+        }
+        state.worldEditorDraft = Object.freeze({
+          ...state.worldEditorDraft,
+          [action.field]: action.value,
+          noticeMessage: null
+        });
+        return RENDER;
+
+      case "SAVE_WORLD_EDITOR":
+        if (state.worldEditorDraft) {
+          state.worldEditorDraft = Object.freeze({
+            ...state.worldEditorDraft,
+            noticeMessage: "保存暂未开放"
+          });
+        }
+        return RENDER;
+
+      case "CANCEL_WORLD_EDITOR":
+        state.activeView = "CHAT_LIST";
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
         return RENDER;
 
       case "OPEN_CREATE_WORLD_DRAFT":
@@ -435,6 +526,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CREATE_WORLD_DRAFT";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -453,6 +546,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CREATE_WORLD_DETAIL_EDIT";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -614,6 +709,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -623,13 +720,14 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
 
       case "CREATE_AI_FRIEND":
       case "CREATE_GROUP":
-      case "OPEN_WORLD_EDITOR":
       case "CHAT_OPEN_GROUP_MEMBERS":
       case "CHAT_OPEN_SETTINGS":
       case "CHAT_OPEN_BACKGROUND_SETTINGS":
@@ -653,7 +751,8 @@ export function resolveView(activeView: string): ViewRouteResolution {
     activeView === "CONTACT_DETAIL" ||
     activeView === "ME" ||
     activeView === "CREATE_WORLD_DRAFT" ||
-    activeView === "CREATE_WORLD_DETAIL_EDIT"
+    activeView === "CREATE_WORLD_DETAIL_EDIT" ||
+    activeView === "WORLD_EDITOR"
   ) {
     return Object.freeze({
       route: activeView,
@@ -674,7 +773,7 @@ export function tabForView(activeView: ViewState): MobileMvpTab {
   if (activeView === "ME") {
     return "me";
   }
-  if (activeView === "CREATE_WORLD_DRAFT" || activeView === "CREATE_WORLD_DETAIL_EDIT") {
+  if (activeView === "CREATE_WORLD_DRAFT" || activeView === "CREATE_WORLD_DETAIL_EDIT" || activeView === "WORLD_EDITOR") {
     return "chats";
   }
   return "chats";

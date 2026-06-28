@@ -102,17 +102,59 @@ describe("Composer mode state machine", () => {
     assert.equal(state.overlay, "world-editor-selector");
   });
 
-  it("keeps world editor scaffold disabled without changing world state", () => {
+  it("opens world editor page scaffold without changing current world", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
     state.overlay = "world-editor-selector";
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        { worldId: state.currentWorldId, title: "Reality", type: "reality" },
+        { worldId: toWorldId("custom:studio"), title: "Studio", type: "custom" }
+      ]
+    };
 
     const result = registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, state);
 
     assert.equal(result.shouldRender, true);
-    assert.equal(result.disabledAction, "OPEN_WORLD_EDITOR");
     assert.equal(state.currentWorldId, toWorldId("reality"));
+    assert.equal(state.activeView, "WORLD_EDITOR");
+    assert.equal(state.selectedWorldIdForEditing, toWorldId("reality"));
+    assert.equal(state.worldEditorDraft?.worldName, "Reality");
+    assert.equal(state.worldEditorDraft?.locked, true);
     assert.equal(state.overlay, null);
+
+    registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
+    assert.equal(state.worldEditorDraft?.noticeMessage, "保存暂未开放");
+
+    registry.execute({ type: "CANCEL_WORLD_EDITOR" }, state);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.selectedWorldIdForEditing, null);
+    assert.equal(state.worldEditorDraft, null);
+  });
+
+  it("updates custom world editor draft without mutating world context", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const customWorldId = toWorldId("custom:studio");
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        { worldId: state.currentWorldId, title: "Reality", type: "reality" },
+        { worldId: customWorldId, title: "Studio", type: "custom" }
+      ]
+    };
+
+    registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: customWorldId }, state);
+    registry.execute({ type: "UPDATE_WORLD_EDITOR_DRAFT", field: "worldName", value: "Edited Studio" }, state);
+    registry.execute({ type: "UPDATE_WORLD_EDITOR_DRAFT", field: "worldviewText", value: "Quiet city" }, state);
+
+    assert.equal(state.currentWorldId, toWorldId("reality"));
+    assert.equal(state.activeView, "WORLD_EDITOR");
+    assert.equal(state.selectedWorldIdForEditing, customWorldId);
+    assert.equal(state.worldEditorDraft?.worldName, "Edited Studio");
+    assert.equal(state.worldEditorDraft?.worldviewText, "Quiet city");
+    assert.equal(state.view.product.snapshot.worldMeta.title, "Reality");
   });
 
   it("opens and updates create world draft without creating or switching worlds", () => {
@@ -332,10 +374,12 @@ function createState(): SemanticMobileState {
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
+    selectedWorldIdForEditing: null,
     composerMode: "text",
     inputDraft: "",
     settingsOpen: false,
     createWorldDraft: null,
+    worldEditorDraft: null,
     worldCreationTransition: null,
     splashVisible: false,
     view: {

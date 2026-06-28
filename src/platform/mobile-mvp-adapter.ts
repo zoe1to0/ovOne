@@ -20,7 +20,8 @@ import type {
   MobileMvpTab,
   MobileOverlay,
   SemanticMobileState,
-  ViewRouteResolution
+  ViewRouteResolution,
+  WorldEditorDraft
 } from "./behavior-registry.js";
 import type {
   MinimalProductShellRuntime,
@@ -57,10 +58,12 @@ export function mountChatShell(
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
+    selectedWorldIdForEditing: null,
     composerMode: resolveDefaultComposerMode("normal"),
     inputDraft: "",
     settingsOpen: false,
     createWorldDraft: null,
+    worldEditorDraft: null,
     worldCreationTransition: null,
     splashVisible: true,
     view: initialView
@@ -192,6 +195,8 @@ function renderShellPage(
       return createCreateWorldDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DETAIL_EDIT":
       return createCreateWorldDetailEditView(snapshot, state, controller);
+    case "WORLD_EDITOR":
+      return createWorldEditorView(snapshot, state, controller);
   }
 }
 
@@ -890,6 +895,93 @@ function createCreateWorldDetailEditView(
   return screen;
 }
 
+function createWorldEditorView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
+  const draft = state.worldEditorDraft ?? createWorldEditorFallbackDraft(snapshot, state);
+  const isReality = draft.locked;
+  const screen = document.createElement("section");
+  screen.className = "mvp-screen mvp-world-editor";
+
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "mvp-back-button";
+  back.textContent = "聊天";
+  bindControllerAction(back, controller, { type: "CANCEL_WORLD_EDITOR" });
+
+  const name = document.createElement("input");
+  name.name = "worldEditorName";
+  name.placeholder = "世界名称";
+  name.value = draft.worldName;
+  name.disabled = isReality;
+  bindWorldEditorInput(name, controller, "worldName");
+
+  const worldview = document.createElement("textarea");
+  worldview.name = "worldEditorWorldview";
+  worldview.placeholder = "世界观 / 世界设定";
+  worldview.value = draft.worldviewText;
+  worldview.disabled = isReality;
+  bindWorldEditorInput(worldview, controller, "worldviewText");
+
+  const worldSection = document.createElement("section");
+  worldSection.className = "mvp-world-editor-section";
+  worldSection.append(name, worldview);
+  if (isReality) {
+    worldSection.append(createValidationNote("现实世界世界观不可修改"));
+  }
+
+  const roleSection = document.createElement("section");
+  roleSection.className = "mvp-world-editor-section";
+  roleSection.append(createDraftNote("角色 / 成员编辑稍后开放"));
+
+  const memberSection = document.createElement("section");
+  memberSection.className = "mvp-world-editor-section";
+  memberSection.append(createDraftNote("添加 AI 成员暂未开放"));
+
+  const actions = document.createElement("section");
+  actions.className = "mvp-world-editor-actions";
+  actions.append(
+    createMenuButton("取消", controller, { type: "CANCEL_WORLD_EDITOR" }),
+    createMenuButton("保存", controller, { type: "SAVE_WORLD_EDITOR" })
+  );
+  if (draft.noticeMessage) {
+    actions.append(createValidationNote(draft.noticeMessage));
+  }
+
+  screen.append(
+    createScreenHeader("编辑世界", back),
+    createDraftStage("世界名称", name),
+    createDraftStage("世界观 / 世界设定", worldSection),
+    createDraftStage("角色 / 成员", roleSection),
+    createDraftStage("添加 AI 成员", memberSection),
+    actions
+  );
+  return screen;
+}
+
+function createWorldEditorFallbackDraft(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState
+): WorldEditorDraft {
+  const worldId = state.selectedWorldIdForEditing ?? snapshot.worldMeta.id;
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === worldId);
+  const isReality = selectedWorld?.type === "reality" || snapshot.worldMeta.type === "reality";
+  const runtimeState = snapshot.runtimeState as {
+    readonly metadata?: {
+      readonly worldView?: Readonly<Record<string, unknown>>;
+    };
+  };
+  return {
+    worldId,
+    worldName: selectedWorld?.title ?? snapshot.worldMeta.title,
+    worldviewText: JSON.stringify(runtimeState.metadata?.worldView ?? {}),
+    locked: isReality,
+    noticeMessage: null
+  };
+}
+
 const CHAT_PANEL_ACTIONS = Object.freeze([
   Object.freeze({ label: "群成员", action: Object.freeze({ type: "CHAT_OPEN_GROUP_MEMBERS" } as const) }),
   Object.freeze({ label: "聊天设置", action: Object.freeze({ type: "CHAT_OPEN_SETTINGS" } as const) }),
@@ -1217,6 +1309,16 @@ function bindCreateWorldDetailInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_CREATE_WORLD_DETAIL", field, value: input.value });
+  });
+}
+
+function bindWorldEditorInput(
+  input: HTMLInputElement | HTMLTextAreaElement,
+  controller: InteractionController,
+  field: "worldName" | "worldviewText"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_WORLD_EDITOR_DRAFT", field, value: input.value });
   });
 }
 

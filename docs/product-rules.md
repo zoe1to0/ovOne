@@ -31,6 +31,7 @@
 - Current known engineering issue: Create World supports minimal Random Role direct creation and a Detailed Edit scaffold route with role-slot metadata, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented yet.
 - Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero groups. No real text generation or group creation is implemented yet.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
+- Current World Editor scaffold: ovO -> Edit World can open a route/page scaffold for existing worlds; Reality worldview remains locked, custom world fields are local draft UI only, and saving/add-member/role editing are not implemented yet.
 
 ## Data Ownership Rules
 

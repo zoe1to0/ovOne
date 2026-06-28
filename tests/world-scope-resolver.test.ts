@@ -69,10 +69,12 @@ describe("World scoped data model foundation", () => {
       activeChatId: "reality-chat-1",
       overlay: "chat-menu",
       selectedContactActorId: "actor:old",
+      selectedWorldIdForEditing: null,
       composerMode: "text",
       inputDraft: "",
       settingsOpen: true,
       createWorldDraft: null,
+      worldEditorDraft: null,
       worldCreationTransition: null,
       splashVisible: false,
       view: {} as SemanticMobileState["view"]
