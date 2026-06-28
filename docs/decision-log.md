@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-06-28: Create World transition lifecycle made explicit
+
+Decision: The local Create World loading/welcome scaffold now has an explicit completion action.
+
+Rules:
+
+- `COMPLETE_WORLD_CREATION_TRANSITION` clears `worldCreationTransition`.
+- Completing the transition keeps `currentWorldId` unchanged.
+- Completing the transition keeps the app on `CHAT_LIST` with no active chat.
+- The transition remains scaffold UI only; no real animation timing, LLM call, memory engine, group chat creation, or Create World core behavior change is introduced.
+
 ## 2026-06-28: Create World validation UX improved
 
 Decision: Existing Create World validation now exposes clearer inline feedback without changing create-world core logic.

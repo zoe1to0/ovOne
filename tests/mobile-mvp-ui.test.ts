@@ -155,7 +155,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| "ovo-world-menu"/);
     assert.match(registry, /\| "world-switcher"/);
     assert.match(registry, /\| "world-editor-selector"/);
-    assert.match(adapter, /app\.append\([\s\S]*viewport,[\s\S]*createWorldCreationTransitionLayer\(state\),[\s\S]*createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\),[\s\S]*createBottomNav\(state, controller\)[\s\S]*\)/);
+    assert.match(adapter, /app\.append\([\s\S]*viewport,[\s\S]*createWorldCreationTransitionLayer\(state, controller\),[\s\S]*createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\),[\s\S]*createBottomNav\(state, controller\)[\s\S]*\)/);
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
     assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);
@@ -166,6 +166,21 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-overlay-panel \{[\s\S]*pointer-events: auto;/);
     assert.match(html, /\.mvp-composer \{[\s\S]*position: fixed;[\s\S]*bottom: 64px;/);
     assert.equal(html.includes(".mvp-world-panel"), false);
+  });
+
+  it("renders a clearable world creation transition through the controller", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
+
+    assert.match(registry, /\| \{ readonly type: "COMPLETE_WORLD_CREATION_TRANSITION" \}/);
+    assert.match(registry, /case "COMPLETE_WORLD_CREATION_TRANSITION":/);
+    assert.match(registry, /state\.worldCreationTransition = null/);
+    assert.match(adapter, /function createWorldCreationTransitionLayer\(\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
+    assert.match(adapter, /transition\.phase === "done"/);
+    assert.match(adapter, /bindControllerAction\(continueButton, controller, \{ type: "COMPLETE_WORLD_CREATION_TRANSITION" \}\)/);
+    assert.match(html, /\.mvp-world-creation-transition \{[\s\S]*pointer-events: auto;/);
+    assert.match(html, /\.mvp-world-creation-transition button \{/);
   });
 
   it("renders create world draft scaffold from the add menu without creating worlds", () => {

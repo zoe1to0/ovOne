@@ -159,7 +159,7 @@ function createChatShell(
 
   app.append(
     viewport,
-    createWorldCreationTransitionLayer(state),
+    createWorldCreationTransitionLayer(state, controller),
     createOverlayLayer(ViewRouter.currentOverlay(state), state, controller),
     createBottomNav(state, controller)
   );
@@ -600,7 +600,10 @@ function createOverlayLayer(
   return layer;
 }
 
-function createWorldCreationTransitionLayer(state: SemanticMobileState): HTMLElement {
+function createWorldCreationTransitionLayer(
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
   const layer = document.createElement("section");
   layer.className = "mvp-world-creation-transition-layer";
   layer.setAttribute("aria-label", "世界载入");
@@ -618,7 +621,12 @@ function createWorldCreationTransitionLayer(state: SemanticMobileState): HTMLEle
   const welcome = document.createElement("strong");
   welcome.textContent = transition.welcomeText;
 
-  panel.append(loading, welcome);
+  const continueButton = document.createElement("button");
+  continueButton.type = "button";
+  continueButton.textContent = "继续";
+  bindControllerAction(continueButton, controller, { type: "COMPLETE_WORLD_CREATION_TRANSITION" });
+
+  panel.append(loading, welcome, continueButton);
   layer.append(panel);
   return layer;
 }

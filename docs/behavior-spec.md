@@ -78,6 +78,7 @@ UI event
 - Confirming the Create World draft with `nextMode = "detailed-edit"` does not create a world yet.
 - Confirming Create World detailed edit with a non-empty world name and at least one selected AI creates a custom world through Flow Executor and the shell runtime boundary.
 - Successful Create World confirmation sets a local loading/welcome transition scaffold and then lands on the new world's `CHAT_LIST`.
+- `COMPLETE_WORLD_CREATION_TRANSITION` explicitly ends the local transition scaffold, clears `worldCreationTransition`, and keeps the user in the new world's `CHAT_LIST`.
 - Transition loading text is `{worldName} 载入中…`.
 - Transition welcome text uses draft identity metadata only: Empty Role, Blank World, and project-document worlds use `欢迎来到 {worldName}。`; identity worlds use `你是 {roleName}，今天是你来到 {worldName} 的第一天。`.
 - If identity exists but no real generated role name exists yet, the scaffold role name is `新世界中的你`.
@@ -159,6 +160,7 @@ UI event
 - `CONFIRM_CREATE_WORLD_DETAIL`
 - `CANCEL_CREATE_WORLD_DRAFT`
 - `CANCEL_CREATE_WORLD_DETAIL`
+- `COMPLETE_WORLD_CREATION_TRANSITION`
 
 ### ovO Actions
 
@@ -191,6 +193,7 @@ UI event
 - `CONFIRM_CREATE_WORLD_DETAIL`
 - `CANCEL_CREATE_WORLD_DRAFT`
 - `CANCEL_CREATE_WORLD_DETAIL`
+- `COMPLETE_WORLD_CREATION_TRANSITION`
 
 ## Implemented Action Mapping
 
@@ -235,6 +238,7 @@ UI event
 | Select detail role mode | `SELECT_DETAIL_ROLE_MODE` | Sets detail role mode to `random-role`, `fixed-role`, or `empty-role`. |
 | Confirm Create World draft | `CONFIRM_CREATE_WORLD_DRAFT` | Registry sanitizes/validates draft state; Flow Executor creates a world only for valid `random-role` with selected AI, sets transition scaffold state, then switches into it and clears draft/overlay. |
 | Confirm Create World detail | `CONFIRM_CREATE_WORLD_DETAIL` | Registry sanitizes/validates draft state; Flow Executor creates a world for valid detail edit drafts with selected AI, sets transition scaffold state, then switches into it and clears draft/overlay. |
+| Complete Create World transition | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps `currentWorldId` unchanged, and remains on `CHAT_LIST` with no active chat. |
 | Cancel Create World draft | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft state and returns to `CHAT_LIST`. |
 | Cancel Create World detail | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft state and returns to `CHAT_LIST`. |
 | Group members | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -273,7 +277,7 @@ These actions are named and routed but intentionally do not implement product be
 - ovO world-button menu hierarchy is bound, but real world editing is not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
-- Create World loading/welcome transition is immediate scaffold state; no real animation timing or generated identity exists yet.
+- Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.
 
 ## Remaining Behavior Questions
 

@@ -56,7 +56,7 @@ describe("Product UI Consolidation", () => {
     assert.match(adapter, /function createChatShell\(/);
     assert.match(adapter, /const controller = createInteractionController\(shell, state, render\)/);
     assert.match(adapter, /const snapshot = state\.view\.product\.snapshot/);
-    assert.match(adapter, /app\.append\([\s\S]*viewport,[\s\S]*createWorldCreationTransitionLayer\(state\),[\s\S]*createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\),[\s\S]*createBottomNav\(state, controller\)[\s\S]*\)/);
+    assert.match(adapter, /app\.append\([\s\S]*viewport,[\s\S]*createWorldCreationTransitionLayer\(state, controller\),[\s\S]*createOverlayLayer\(ViewRouter\.currentOverlay\(state\), state, controller\),[\s\S]*createBottomNav\(state, controller\)[\s\S]*\)/);
     assert.doesNotMatch(adapter, /className = "minimal-/);
     assert.doesNotMatch(adapter, /ovone-product-shell/);
   });

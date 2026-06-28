@@ -17,7 +17,7 @@ Last audited: 2026-06-27.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or create group chats yet.
-- Create World loading/welcome transition is scaffold state only; no polished animation timing, real generated identity, or loading process exists yet.
+- Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
 - ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.

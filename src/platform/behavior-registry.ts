@@ -113,6 +113,7 @@ export type InteractionAction =
   | { readonly type: "CONFIRM_CREATE_WORLD_DETAIL" }
   | { readonly type: "CANCEL_CREATE_WORLD_DRAFT" }
   | { readonly type: "CANCEL_CREATE_WORLD_DETAIL" }
+  | { readonly type: "COMPLETE_WORLD_CREATION_TRANSITION" }
   | { readonly type: "CHAT_OPEN_GROUP_MEMBERS" }
   | { readonly type: "CHAT_OPEN_SETTINGS" }
   | { readonly type: "CHAT_OPEN_BACKGROUND_SETTINGS" }
@@ -178,6 +179,7 @@ type DisabledInteractionAction = Exclude<
   | "CONFIRM_CREATE_WORLD_DETAIL"
   | "CANCEL_CREATE_WORLD_DRAFT"
   | "CANCEL_CREATE_WORLD_DETAIL"
+  | "COMPLETE_WORLD_CREATION_TRANSITION"
 >;
 
 export type BehaviorRegistry = Readonly<{
@@ -609,6 +611,15 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "CANCEL_CREATE_WORLD_DRAFT":
       case "CANCEL_CREATE_WORLD_DETAIL":
         state.createWorldDraft = null;
+        state.activeView = "CHAT_LIST";
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+
+      case "COMPLETE_WORLD_CREATION_TRANSITION":
+        state.worldCreationTransition = null;
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;

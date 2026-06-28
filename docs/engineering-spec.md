@@ -134,6 +134,7 @@ UI action
 - Missing world name shows `请输入世界名称`; missing AI selection shows `请选择至少一个 AI 朋友`; document import source controls show `文档导入暂未开放` without changing source state.
 - Fixed Role incomplete rows and Random Role empty slots do not block creation; they show helper text only.
 - Successful Create World confirmation sets local `worldCreationTransition` scaffold state with loading and welcome text, then lands on the new world's `CHAT_LIST`.
+- `COMPLETE_WORLD_CREATION_TRANSITION` clears local `worldCreationTransition`, keeps `currentWorldId` unchanged, and remains on `CHAT_LIST` with no active chat.
 - Create World welcome text is resolved by `src/platform/world-creation-transition.ts` from the draft identity scaffold only; it does not call an LLM or generate real roles.
 - Empty Role, Blank World, and project-document worlds use no-identity welcome text; worldview/official/text worlds use explicit user role names when present or safe placeholder `新世界中的你`.
 - Detailed Edit supports role modes `random-role`, `fixed-role`, and `empty-role`; role content remains placeholder metadata.
@@ -245,6 +246,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `CONFIRM_CREATE_WORLD_DETAIL`
 - `CANCEL_CREATE_WORLD_DRAFT`
 - `CANCEL_CREATE_WORLD_DETAIL`
+- `COMPLETE_WORLD_CREATION_TRANSITION`
 - `OPEN_EMOJI_PICKER`
 - `OPEN_FILE_PICKER`
 - `CLOSE_OVERLAY`
@@ -307,6 +309,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CONFIRM_CREATE_WORLD_DETAIL` | Registry validates/sanitizes draft state; Flow Executor creates a world for valid detail edit drafts with selected AI, sets transition scaffold state, then clears draft/overlay and lands on `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DRAFT` | Clears local draft and returns to `CHAT_LIST`. |
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
+| `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
 | `OPEN_WORLD_EDITOR` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -396,7 +399,7 @@ Exceptions:
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 - Create World draft edit actions mutate only local `createWorldDraft` state.
 - Random-role Create World draft confirmation and valid Detailed Edit confirmation are the Create World actions with Flow Executor runtime effects.
-- Create World transition is currently immediate scaffold state; no real animation timing or generated role identity exists yet.
+- Create World transition is currently immediate scaffold state with an explicit completion action; no real animation timing or generated role identity exists yet.
 
 ## Current Test/Verification Surface
 

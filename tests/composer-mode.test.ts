@@ -292,6 +292,36 @@ describe("Composer mode state machine", () => {
     assert.equal(state.selectedContactActorId, null);
     assert.equal(state.overlay, null);
   });
+
+  it("completes world creation transition without changing world context", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const newWorldId = toWorldId("custom:new-world");
+    state.currentWorldId = newWorldId;
+    state.activeView = "CHAT_LIST";
+    state.activeChatId = null;
+    state.selectedContactActorId = null;
+    state.overlay = "add-menu";
+    state.settingsOpen = true;
+    state.worldCreationTransition = {
+      worldId: newWorldId,
+      worldName: "New World",
+      phase: "welcome",
+      loadingText: "New World loading",
+      welcomeText: "Welcome"
+    };
+
+    const result = registry.execute({ type: "COMPLETE_WORLD_CREATION_TRANSITION" }, state);
+
+    assert.equal(result.shouldRender, true);
+    assert.equal(state.worldCreationTransition, null);
+    assert.equal(state.currentWorldId, newWorldId);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.selectedContactActorId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+  });
 });
 
 function createState(): SemanticMobileState {
