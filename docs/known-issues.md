@@ -13,10 +13,10 @@ Last audited: 2026-06-27.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
 - World-scoped data model foundation now supports minimal random-role world creation and detailed edit scaffold creation, but does not implement edit world flows.
-- Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, AI initial messages, and auto group creation are not implemented.
+- Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
-- World Bootstrap Planner stores deterministic plan metadata only; it does not generate AI text, create initial messages, create memory, or create group chats yet.
+- World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or create group chats yet.
 - Create World missing-name validation is now explicit, but broader validation beyond required world name is not implemented yet.
 - ovO world menu supports read-only world switching and a world editor selector scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.

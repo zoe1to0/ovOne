@@ -28,8 +28,8 @@
 - ovO cannot be customized.
 - ovO is the entry for world switching and world editing.
 - Add/create actions include add AI friend, create group, create world.
-- Current known engineering issue: Create World supports minimal Random Role direct creation and a Detailed Edit scaffold route with role-slot metadata, but real random role generation, real generated/fixed role behavior, document parsing, AI initial messages, and auto group creation are not implemented yet.
-- Current bootstrap scaffold: non-empty role worlds store planned initial private message metadata per selected AI; Empty Role worlds store zero planned private messages and zero groups. No real text generation or group creation is implemented yet.
+- Current known engineering issue: Create World supports minimal Random Role direct creation and a Detailed Edit scaffold route with role-slot metadata, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented yet.
+- Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero groups. No real text generation or group creation is implemented yet.
 
 ## Data Ownership Rules
 

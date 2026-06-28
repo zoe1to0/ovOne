@@ -139,9 +139,10 @@ UI action
 - Blank-world creation keeps selected AI original display names and stores role assignment as `none`.
 - Non-blank source creation stores role assignment as `placeholder`; no real role generation is performed.
 - Create World service calls World Bootstrap Planner during custom world creation and stores the deterministic `bootstrapPlan` in world metadata.
-- `bootstrapPlan` contains planned private initial message metadata and planned group metadata only; it does not create messages, call an LLM, create memory, or create group chats.
-- Non-empty role worlds plan one initial private message per selected AI contact.
-- Empty Role worlds plan zero initial private messages and zero groups.
+- `bootstrapPlan` contains private initial message and group plan metadata; it does not call an LLM, create memory, or create group chats.
+- Non-empty role worlds create one scaffold initial private message per selected AI contact using explicit placeholder text.
+- Created scaffold initial private message plans are marked `generated-stub`.
+- Empty Role worlds create zero active initial private messages and zero groups.
 - CSS production namespace is `.mvp-*`.
 
 ## Current Stable Core

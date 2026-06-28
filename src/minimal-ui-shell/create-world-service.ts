@@ -1,6 +1,6 @@
 import type { AppRuntime } from "../app/index.js";
-import { toChatEventId, toChatId, transition } from "../chat-kernel/index.js";
-import type { ChatId } from "../chat-kernel/index.js";
+import { toChatEventId, toChatId, toMessageId, transition } from "../chat-kernel/index.js";
+import type { ChatId, MessageId } from "../chat-kernel/index.js";
 import { planWorldBootstrap } from "../domain/index.js";
 import type { WorldBootstrapPlan, WorldBootstrapRoleMode } from "../domain/index.js";
 import { createPatchQueue } from "../patch-queue/index.js";
@@ -42,7 +42,8 @@ export function createWorldFromDraft(input: Readonly<{
     roleMode: bootstrapRoleModeForDraft(input.draft),
     sourceType: input.draft.worldviewSourceType
   });
-  const initialState = createInitialWorldState(worldId, title, input.sourceSnapshot, contacts, input.draft, bootstrapPlan);
+  const storedBootstrapPlan = markBootstrapPlanGeneratedStub(bootstrapPlan);
+  const initialState = createInitialWorldState(worldId, title, input.sourceSnapshot, contacts, input.draft, storedBootstrapPlan);
   input.app.worldDomain.commitState(initialState);
 
   let state = input.app.worldDomain.getWorldState(worldId);
@@ -59,12 +60,48 @@ export function createWorldFromDraft(input: Readonly<{
     });
     input.app.worldDomain.commitState(state);
   }
+  state = executeBootstrapInitialMessageStubs(state, bootstrapPlan);
+  input.app.worldDomain.commitState(state);
 
   return Object.freeze({
     worldId,
     state: input.app.worldDomain.getWorldState(worldId),
-    bootstrapPlan
+    bootstrapPlan: storedBootstrapPlan
   });
+}
+
+function executeBootstrapInitialMessageStubs(state: WorldState, bootstrapPlan: WorldBootstrapPlan): WorldState {
+  let nextState = state;
+  for (const [index, plan] of bootstrapPlan.privateMessages.entries()) {
+    const chatId = toChatId(`chat:${plan.worldId}:${plan.contactId}`) as ChatId;
+    nextState = transition(nextState, {
+      id: toChatEventId(`event:create-world:${plan.worldId}:bootstrap-message:${plan.contactId}`),
+      type: "message.submitted",
+      worldId: plan.worldId,
+      timestamp: 9000 + index,
+      payload: {
+        chatId,
+        messageId: toMessageId(`message:create-world:${plan.worldId}:bootstrap:${plan.contactId}`) as MessageId,
+        authorActorId: plan.contactId,
+        text: "初始消息待生成",
+        createdAt: 9000 + index
+      }
+    });
+  }
+  return nextState;
+}
+
+function markBootstrapPlanGeneratedStub(bootstrapPlan: WorldBootstrapPlan): WorldBootstrapPlan {
+  if (bootstrapPlan.privateMessages.length === 0) {
+    return bootstrapPlan;
+  }
+  return Object.freeze({
+    ...bootstrapPlan,
+    privateMessages: Object.freeze(bootstrapPlan.privateMessages.map((plan) => Object.freeze({
+      ...plan,
+      status: "generated-stub" as const
+    })))
+  }) satisfies WorldBootstrapPlan;
 }
 
 function createInitialWorldState(

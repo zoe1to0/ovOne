@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-28: Bootstrap initial message stubs added
+
+Decision: Create World now turns planned private bootstrap messages into scaffold chat messages.
+
+Rules:
+
+- Non-empty role worlds create one scaffold initial private message per selected AI private chat.
+- Scaffold initial message text is explicit placeholder content and must not be treated as final generated AI output.
+- Empty Role worlds create zero active initial private messages.
+- Bootstrap private message plans that produce scaffold messages are marked `generated-stub`.
+- Reality chats/messages remain unchanged by custom world bootstrap execution.
+- No LLM call, real prompt generation, memory write, loading animation, or group chat creation is implemented.
+
 ## 2026-06-28: World Bootstrap Planner scaffold added
 
 Decision: Create World now produces a deterministic bootstrap plan after custom world creation.
@@ -11,8 +24,8 @@ Rules:
 - Non-empty role worlds plan one private initial message per selected AI contact.
 - Empty Role worlds plan zero private initial messages and zero groups.
 - Group plans are capped at two and are never created just because many AI are selected.
-- The create-world service stores the plan in world metadata for later runtime work.
-- The planner does not call an LLM, generate message text, create memory, create messages, or create group chats.
+- The create-world service stores the plan in world metadata for bootstrap execution.
+- The planner does not call an LLM, generate final message text, create memory, or create group chats.
 
 ## 2026-06-27: Create World validation hardened
 

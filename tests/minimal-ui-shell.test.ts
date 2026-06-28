@@ -146,6 +146,7 @@ describe("Minimal UI Shell", () => {
     const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
     const beforeWorlds = realityBefore.availableWorlds.length;
     const beforeRealityContactCount = realityBefore.product.snapshot.contacts.length;
+    const beforeRealityChatCount = realityBefore.product.snapshot.chatState.chats.size;
 
     const created = shell.createWorldFromDraft({
       worldName: "Blank Test World",
@@ -163,14 +164,20 @@ describe("Minimal UI Shell", () => {
     assert.equal(createWorldSettings(created).roleAssignment, "none");
     assert.equal(createWorldBootstrapPlan(created).privateMessages.length, 1);
     assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.contactId, friend.actorId);
+    assert.equal(createWorldBootstrapPlan(created).privateMessages[0]?.status, "generated-stub");
     assert.deepEqual(createWorldBootstrapPlan(created).groups, []);
     assert.equal(created.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId && contact.worldId === created.activeWorldId), true);
     assert.equal(created.product.snapshot.chatState.chats.size, 1);
-    assert.equal(created.product.snapshot.chatState.chats.values().next().value?.title, friend.displayName);
+    const chat = created.product.snapshot.chatState.chats.values().next().value;
+    assert.equal(chat?.title, friend.displayName);
+    assert.equal(chat?.messages.length, 1);
+    assert.equal(chat?.messages[0]?.authorActorId, friend.actorId);
+    assert.equal(chat?.messages[0]?.text, "初始消息待生成");
 
     const realityAfter = shell.switchWorld(realityWorldId);
     assert.equal(realityAfter.product.snapshot.contacts.length, beforeRealityContactCount);
     assert.equal(realityAfter.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)?.worldId, realityWorldId);
+    assert.equal(realityAfter.product.snapshot.chatState.chats.size, beforeRealityChatCount);
   });
 
   it("keeps non-blank role assignment as an explicit placeholder", () => {
@@ -200,21 +207,34 @@ describe("Minimal UI Shell", () => {
     assert.equal(created.product.snapshot.runtimeState.metadata.worldView.roleAssignment, "placeholder");
     assert.equal(createWorldSettings(created).roleAssignment, "placeholder");
     assert.equal(createWorldBootstrapPlan(created).privateMessages.length, 1);
+    assert.equal(created.product.snapshot.chatState.chats.values().next().value?.messages[0]?.text, "初始消息待生成");
   });
 
-  it("creates a custom world from detailed edit empty role without changing Reality", () => {
+  it("creates a custom world from detailed edit empty role without active initial messages", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);
     const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
     const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
     const beforeWorlds = realityBefore.availableWorlds.length;
     const beforeRealityContactCount = realityBefore.product.snapshot.contacts.length;
+    const beforeRealityChatCount = realityBefore.product.snapshot.chatState.chats.size;
 
     const created = shell.createWorldFromDraft({
       worldName: "Empty Role World",
       worldviewSourceType: "text",
       worldviewText: "A quiet place.",
-      selectedAIModelIds: [],
+      selectedAIModelIds: [friend.actorId],
       nextMode: "detailed-edit",
       detailRoleMode: "empty-role",
       randomRoleSlots: [],
@@ -231,9 +251,13 @@ describe("Minimal UI Shell", () => {
     assert.equal(createWorldSettings(created).detailRoleMode, "empty-role");
     assert.deepEqual(createWorldBootstrapPlan(created).privateMessages, []);
     assert.deepEqual(createWorldBootstrapPlan(created).groups, []);
+    assert.equal(created.product.snapshot.groups.length, 0);
+    assert.equal(created.product.snapshot.chatState.chats.size, 1);
+    assert.equal(created.product.snapshot.chatState.chats.values().next().value?.messages.length, 0);
 
     const realityAfter = shell.switchWorld(realityWorldId);
     assert.equal(realityAfter.product.snapshot.contacts.length, beforeRealityContactCount);
+    assert.equal(realityAfter.product.snapshot.chatState.chats.size, beforeRealityChatCount);
   });
 });
 
@@ -242,11 +266,11 @@ function createWorldSettings(view: ReturnType<MinimalProductShellRuntime["view"]
 }
 
 function createWorldBootstrapPlan(view: ReturnType<MinimalProductShellRuntime["view"]>): {
-  privateMessages: { contactId: string }[];
+  privateMessages: { contactId: string; status: string }[];
   groups: unknown[];
 } {
   return createWorldSettings(view).bootstrapPlan as {
-    privateMessages: { contactId: string }[];
+    privateMessages: { contactId: string; status: string }[];
     groups: unknown[];
   };
 }

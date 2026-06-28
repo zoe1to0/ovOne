@@ -6,7 +6,7 @@ export type InitialPrivateMessagePlan = Readonly<{
   readonly worldId: WorldId;
   readonly contactId: string;
   readonly reason: string;
-  readonly status: "planned";
+  readonly status: "planned" | "generated-stub";
 }>;
 
 export type InitialGroupPlan = Readonly<{
