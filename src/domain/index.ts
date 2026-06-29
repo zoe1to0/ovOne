@@ -48,6 +48,21 @@ export type {
   WorldEditorPatchValidation
 } from "./world-editor-contract.js";
 export {
+  WORLD_ROLE_EDITOR_REALITY_LOCKED_MESSAGE,
+  canEditWorldRoles,
+  getForbiddenWorldRoleEditorFields,
+  getWorldRoleEditorWarnings,
+  validateWorldRoleEditorPatch
+} from "./world-role-editor-contract.js";
+export type {
+  MemberWorldRolePatch,
+  UserWorldRolePatch,
+  WorldRoleEditorEditabilityInput,
+  WorldRoleEditorForbiddenField,
+  WorldRoleEditorPatch,
+  WorldRoleEditorValidation
+} from "./world-role-editor-contract.js";
+export {
   WORLD_MEMBER_ALREADY_EXISTS_MESSAGE,
   WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
   WORLD_MEMBER_UNLINKED_AI_MESSAGE,

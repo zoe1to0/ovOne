@@ -30,6 +30,7 @@ Last audited: 2026-06-28.
 - ovO panel has read-only world switching, custom world metadata saving, local role/member draft scaffolding, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no role/member save mutation, group membership cleanup, initial member messages after member add, or real memory engine integration yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata only; it must not be treated as contact, role, member, chat, memory, GlobalAIModel, or GlobalAILink editing.
 - World Editor role/member scaffold now collects local user role and AI member role draft fields for custom worlds, but role/member save mutation is not implemented.
+- World Editor role/member save contract exists, but `SAVE_WORLD_EDITOR` still does not persist role/member data.
 - World Editor role/member scaffold must not be treated as Contacts Detail behavior; contact remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission remain outside World Editor.
 - Contacts Detail remains unimplemented as a real preference editor; its five owned settings are documented but not yet available as product behavior.
 - Me Settings global context authorization for weather/time is documented as an account-level boundary, but real authorization UI and permission enforcement are not implemented yet.

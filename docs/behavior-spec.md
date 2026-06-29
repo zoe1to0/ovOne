@@ -81,6 +81,9 @@ UI event
 - World Editor role/member scaffold has a user role row and current world AI member role rows.
 - `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` and `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` update local draft fields only and show `角色设定保存暂未开放`.
 - `SAVE_WORLD_EDITOR` still persists only custom world name/worldview metadata; it does not persist role/member draft data.
+- World Editor role/member save contract is defined in `src/domain/world-role-editor-contract.ts`, but it is not connected to runtime role/member mutation yet.
+- The role/member save contract allows only user `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
+- The role/member save contract rejects Reality and forbids contact preferences, weather/time permissions, global AI settings, chat mutation, and memory mutation.
 - World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor must not expose contact-level preference controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
