@@ -501,6 +501,57 @@ describe("Minimal UI Shell", () => {
     assert.equal(Boolean((customAfter.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
   });
 
+  it("re-adds a removed member as a clean world-scoped instance without old chat or memory", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Readd Member World",
+      worldviewSourceType: "text",
+      worldviewText: "A small shared place.",
+      selectedAIModelIds: [],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const firstAdded = shell.addWorldMember({
+      worldId: customWorldId,
+      globalAILinkId: "link:ai:friend"
+    });
+    const chatId = `chat:${customWorldId}:ai:friend`;
+    assert.equal(firstAdded.product.snapshot.chatState.chats.get(chatId)?.messages.length, 0);
+    assert.equal(Boolean((firstAdded.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), true);
+
+    const removed = shell.removeWorldMember({
+      worldId: customWorldId,
+      actorId: "ai:friend"
+    });
+    assert.equal(removed.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), false);
+    assert.equal(removed.product.snapshot.chatState.chats.has(chatId), false);
+    assert.equal(Boolean((removed.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
+
+    const readded = shell.addWorldMember({
+      worldId: customWorldId,
+      globalAILinkId: "link:ai:friend"
+    });
+
+    assert.equal(readded.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), true);
+    assert.equal(readded.product.snapshot.chatState.chats.has(chatId), true);
+    assert.equal(readded.product.snapshot.chatState.chats.get(chatId)?.messages.length, 0);
+    assert.equal(Boolean((readded.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), true);
+    assert.equal(readded.linkedAIModels?.some((model) => model.globalAILinkId === "link:ai:friend"), true);
+  });
+
   it("rejects invalid member removes", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);
