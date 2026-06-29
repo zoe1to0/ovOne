@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-06-29: v0.3-world-editor-core milestone tagged
+
+Decision: `v0.3-world-editor-core` marks the completed World Editor Core milestone.
+
+Rules:
+
+- The milestone includes the World Editor route/page scaffold.
+- The milestone includes Reality lock behavior.
+- The milestone includes custom world metadata save for world name/worldview.
+- The milestone includes Add Member execution.
+- The milestone includes Remove Member execution.
+- The milestone includes user world-level role metadata save.
+- The milestone includes AI member `worldRoleName` / `worldPersonaNotes` save.
+- Contacts Detail responsibility boundaries remain preserved.
+- Chat, memory, global AI link, and provider mutation remain outside World Editor except for the explicitly defined member lifecycle boundaries.
+
 ## 2026-06-29: World Editor role/member metadata save implemented
 
 Decision: `SAVE_WORLD_EDITOR` now persists allowed world-level role/member metadata for custom worlds through a controlled runtime boundary.
