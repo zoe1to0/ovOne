@@ -266,6 +266,81 @@ describe("Minimal UI Shell", () => {
     assert.equal(savedNonCurrent.availableWorlds.find((world) => world.worldId === customWorldId)?.worldView?.text, "Next worldview");
   });
 
+  it("saves custom world role metadata without mutating chats, memory, or global links", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+    const linkedBefore = realityBefore.linkedAIModels;
+    const created = shell.createWorldFromDraft({
+      worldName: "Role World",
+      worldviewSourceType: "text",
+      worldviewText: "Original worldview",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const contactsBefore = created.product.snapshot.contacts;
+    const chatsBefore = created.product.snapshot.chatState.chats;
+    const memoryBefore = created.product.snapshot.memorySummary;
+    const settingsBefore = created.product.snapshot.runtimeState.metadata.settings;
+
+    const saved = shell.saveWorldRoleMetadata({
+      worldId: customWorldId,
+      userRole: {
+        roleName: "Traveler",
+        personaNotes: "New arrival"
+      },
+      memberRoles: [
+        {
+          worldContactId: friend.actorId,
+          worldRoleName: "Guide",
+          worldPersonaNotes: "Knows the city"
+        }
+      ]
+    });
+
+    const userRole = saved.product.snapshot.runtimeState.metadata.worldView.worldEditorUserRole as {
+      readonly roleName: string;
+      readonly personaNotes: string;
+    };
+    const savedFriend = saved.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    const beforeFriend = contactsBefore.find((contact) => contact.actorId === friend.actorId)!;
+    assert.equal(userRole.roleName, "Traveler");
+    assert.equal(userRole.personaNotes, "New arrival");
+    assert.equal(savedFriend.worldRoleName, "Guide");
+    assert.equal(savedFriend.worldPersonaNotes, "Knows the city");
+    assert.equal(savedFriend.displayName, beforeFriend.displayName);
+    assert.equal(savedFriend.outputMode, beforeFriend.outputMode);
+    assert.equal(savedFriend.kind, beforeFriend.kind);
+    assert.equal(saved.product.snapshot.contacts.length, contactsBefore.length);
+    assert.deepEqual([...saved.product.snapshot.chatState.chats], [...chatsBefore]);
+    assert.deepEqual(saved.product.snapshot.memorySummary, memoryBefore);
+    assert.deepEqual(saved.product.snapshot.runtimeState.metadata.settings, settingsBefore);
+    assert.deepEqual(saved.linkedAIModels, linkedBefore);
+
+    assert.throws(
+      () => shell.saveWorldRoleMetadata({
+        worldId: realityWorldId,
+        userRole: { roleName: "Reality Role", personaNotes: "Nope" },
+        memberRoles: []
+      }),
+      /invalid World Editor role patch/
+    );
+    assert.deepEqual(shell.switchWorld(realityWorldId).product.snapshot.contacts, realityBefore.product.snapshot.contacts);
+  });
+
   it("adds a linked AI member to a custom world without touching Reality, groups, or messages", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

@@ -1,5 +1,5 @@
 import type { ChatId } from "../chat-kernel/index.js";
-import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand } from "../domain/index.js";
+import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 
 export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
@@ -92,6 +92,11 @@ export type MinimalProductShellView = Readonly<{
     readonly type: string;
     readonly worldView?: Readonly<Record<string, unknown>>;
     readonly memberActorIds?: readonly string[];
+    readonly memberRoles?: readonly Readonly<{
+      readonly worldContactId: string;
+      readonly worldRoleName: string;
+      readonly worldPersonaNotes: string;
+    }>[];
   }>[];
   readonly linkedAIModels?: readonly Readonly<{
     readonly globalAILinkId: string;
@@ -127,6 +132,7 @@ export type MinimalProductShellRuntime = Readonly<{
   readonly switchWorld: (worldId: WorldId) => MinimalProductShellView;
   readonly createWorldFromDraft: (draft: CreateWorldDraftInput) => MinimalProductShellView;
   readonly saveWorldMetadata: (patch: WorldEditorPatch) => MinimalProductShellView;
+  readonly saveWorldRoleMetadata: (patch: WorldRoleEditorPatch) => MinimalProductShellView;
   readonly addWorldMember: (command: WorldAddMemberCommand) => MinimalProductShellView;
   readonly removeWorldMember: (command: WorldRemoveMemberCommand) => MinimalProductShellView;
   readonly sendMessage: (text: string) => MinimalProductShellView;

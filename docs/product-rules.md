@@ -45,7 +45,8 @@
 - Remove Member must not disconnect Global AI Link, mutate Reality, mutate other worlds, mutate provider connections, or recover old world memory after re-add.
 - World Editor owns world-level setup only: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor role/member scaffold can show a user role row and current world AI member role rows for custom worlds.
-- World Editor role/member fields are local draft fields only until role save is explicitly implemented.
+- World Editor role/member fields can be saved as world-level role metadata for custom worlds.
+- User role metadata is world-level metadata; AI member role metadata is stored only on that world's `WorldContact.worldRoleName` and `WorldContact.worldPersonaNotes`.
 - World Editor role/member save contract may only allow user `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
 - World Editor must not own or expose contact-level communication preferences.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, "你认为他是怎样的人？", answer mode, chat tone/how the contact speaks to the user, and emoji permission.

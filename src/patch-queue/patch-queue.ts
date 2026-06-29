@@ -151,6 +151,12 @@ function applyPatch(state: WorldState | null, patch: StatePatch): WorldState {
         contacts: [...state.contacts, patch.value as WorldContact]
       };
 
+    case "contacts.replace":
+      return {
+        ...state,
+        contacts: patch.value as readonly WorldContact[]
+      };
+
     case "groups":
       return {
         ...state,

@@ -1,8 +1,22 @@
 # ovOne Decision Log
 
+## 2026-06-29: World Editor role/member metadata save implemented
+
+Decision: `SAVE_WORLD_EDITOR` now persists allowed world-level role/member metadata for custom worlds through a controlled runtime boundary.
+
+Rules:
+
+- Valid custom-world saves still persist name/worldview metadata.
+- Valid custom-world saves also persist `WorldRoleEditorPatch` data through `shell.saveWorldRoleMetadata(...)`.
+- User role metadata is stored under `metadata.worldView.worldEditorUserRole`; AI member role metadata is stored on the matching world-scoped `WorldContact` fields `worldRoleName` and `worldPersonaNotes`.
+- Reality rejects role/member metadata saves.
+- Contacts Detail fields remain outside World Editor: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone, and emoji permission.
+- Me Settings fields remain outside World Editor: global weather/time permission.
+- Role metadata saving does not mutate contact preference fields, chats, memory, `GlobalAIModel`, `GlobalAILink`, or provider connections; it may update only `WorldContact.worldRoleName` and `WorldContact.worldPersonaNotes` for custom-world AI members.
+
 ## 2026-06-29: World Editor role/member save contract defined
 
-Decision: Future World Editor role/member saving is governed by a pure custom-world-only contract before runtime mutation is implemented.
+Decision: Future World Editor role/member saving is governed by a pure custom-world-only contract before runtime mutation is implemented. This contract is now executed by the later role/member metadata save implementation above.
 
 Rules:
 
@@ -10,7 +24,7 @@ Rules:
 - Empty role fields are allowed and mean future fallback to world/create defaults.
 - Reality rejects role/member save patches.
 - World Editor role/member save contract forbids contact nickname/remark, `你认为他是怎样的人？`, answer mode, chat tone, emoji permission, weather/time permission, global AI link/model settings, provider connection mutation, chat mutation, and memory mutation.
-- `SAVE_WORLD_EDITOR` continues to save only custom world name/worldview metadata; role/member data remains scaffold-only until a later mutation path is implemented.
+- At this decision point, `SAVE_WORLD_EDITOR` continued to save only custom world name/worldview metadata; this was superseded by the role/member metadata save implementation above.
 
 ## 2026-06-29: Product responsibility boundaries clarified
 
@@ -28,14 +42,14 @@ Rules:
 
 ## 2026-06-29: World Editor role/member scaffold added
 
-Decision: World Editor now exposes custom-world role/member draft fields as a scaffold for future world-level role/background setup.
+Decision: World Editor now exposes custom-world role/member draft fields as a scaffold for future world-level role/background setup. The draft-only save limitation from this decision was superseded by the later role/member metadata save implementation above.
 
 Rules:
 
 - World Editor role/member scaffold applies only to custom worlds; Reality remains locked.
 - The scaffold includes a user role row and current world AI member role rows.
-- Draft fields are local only and are not persisted by `SAVE_WORLD_EDITOR`.
-- `SAVE_WORLD_EDITOR` continues to mutate only custom world name/worldview metadata.
+- At this decision point, draft fields were local only and were not persisted by `SAVE_WORLD_EDITOR`; this was superseded by the role/member metadata save implementation above.
+- At this decision point, `SAVE_WORLD_EDITOR` mutated only custom world name/worldview metadata; this was superseded by the role/member metadata save implementation above.
 - World Editor must not expose contact-level communication preferences such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts detail remains the owner for contact-level communication preferences.
 

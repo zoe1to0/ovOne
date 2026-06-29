@@ -119,6 +119,7 @@ export function createPersistentMinimalUiShell(
     switchWorld: (worldId) => withAutosave(shell.switchWorld(worldId)),
     createWorldFromDraft: (draft) => withAutosave(shell.createWorldFromDraft(draft)),
     saveWorldMetadata: (patch) => withAutosave(shell.saveWorldMetadata(patch)),
+    saveWorldRoleMetadata: (patch) => withAutosave(shell.saveWorldRoleMetadata(patch)),
     addWorldMember: (command) => withAutosave(shell.addWorldMember(command)),
     removeWorldMember: (command) => withAutosave(shell.removeWorldMember(command)),
     sendMessage: (text) => withAutosave(shell.sendMessage(text)),

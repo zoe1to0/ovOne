@@ -594,7 +594,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
             ...(state.worldEditorDraft.userRole ?? createWorldEditorUserRoleDraft({})),
             [action.field]: action.value
           }),
-          noticeMessage: "角色设定保存暂未开放"
+          noticeMessage: "角色设定将在保存时更新"
         });
         return RENDER;
 
@@ -610,7 +610,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
             action.field,
             action.value
           ),
-          noticeMessage: "角色设定保存暂未开放"
+          noticeMessage: "角色设定将在保存时更新"
         });
         return RENDER;
 
@@ -918,6 +918,13 @@ function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown
 }
 
 function createWorldEditorUserRoleDraft(worldView: Readonly<Record<string, unknown>>): WorldEditorUserRoleDraft {
+  const userRoleMetadata = worldView.worldEditorUserRole;
+  if (userRoleMetadata && typeof userRoleMetadata === "object" && !Array.isArray(userRoleMetadata)) {
+    return Object.freeze({
+      roleName: stringRecordValue(userRoleMetadata, "roleName"),
+      personaNotes: stringRecordValue(userRoleMetadata, "personaNotes")
+    });
+  }
   const roleDraft = worldEditorRoleMetadata(worldView);
   const userRole = roleDraft.userRole;
   return Object.freeze({
@@ -933,7 +940,7 @@ function createWorldEditorMemberRoleDrafts(
 ): readonly WorldEditorMemberRoleDraft[] {
   const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === worldId);
   const existingRoles = new Map(
-    worldEditorRoleMetadata(worldView).memberRoles.map((role) => [role.worldContactId, role])
+    (selectedWorld?.memberRoles ?? worldEditorRoleMetadata(worldView).memberRoles).map((role) => [role.worldContactId, role])
   );
   return Object.freeze((selectedWorld?.memberActorIds ?? []).map((actorId) => {
     const existing = existingRoles.get(actorId);

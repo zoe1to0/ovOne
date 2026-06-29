@@ -127,10 +127,12 @@ UI action
 - World Editor shows world name, worldview/world setting, role/member scaffold, add AI member scaffold, and a Reality lock note when editing Reality.
 - World Editor role/member scaffold is custom-world only and initializes local draft fields for a user role row plus current world AI member rows.
 - World Editor role/member draft fields are `userRole.roleName`, `userRole.personaNotes`, `memberRoles[].worldRoleName`, and `memberRoles[].worldPersonaNotes`.
-- World Editor role/member draft updates are local only and show `角色设定保存暂未开放`; `SAVE_WORLD_EDITOR` does not persist role/member draft data yet.
+- World Editor role/member draft updates are local until `SAVE_WORLD_EDITOR`; valid custom-world saves persist the allowed role/member fields as world-level metadata.
 - World Editor role/member save contract lives in `src/domain/world-role-editor-contract.ts`.
 - `WorldRoleEditorPatch` permits only world-level role setup fields: user `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
 - `validateWorldRoleEditorPatch(...)` rejects Reality and rejects contact preferences, weather/time permissions, global AI settings, provider connection mutation, chat mutation, and memory mutation.
+- `SAVE_WORLD_EDITOR` calls `shell.saveWorldMetadata(...)` for name/worldview and `shell.saveWorldRoleMetadata(...)` for role/member metadata.
+- User role metadata is stored in `metadata.worldView.worldEditorUserRole`; AI member role metadata is stored only on the matching world-scoped `WorldContact.worldRoleName` and `WorldContact.worldPersonaNotes` fields.
 - World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor must not expose contact-level communication controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
@@ -138,10 +140,10 @@ UI action
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
 - Individual AI contacts cannot separately disable weather/time access.
-- `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` contract, then Flow Executor calls `shell.saveWorldMetadata(...)` for custom worlds.
+- `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` and `WorldRoleEditorPatch` contracts, then Flow Executor calls `shell.saveWorldMetadata(...)` and `shell.saveWorldRoleMetadata(...)` for custom worlds.
 - Valid custom world saves update only world metadata name/title and worldview; the app remains on `WORLD_EDITOR`.
 - World Editor save contract permits only `worldId`, `name`, and `worldview` fields for custom worlds.
-- World Editor save contract forbids mutation to `WorldContact`, `WorldChat`, `WorldMemory`, `GlobalAIModel`, `GlobalAILink`, and Reality name/worldview.
+- World Editor metadata save contract forbids mutation to `WorldContact`, `WorldChat`, `WorldMemory`, `GlobalAIModel`, `GlobalAILink`, and Reality name/worldview; the separate role save contract permits only `WorldContact.worldRoleName` and `WorldContact.worldPersonaNotes` updates for custom-world AI members.
 - Empty custom world names show `请输入世界名称`.
 - Cleared custom worldview shows `清空世界观会使该世界更接近空白世界`.
 - Changed custom worldview shows `大幅修改世界观可能影响该世界内角色表现和后续体验`.
@@ -364,8 +366,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
 | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
 | `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` | Updates local custom-world user role scaffold fields only; does not mutate world data or contact preferences. |
-| `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` | Updates local custom-world AI member role scaffold fields only; does not mutate `WorldContact`, chats, memory, or contact preferences. |
-| `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract; valid custom worlds are saved through Flow Executor and `shell.saveWorldMetadata(...)`. |
+| `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` | Updates local custom-world AI member role scaffold fields before save; does not mutate `WorldContact`, chats, memory, or contact preferences during draft editing. |
+| `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contracts; valid custom worlds save name/worldview through `shell.saveWorldMetadata(...)` and role/member metadata through `shell.saveWorldRoleMetadata(...)`. |
 | `ADD_WORLD_MEMBER` | Validates the selected linked AI against the add-member contract; Flow Executor creates the custom-world contact/chat/memory placeholder through `shell.addWorldMember(...)` and leaves the editor open. |
 | `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates the selected existing custom-world AI member and stores local confirmation state with deletion warning text. |
 | `CANCEL_REMOVE_WORLD_MEMBER` | Clears local remove-member confirmation state. |
@@ -415,6 +417,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "detailed-edit"` or missing name | No runtime effect. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with non-empty name, selected AI, and `nextMode = "detailed-edit"` | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
 | `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
+| `SAVE_WORLD_EDITOR` with valid custom-world draft | Calls `shell.saveWorldMetadata(...)` and `shell.saveWorldRoleMetadata(...)`, updates `state.view`, keeps `currentWorldId` unchanged, keeps `activeView = WORLD_EDITOR`, clears active chat/contact/overlay/settings state, and shows save success. |
 | `ADD_WORLD_MEMBER` with a valid custom-world linked AI candidate | Calls `shell.addWorldMember(command)`, updates `state.view`, keeps `currentWorldId` unchanged, keeps `activeView = WORLD_EDITOR`, clears active chat/contact/overlay/settings state, and shows `已添加`. |
 | `ADD_WORLD_MEMBER` with Reality, unlinked AI, or existing world member | No world mutation; shows validation notice in the World Editor draft. |
 | `CONFIRM_REMOVE_WORLD_MEMBER` with matching confirmation state | Calls `shell.removeWorldMember(command)`, updates `state.view`, keeps `currentWorldId` unchanged, clears confirmation, shows `已删除`, and if the deleted chat was active lands on `CHAT_LIST` with `activeChatId = null`. |

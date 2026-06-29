@@ -18,6 +18,8 @@ import type {
 } from "./types.js";
 import { validateWorldEditorPatch } from "../domain/world-editor-contract.js";
 import type { WorldEditorPatch } from "../domain/world-editor-contract.js";
+import { validateWorldRoleEditorPatch } from "../domain/world-role-editor-contract.js";
+import type { WorldRoleEditorPatch } from "../domain/world-role-editor-contract.js";
 
 export type WorldDomainInit = Readonly<{
   readonly reality: RealityDefinition;
@@ -157,6 +159,43 @@ export class WorldDomain {
       targetField: "metadata.worldView.replace",
       operation: "replace",
       value: worldViewFromEditorText(validation.patch.worldview)
+    });
+    return queue.reduce();
+  }
+
+  applyWorldRoleEditorPatch(patch: WorldRoleEditorPatch): WorldState {
+    const state = this.getWorldState(patch.worldId);
+    assertWorldAcceptsPatches(state);
+    const validation = validateWorldRoleEditorPatch(patch, { worldType: state.world.type });
+    if (!validation.valid || !validation.patch) {
+      throw new Error(`WorldDomain: invalid World Editor role patch for world "${patch.worldId}".`);
+    }
+
+    const roleByContactId = new Map(validation.patch.memberRoles.map((role) => [role.worldContactId, role]));
+    const contacts = state.contacts.map((contact) => {
+      const role = roleByContactId.get(contact.actorId);
+      return role
+        ? {
+            ...contact,
+            worldRoleName: role.worldRoleName,
+            worldPersonaNotes: role.worldPersonaNotes
+          }
+        : contact;
+    });
+    const queue = this.getQueue(patch.worldId);
+    queue.enqueue({
+      source: "ovo",
+      targetField: "metadata.worldView",
+      operation: "merge",
+      value: {
+        worldEditorUserRole: validation.patch.userRole
+      }
+    });
+    queue.enqueue({
+      source: "ovo",
+      targetField: "contacts.replace",
+      operation: "replace",
+      value: contacts
     });
     return queue.reduce();
   }

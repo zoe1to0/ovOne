@@ -1,5 +1,5 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
-import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch } from "../domain/index.js";
+import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch, validateWorldRoleEditorPatch } from "../domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
 import { privateChatIdForMember, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-remove-service.js";
 import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
@@ -94,6 +94,18 @@ export function createFlowExecutor(): FlowExecutor {
           return NO_FLOW;
         }
         context.state.view = context.shell.saveWorldMetadata(validation.patch);
+        const rolePatch = {
+          worldId: draft.worldId,
+          userRole: {
+            roleName: draft.userRole?.roleName ?? "",
+            personaNotes: draft.userRole?.personaNotes ?? ""
+          },
+          memberRoles: draft.memberRoles ?? []
+        };
+        const roleValidation = validateWorldRoleEditorPatch(rolePatch, { worldType: "custom" });
+        if (roleValidation.valid && roleValidation.patch) {
+          context.state.view = context.shell.saveWorldRoleMetadata(roleValidation.patch);
+        }
         context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
         context.state.activeView = "WORLD_EDITOR";
         context.state.activeChatId = null;

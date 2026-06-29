@@ -60,7 +60,10 @@ export type WorldIdentity = Readonly<{
   readonly lifecycle: WorldLifecycleState;
 }>;
 
-export type WorldContact = Identity;
+export type WorldContact = Identity & Readonly<{
+  readonly worldRoleName?: string;
+  readonly worldPersonaNotes?: string;
+}>;
 
 export type WorldGroup = Readonly<{
   readonly id: string;

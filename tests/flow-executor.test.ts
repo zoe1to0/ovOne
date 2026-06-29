@@ -114,13 +114,20 @@ describe("FlowExecutor", () => {
   it("executes SAVE_WORLD_EDITOR through the runtime metadata save boundary", () => {
     const targetWorldId = toWorldId("custom:studio");
     const nextView = createView(null, toWorldId("reality"));
-    const calls: unknown[] = [];
+    const metadataCalls: unknown[] = [];
+    const roleCalls: unknown[] = [];
     const shell = createShell(
       () => createView("unused"),
       () => createView("unused"),
       () => createView("unused"),
       (patch) => {
-        calls.push(patch);
+        metadataCalls.push(patch);
+        return nextView;
+      },
+      undefined,
+      undefined,
+      (patch) => {
+        roleCalls.push(patch);
         return nextView;
       }
     );
@@ -139,6 +146,17 @@ describe("FlowExecutor", () => {
       fieldErrors: { worldName: null },
       warnings: [],
       noticeMessage: null,
+      userRole: {
+        roleName: "Traveler",
+        personaNotes: "New arrival"
+      },
+      memberRoles: [
+        {
+          worldContactId: "ai:friend",
+          worldRoleName: "Guide",
+          worldPersonaNotes: "Knows the city"
+        }
+      ],
       removeMemberConfirmation: null
     };
     const registry = createBehaviorRegistry();
@@ -150,7 +168,21 @@ describe("FlowExecutor", () => {
     assert.equal(transition.shouldRender, true);
     assert.equal(flow.executedFlow, "SAVE_WORLD_METADATA");
     assert.equal(flow.shouldRender, true);
-    assert.deepEqual(calls, [{ worldId: targetWorldId, name: "Studio", worldview: "Next worldview" }]);
+    assert.deepEqual(metadataCalls, [{ worldId: targetWorldId, name: "Studio", worldview: "Next worldview" }]);
+    assert.deepEqual(roleCalls, [{
+      worldId: targetWorldId,
+      userRole: {
+        roleName: "Traveler",
+        personaNotes: "New arrival"
+      },
+      memberRoles: [
+        {
+          worldContactId: "ai:friend",
+          worldRoleName: "Guide",
+          worldPersonaNotes: "Knows the city"
+        }
+      ]
+    }]);
     assert.equal(state.view, nextView);
     assert.equal(state.currentWorldId, toWorldId("reality"));
     assert.equal(state.activeView, "WORLD_EDITOR");
@@ -692,7 +724,8 @@ function createShell(
   createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial"),
   saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial"),
   addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial"),
-  removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial")
+  removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial"),
+  saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -700,6 +733,7 @@ function createShell(
     switchWorld,
     createWorldFromDraft,
     saveWorldMetadata,
+    saveWorldRoleMetadata,
     addWorldMember,
     removeWorldMember,
     sendMessage,

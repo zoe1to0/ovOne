@@ -10,7 +10,7 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand } from "../domain/index.js";
+import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
@@ -46,7 +46,14 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
           worldView: worldSnapshot.runtimeState.metadata.worldView,
           memberActorIds: worldSnapshot.contacts
             .filter((contact) => contact.kind === "assistant" && contact.actorId !== worldSnapshot.worldMeta.assistantActorId)
-            .map((contact) => contact.actorId)
+            .map((contact) => contact.actorId),
+          memberRoles: worldSnapshot.contacts
+            .filter((contact) => contact.kind === "assistant" && contact.actorId !== worldSnapshot.worldMeta.assistantActorId)
+            .map((contact) => Object.freeze({
+              worldContactId: contact.actorId,
+              worldRoleName: contact.worldRoleName ?? "",
+              worldPersonaNotes: contact.worldPersonaNotes ?? ""
+            }))
         });
       }),
       linkedAIModels: linkedAIModels(app.worldDomain.generateSnapshot(toWorldId("reality"))),
@@ -85,6 +92,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
 
   const saveWorldMetadata = (patch: WorldEditorPatch): MinimalProductShellView => {
     app.worldDomain.applyWorldEditorPatch(patch);
+    screen = "chat";
+    return view();
+  };
+
+  const saveWorldRoleMetadata = (patch: WorldRoleEditorPatch): MinimalProductShellView => {
+    app.worldDomain.applyWorldRoleEditorPatch(patch);
     screen = "chat";
     return view();
   };
@@ -139,6 +152,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     switchWorld,
     createWorldFromDraft: createWorld,
     saveWorldMetadata,
+    saveWorldRoleMetadata,
     addWorldMember: addMember,
     removeWorldMember: removeMember,
     sendMessage,

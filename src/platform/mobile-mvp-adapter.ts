@@ -1020,7 +1020,7 @@ function createWorldEditorRoleMemberScaffold(
     row.append(title, roleName, personaNotes);
     section.append(row);
   }
-  section.append(createDraftNote("角色设定保存暂未开放"));
+  section.append(createDraftNote("角色设定将在保存时更新"));
   return section;
 }
 

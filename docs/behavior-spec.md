@@ -60,7 +60,7 @@ UI event
 - Edit World opens the world editor selector list and selecting a world dispatches `OPEN_WORLD_EDITOR`.
 - `OPEN_WORLD_EDITOR` opens the route/page-like `WORLD_EDITOR` scaffold; it does not mutate world data.
 - Reality appears in the editor selector and World Editor page as locked; no Reality worldview editing is allowed.
-- World Editor save contract validates and saves custom world `name` and `worldview` only.
+- World Editor metadata save contract validates and saves custom world `name` and `worldview`.
 - Custom world name cannot be empty and shows `请输入世界名称` when invalid.
 - Custom worldview can be cleared and shows `清空世界观会使该世界更接近空白世界`.
 - Substantial worldview changes show `大幅修改世界观可能影响该世界内角色表现和后续体验`.
@@ -79,9 +79,10 @@ UI event
 - Remove Member does not mutate Reality, other worlds, groups, Global AI links/models, or provider connections.
 - World Editor role/member scaffold is custom-world only.
 - World Editor role/member scaffold has a user role row and current world AI member role rows.
-- `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` and `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` update local draft fields only and show `角色设定保存暂未开放`.
-- `SAVE_WORLD_EDITOR` still persists only custom world name/worldview metadata; it does not persist role/member draft data.
-- World Editor role/member save contract is defined in `src/domain/world-role-editor-contract.ts`, but it is not connected to runtime role/member mutation yet.
+- `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` and `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` update local draft fields before save and show `角色设定将在保存时更新`.
+- `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata and allowed world-level role/member metadata.
+- User role metadata is stored in world metadata; AI member role metadata is stored only on matching world-scoped contact role fields.
+- World Editor role/member save contract is defined in `src/domain/world-role-editor-contract.ts` and is executed through `shell.saveWorldRoleMetadata(...)`.
 - The role/member save contract allows only user `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
 - The role/member save contract rejects Reality and forbids contact preferences, weather/time permissions, global AI settings, provider connection mutation, chat mutation, and memory mutation.
 - World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
@@ -254,9 +255,9 @@ UI event
 | Open world editor selector | `OPEN_WORLD_EDITOR_SELECTOR` | Opens world editor selector list. Reality is marked locked. |
 | Select world to edit | `OPEN_WORLD_EDITOR` | Opens `WORLD_EDITOR` page scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and closes overlay without switching worlds. |
 | Update world editor draft | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
-| Update world editor user role draft | `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` | Updates local custom-world user role scaffold fields only and shows the role-save-unavailable notice. |
-| Update world editor member role draft | `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` | Updates local custom-world AI member role scaffold fields only and shows the role-save-unavailable notice. |
-| Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract; valid custom worlds update metadata name/worldview and remain on `WORLD_EDITOR`. |
+| Update world editor user role draft | `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` | Updates local custom-world user role scaffold fields before save and shows the save-on-submit notice. |
+| Update world editor member role draft | `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` | Updates local custom-world AI member role scaffold fields before save and shows the save-on-submit notice. |
+| Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contracts; valid custom worlds update metadata name/worldview plus allowed world-level role/member metadata and remain on `WORLD_EDITOR`. |
 | Add world member | `ADD_WORLD_MEMBER` | Validates a linked AI candidate and, for valid custom worlds, creates a world-scoped contact, private chat, and isolated memory placeholder while keeping the editor open. |
 | Open remove-member confirmation | `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates an existing custom-world AI member and stores local confirmation state with warning text. |
 | Cancel remove member | `CANCEL_REMOVE_WORLD_MEMBER` | Clears local remove-member confirmation state. |
@@ -325,7 +326,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, maintain local role/member scaffold draft fields, Add Member can create custom-world contact/chat/memory placeholder data, and confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data. Role/member save mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, and confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data. Contacts Detail preferences, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

@@ -103,6 +103,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveWorldRoleMetadata: (patch) => {
+      try {
+        return shell.saveWorldRoleMetadata(patch);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveWorldRoleMetadata", worldId: patch.worldId });
+        return decorate();
+      }
+    },
     addWorldMember: (command) => {
       try {
         return shell.addWorldMember(command);

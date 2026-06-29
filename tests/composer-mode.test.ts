@@ -171,7 +171,7 @@ describe("Composer mode state machine", () => {
     assert.equal(state.view.product.snapshot.worldMeta.title, "Reality");
   });
 
-  it("updates world editor role member draft locally without mutating contacts", () => {
+  it("updates world editor role member draft locally before save", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
     const customWorldId = toWorldId("custom:studio");
@@ -212,7 +212,7 @@ describe("Composer mode state machine", () => {
     assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldContactId, "ai:friend");
     assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldRoleName, "Guide");
     assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldPersonaNotes, "Knows the city");
-    assert.equal(state.worldEditorDraft?.noticeMessage, "角色设定保存暂未开放");
+    assert.equal(state.worldEditorDraft?.noticeMessage, "角色设定将在保存时更新");
     assert.deepEqual(state.view.product.snapshot.contacts, []);
 
     registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
