@@ -1,6 +1,8 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   getWorldEditorWarnings,
+  validateContactDetailPreferencePatch,
+  validateDeleteFriendCommand,
   validateWorldAddMemberCommand,
   validateWorldRemoveMemberCommand,
   validateWorldEditorPatch
@@ -101,6 +103,21 @@ export type WorldEditorDraft = Readonly<{
     readonly warning: string;
   }> | null;
 }>;
+export type ContactDetailDraft = Readonly<{
+  readonly worldId: WorldId;
+  readonly worldContactId: string;
+  readonly remark: string;
+  readonly perceivedPersonaNotes: string;
+  readonly answerMode: "conversational" | "qa";
+  readonly chatTone: string;
+  readonly emojiPermission: boolean;
+  readonly noticeMessage: string | null;
+  readonly deleteFriendConfirmation: Readonly<{
+    readonly worldContactId: string;
+    readonly displayName: string;
+    readonly warning: string;
+  }> | null;
+}>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -141,6 +158,11 @@ export type InteractionAction =
   | { readonly type: "OPEN_SETTINGS" }
   | { readonly type: "CLOSE_SETTINGS" }
   | { readonly type: "OPEN_CONTACT"; readonly actorId: string }
+  | { readonly type: "UPDATE_CONTACT_DETAIL_DRAFT"; readonly field: "remark" | "perceivedPersonaNotes" | "answerMode" | "chatTone" | "emojiPermission"; readonly value: string | boolean }
+  | { readonly type: "SAVE_CONTACT_DETAIL_PREFERENCES" }
+  | { readonly type: "OPEN_DELETE_FRIEND_CONFIRMATION"; readonly worldId: WorldId; readonly worldContactId: string; readonly displayName: string }
+  | { readonly type: "CANCEL_DELETE_FRIEND" }
+  | { readonly type: "CONFIRM_DELETE_FRIEND"; readonly worldId: WorldId; readonly worldContactId: string }
   | { readonly type: "CREATE_AI_FRIEND" }
   | { readonly type: "CREATE_GROUP" }
   | { readonly type: "OPEN_CREATE_WORLD_DRAFT" }
@@ -176,6 +198,7 @@ export type SemanticMobileState = {
   settingsOpen: boolean;
   createWorldDraft: CreateWorldDraft | null;
   worldEditorDraft: WorldEditorDraft | null;
+  contactDetailDraft: ContactDetailDraft | null;
   worldCreationTransition: WorldCreationTransition | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
@@ -221,6 +244,11 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_SETTINGS"
   | "CLOSE_SETTINGS"
   | "OPEN_CONTACT"
+  | "UPDATE_CONTACT_DETAIL_DRAFT"
+  | "SAVE_CONTACT_DETAIL_PREFERENCES"
+  | "OPEN_DELETE_FRIEND_CONFIRMATION"
+  | "CANCEL_DELETE_FRIEND"
+  | "CONFIRM_DELETE_FRIEND"
   | "OPEN_CREATE_WORLD_DRAFT"
   | "OPEN_CREATE_WORLD_DETAIL_EDIT"
   | "UPDATE_CREATE_WORLD_DRAFT"
@@ -384,6 +412,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -394,6 +423,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -404,6 +434,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -415,6 +446,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -425,6 +457,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.composerMode = resolveDefaultComposerMode("normal");
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         return RENDER;
 
@@ -434,6 +467,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         state.composerMode = resolveDefaultComposerMode("ovo");
         closeOverlay(state);
         state.settingsOpen = false;
@@ -443,6 +477,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         if (state.activeView === "CONTACT_DETAIL") {
           state.activeView = "CONTACTS";
           state.selectedContactActorId = null;
+          state.contactDetailDraft = null;
         } else if (state.activeView === "CREATE_WORLD_DETAIL_EDIT") {
           state.activeView = "CREATE_WORLD_DRAFT";
         } else if (state.activeView === "CREATE_WORLD_DRAFT") {
@@ -451,6 +486,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.activeView = "CHAT_LIST";
           state.selectedWorldIdForEditing = null;
           state.worldEditorDraft = null;
+          state.contactDetailDraft = null;
         } else {
           state.activeView = "CHAT_LIST";
           state.activeChatId = null;
@@ -566,8 +602,83 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = action.actorId;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = createContactDetailDraft(state, action.actorId);
         closeOverlay(state);
         return RENDER;
+
+      case "UPDATE_CONTACT_DETAIL_DRAFT":
+        if (!state.contactDetailDraft) {
+          return RENDER;
+        }
+        state.contactDetailDraft = Object.freeze({
+          ...state.contactDetailDraft,
+          [action.field]: action.value,
+          noticeMessage: "偏好将在保存时更新",
+          deleteFriendConfirmation: null
+        });
+        return RENDER;
+
+      case "SAVE_CONTACT_DETAIL_PREFERENCES": {
+        if (!state.contactDetailDraft) {
+          return RENDER;
+        }
+        const validation = validateContactDetailPreferencePatch(
+          contactDetailPreferencePatchFromDraft(state.contactDetailDraft),
+          createContactDetailContractInput(state)
+        );
+        state.contactDetailDraft = Object.freeze({
+          ...state.contactDetailDraft,
+          noticeMessage: validation.valid ? "偏好保存暂未开放" : validation.error,
+          deleteFriendConfirmation: null
+        });
+        return RENDER;
+      }
+
+      case "OPEN_DELETE_FRIEND_CONFIRMATION": {
+        const validation = validateDeleteFriendCommand(
+          { worldId: action.worldId, worldContactId: action.worldContactId },
+          createContactDetailContractInput(state)
+        );
+        if (state.contactDetailDraft) {
+          state.contactDetailDraft = Object.freeze({
+            ...state.contactDetailDraft,
+            noticeMessage: validation.error,
+            deleteFriendConfirmation: validation.valid
+              ? Object.freeze({
+                  worldContactId: action.worldContactId,
+                  displayName: action.displayName,
+                  warning: validation.warning
+                })
+              : null
+          });
+        }
+        return RENDER;
+      }
+
+      case "CANCEL_DELETE_FRIEND":
+        if (state.contactDetailDraft) {
+          state.contactDetailDraft = Object.freeze({
+            ...state.contactDetailDraft,
+            noticeMessage: null,
+            deleteFriendConfirmation: null
+          });
+        }
+        return RENDER;
+
+      case "CONFIRM_DELETE_FRIEND": {
+        const validation = validateDeleteFriendCommand(
+          { worldId: action.worldId, worldContactId: action.worldContactId },
+          createContactDetailContractInput(state)
+        );
+        if (state.contactDetailDraft) {
+          state.contactDetailDraft = Object.freeze({
+            ...state.contactDetailDraft,
+            noticeMessage: validation.valid ? "删除好友暂未开放" : validation.error,
+            deleteFriendConfirmation: validation.valid ? state.contactDetailDraft.deleteFriendConfirmation : null
+          });
+        }
+        return RENDER;
+      }
 
       case "UPDATE_WORLD_EDITOR_DRAFT":
         if (!state.worldEditorDraft || state.worldEditorDraft.locked) {
@@ -685,6 +796,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         state.activeChatId = null;
         state.selectedContactActorId = null;
         closeOverlay(state);
@@ -698,6 +810,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -718,6 +831,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -881,6 +995,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -892,6 +1007,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -1007,6 +1123,50 @@ function stringRecordValue(record: unknown, key: string): string {
   }
   const value = (record as Readonly<Record<string, unknown>>)[key];
   return typeof value === "string" ? value : "";
+}
+
+function createContactDetailDraft(state: SemanticMobileState, worldContactId: string): ContactDetailDraft {
+  return Object.freeze({
+    worldId: state.currentWorldId,
+    worldContactId,
+    remark: "",
+    perceivedPersonaNotes: defaultPerceivedPersonaNotes(state, worldContactId),
+    answerMode: "conversational",
+    chatTone: "",
+    emojiPermission: true,
+    noticeMessage: null,
+    deleteFriendConfirmation: null
+  });
+}
+
+function defaultPerceivedPersonaNotes(state: SemanticMobileState, worldContactId: string): string {
+  const contact = state.view.product.snapshot.contacts.find((item) => item.actorId === worldContactId);
+  if (state.view.product.snapshot.worldMeta.type === "reality") {
+    return "";
+  }
+  const roleNote = [contact?.worldRoleName, contact?.worldPersonaNotes].filter(Boolean).join(" / ");
+  return roleNote || "";
+}
+
+function contactDetailPreferencePatchFromDraft(draft: ContactDetailDraft) {
+  return {
+    worldId: draft.worldId,
+    worldContactId: draft.worldContactId,
+    remark: draft.remark,
+    perceivedPersonaNotes: draft.perceivedPersonaNotes,
+    answerMode: draft.answerMode,
+    chatTone: draft.chatTone,
+    emojiPermission: draft.emojiPermission
+  };
+}
+
+function createContactDetailContractInput(state: SemanticMobileState) {
+  return {
+    worldId: state.currentWorldId,
+    contactActorIds: state.view.product.snapshot.contacts
+      .filter((contact) => contact.kind === "assistant" && contact.actorId !== state.view.product.snapshot.worldMeta.assistantActorId)
+      .map((contact) => contact.actorId)
+  };
 }
 
 function createWorldMemberContractInputFromState(state: SemanticMobileState, worldId: WorldId) {

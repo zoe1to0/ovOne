@@ -8,6 +8,7 @@ import {
 import { createBehaviorRegistry, OVO_CHAT_ID } from "../src/platform/behavior-registry.js";
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
+  CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_EDITOR_NAME_REQUIRED_MESSAGE,
@@ -88,6 +89,75 @@ describe("Composer mode state machine", () => {
     assert.equal(state.activeView, "CHAT_VIEW");
     assert.equal(state.activeChatId, "friend-chat");
     assert.equal(state.composerMode, "text");
+  });
+
+  it("updates contact detail preference draft locally and scaffolds delete friend confirmation", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          contacts: [
+            {
+              worldId: state.currentWorldId,
+              actorId: "ai:friend",
+              displayName: "Friend",
+              kind: "assistant",
+              outputMode: "Dialogue",
+              worldRoleName: "Guide",
+              worldPersonaNotes: "Knows the city"
+            } as never
+          ]
+        }
+      }
+    };
+
+    assert.equal(registry.execute({ type: "OPEN_CONTACT", actorId: "ai:friend" }, state).shouldRender, true);
+    assert.equal(state.activeView, "CONTACT_DETAIL");
+    assert.equal(state.contactDetailDraft?.worldContactId, "ai:friend");
+    assert.equal(state.contactDetailDraft?.perceivedPersonaNotes, "");
+
+    registry.execute({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field: "remark", value: "小友" }, state);
+    registry.execute({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field: "perceivedPersonaNotes", value: "可靠的新朋友" }, state);
+    registry.execute({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field: "answerMode", value: "qa" }, state);
+    registry.execute({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field: "chatTone", value: "gentle" }, state);
+    registry.execute({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field: "emojiPermission", value: false }, state);
+
+    assert.equal(state.contactDetailDraft?.remark, "小友");
+    assert.equal(state.contactDetailDraft?.perceivedPersonaNotes, "可靠的新朋友");
+    assert.equal(state.contactDetailDraft?.answerMode, "qa");
+    assert.equal(state.contactDetailDraft?.chatTone, "gentle");
+    assert.equal(state.contactDetailDraft?.emojiPermission, false);
+    assert.deepEqual(state.view.product.snapshot.chatState.chats, new Map());
+    assert.deepEqual(state.view.product.snapshot.memorySummary.namespace, "world:reality");
+
+    registry.execute({
+      type: "OPEN_DELETE_FRIEND_CONFIRMATION",
+      worldId: state.currentWorldId,
+      worldContactId: "ai:friend",
+      displayName: "Friend"
+    }, state);
+    assert.equal(state.contactDetailDraft?.deleteFriendConfirmation?.warning, CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE);
+
+    registry.execute({ type: "CANCEL_DELETE_FRIEND" }, state);
+    assert.equal(state.contactDetailDraft?.deleteFriendConfirmation, null);
+
+    registry.execute({
+      type: "OPEN_DELETE_FRIEND_CONFIRMATION",
+      worldId: state.currentWorldId,
+      worldContactId: "ai:friend",
+      displayName: "Friend"
+    }, state);
+    registry.execute({
+      type: "CONFIRM_DELETE_FRIEND",
+      worldId: state.currentWorldId,
+      worldContactId: "ai:friend"
+    }, state);
+    assert.equal(state.contactDetailDraft?.noticeMessage, "删除好友暂未开放");
+    assert.equal(state.view.product.snapshot.contacts.length, 1);
   });
 
   it("opens ovO world menu and routes to switcher/editor selector overlays", () => {
@@ -530,6 +600,7 @@ function createState(): SemanticMobileState {
     settingsOpen: false,
     createWorldDraft: null,
     worldEditorDraft: null,
+    contactDetailDraft: null,
     worldCreationTransition: null,
     splashVisible: false,
     view: {

@@ -31,6 +31,21 @@ export type {
   WorldBootstrapRoleMode
 } from "./world-bootstrap-planner.js";
 export {
+  CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
+  canDeleteFriendInCurrentWorld,
+  getDeleteFriendWarning,
+  validateContactDetailPreferencePatch,
+  validateDeleteFriendCommand
+} from "./contact-detail-contract.js";
+export type {
+  ContactDetailAnswerMode,
+  ContactDetailForbiddenField,
+  ContactDetailPreferencePatch,
+  ContactDetailPreferenceValidation,
+  DeleteFriendCommand,
+  DeleteFriendValidation
+} from "./contact-detail-contract.js";
+export {
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_EDITOR_NAME_REQUIRED_MESSAGE,

@@ -71,7 +71,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /return createChatList\(snapshot, state, controller\)/);
     assert.match(adapter, /return createChatView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactsView\(snapshot, state, controller\)/);
-    assert.match(adapter, /return createContactDetailView\(snapshot, state\.selectedContactActorId, controller\)/);
+    assert.match(adapter, /return createContactDetailView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
     assert.match(adapter, /return createCreateWorldDraftView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createCreateWorldDetailEditView\(snapshot, state, controller\)/);
@@ -161,7 +161,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function createOverlayContent\(\s*overlayState: MobileOverlay,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /bindControllerAction\(left, controller, \{ type: "OPEN_EMOJI_PICKER" \}\)/);
     assert.match(adapter, /bindControllerAction\(action, controller, \{ type: "OPEN_FILE_PICKER" \}\)/);
-    assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\)/);
+    assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.doesNotMatch(adapter, /screen\.append\(createAddMenu\(\)\)/);
     assert.doesNotMatch(adapter, /screen\.append\(createChatMenu\(\)\)/);
     assert.match(html, /\.mvp-overlay-layer \{[\s\S]*position: fixed;[\s\S]*pointer-events: none;/);
@@ -253,11 +253,11 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function createContactsView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\): HTMLElement/);
     assert.match(adapter, /screen\.append\(list\)/);
     assert.match(adapter, /screen\.append\(createProfileHeader\(\), createFeatureMenu\(snapshot, controller\)\)/);
-    assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*actorId: string \| null,\s*controller: InteractionController\s*\): HTMLElement/);
+    assert.match(adapter, /function createContactDetailView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\): HTMLElement/);
+    assert.match(adapter, /form\.className = "mvp-detail-form"/);
     assert.equal(adapter.includes("createDetailForm"), false);
     assert.equal(adapter.includes("mvp-contact-detail-overlay"), false);
     assert.equal(html.includes(".mvp-contact-detail-overlay"), false);
-    assert.equal(html.includes(".mvp-detail-form"), false);
     assert.match(html, /\.mvp-composer \{[\s\S]*position: fixed;/);
   });
 
@@ -459,7 +459,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 8);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 9);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });
@@ -485,7 +485,14 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /return contact\.outputMode === "QA" \? "可靠顾问" : "亲近角色"/);
     assert.equal(adapter.includes("createTextInput"), false);
     assert.equal(adapter.includes("createSelect"), false);
-    assert.equal(adapter.includes("mvp-detail-form"), false);
+    assert.match(adapter, /mvp-detail-form/);
+    assert.match(adapter, /"备注 \/ 昵称"/);
+    assert.match(adapter, /"你认为他是怎样的人？"/);
+    assert.match(adapter, /"更像聊天"/);
+    assert.match(adapter, /"更像问答"/);
+    assert.match(adapter, /"他 \/ 她如何和你说话"/);
+    assert.match(adapter, /emojiPermission/);
+    assert.match(adapter, /"删除好友"/);
     assert.match(adapter, /已连接 AI/);
     assert.match(adapter, /断开连接/);
     assert.match(adapter, /在这里断开 AI，会从账号中移除该连接。/);

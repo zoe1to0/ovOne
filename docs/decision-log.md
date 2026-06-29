@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-29: Contacts Detail preference and Delete Friend contract scaffold added
+
+Decision: Contacts Detail now has a current-world preference/delete contract and local UI scaffold without persistence or deletion mutation.
+
+Rules:
+
+- Contacts Detail owns contact-level current-world fields: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone, emoji permission, and Delete Friend.
+- `ContactDetailPreferencePatch` allows only `worldId`, `worldContactId`, `remark`, `perceivedPersonaNotes`, `answerMode`, `chatTone`, and `emojiPermission`.
+- Contacts Detail rejects World Editor fields, weather/time permission, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, chat mutation, memory mutation, and other-world mutation.
+- Delete Friend validates only the current-world contact and opens confirmation before future deletion.
+- Delete Friend confirmation text is `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`
+- Confirm Delete Friend is scaffold/no-op in this milestone and does not delete contacts, chats, memory, global links, or provider connections.
+- True global disconnect remains owned by Me -> Settings -> Linked AI.
+
 ## 2026-06-29: v0.3-world-editor-core milestone tagged
 
 Decision: `v0.3-world-editor-core` marks the completed World Editor Core milestone.

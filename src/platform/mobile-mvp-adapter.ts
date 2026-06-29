@@ -68,6 +68,7 @@ export function mountChatShell(
     settingsOpen: false,
     createWorldDraft: null,
     worldEditorDraft: null,
+    contactDetailDraft: null,
     worldCreationTransition: null,
     splashVisible: true,
     view: initialView
@@ -192,7 +193,7 @@ function renderShellPage(
     case "CONTACTS":
       return createContactsView(snapshot, state, controller);
     case "CONTACT_DETAIL":
-      return createContactDetailView(snapshot, state.selectedContactActorId, controller);
+      return createContactDetailView(snapshot, state, controller);
     case "ME":
       return createMeView(snapshot, state.settingsOpen, controller);
     case "CREATE_WORLD_DRAFT":
@@ -1170,6 +1171,27 @@ function createWorldEditorFallbackDraft(
   };
 }
 
+function createContactDetailFallbackDraft(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState
+): NonNullable<SemanticMobileState["contactDetailDraft"]> {
+  const worldContactId = state.selectedContactActorId ?? "";
+  const contact = contactsFromSnapshot(snapshot).find((item) => item.actorId === worldContactId) ?? null;
+  return {
+    worldId: state.currentWorldId,
+    worldContactId,
+    remark: "",
+    perceivedPersonaNotes: snapshot.worldMeta.type === "reality"
+      ? ""
+      : [contact?.worldRoleName, contact?.worldPersonaNotes].filter(Boolean).join(" / "),
+    answerMode: "conversational",
+    chatTone: "",
+    emojiPermission: true,
+    noticeMessage: null,
+    deleteFriendConfirmation: null
+  };
+}
+
 function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown>>): string {
   return typeof worldView.text === "string" ? worldView.text : JSON.stringify(worldView);
 }
@@ -1243,10 +1265,12 @@ function createWorldList(
 
 function createContactDetailView(
   snapshot: WorldSnapshot,
-  actorId: string | null,
+  state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
+  const actorId = state.selectedContactActorId;
   const contact = contactsFromSnapshot(snapshot).find((item) => item.actorId === actorId) ?? null;
+  const draft = state.contactDetailDraft ?? createContactDetailFallbackDraft(snapshot, state);
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-contact-detail";
 
@@ -1262,7 +1286,66 @@ function createContactDetailView(
   const detail = document.createElement("span");
   detail.textContent = contact ? contactPersona(contact) : "暂无资料";
 
-  screen.append(back, title, detail);
+  const form = document.createElement("section");
+  form.className = "mvp-detail-form";
+  const remark = createWorldEditorRoleInput("remark", "备注 / 昵称", draft.remark);
+  bindContactDetailInput(remark, controller, "remark");
+  const perceived = createWorldEditorRoleTextarea("perceivedPersonaNotes", "你认为他是怎样的人？", draft.perceivedPersonaNotes);
+  bindContactDetailInput(perceived, controller, "perceivedPersonaNotes");
+  const answerMode = document.createElement("select");
+  answerMode.name = "answerMode";
+  for (const [value, label] of [["conversational", "更像聊天"], ["qa", "更像问答"]] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    option.selected = draft.answerMode === value;
+    answerMode.append(option);
+  }
+  bindContactDetailInput(answerMode, controller, "answerMode");
+  const tone = createWorldEditorRoleInput("chatTone", "他 / 她如何和你说话", draft.chatTone);
+  bindContactDetailInput(tone, controller, "chatTone");
+  const emojiLabel = document.createElement("label");
+  const emoji = document.createElement("input");
+  emoji.type = "checkbox";
+  emoji.checked = draft.emojiPermission;
+  bindContactDetailInput(emoji, controller, "emojiPermission");
+  emojiLabel.append(emoji, " 允许使用表情");
+  form.append(
+    createDraftStage("备注", remark),
+    createDraftStage("你认为他是怎样的人？", perceived),
+    createDraftStage("回答方式", answerMode),
+    createDraftStage("说话方式", tone),
+    createDraftStage("表情权限", emojiLabel)
+  );
+
+  const save = createMenuButton("保存偏好", controller, { type: "SAVE_CONTACT_DETAIL_PREFERENCES" });
+  form.append(save);
+  if (draft.noticeMessage) {
+    form.append(createDraftNote(draft.noticeMessage));
+  }
+
+  const deleteSection = document.createElement("section");
+  deleteSection.className = "mvp-danger-section";
+  const deleteButton = createMenuButton("删除好友", controller, {
+    type: "OPEN_DELETE_FRIEND_CONFIRMATION",
+    worldId: draft.worldId,
+    worldContactId: draft.worldContactId,
+    displayName: contact ? contactDisplayName(contact) : "AI"
+  });
+  deleteSection.append(deleteButton);
+  if (draft.deleteFriendConfirmation) {
+    deleteSection.append(createDraftNote(draft.deleteFriendConfirmation.warning));
+    deleteSection.append(
+      createMenuButton("取消", controller, { type: "CANCEL_DELETE_FRIEND" }),
+      createMenuButton("确认删除", controller, {
+        type: "CONFIRM_DELETE_FRIEND",
+        worldId: draft.worldId,
+        worldContactId: draft.worldContactId
+      })
+    );
+  }
+
+  screen.append(back, title, detail, form, deleteSection);
   return screen;
 }
 
@@ -1532,6 +1615,17 @@ function bindWorldEditorMemberRoleInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT", worldContactId, field, value: input.value });
+  });
+}
+
+function bindContactDetailInput(
+  input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  controller: InteractionController,
+  field: "remark" | "perceivedPersonaNotes" | "answerMode" | "chatTone" | "emojiPermission"
+): void {
+  input.addEventListener("input", () => {
+    const value = input instanceof HTMLInputElement && input.type === "checkbox" ? input.checked : input.value;
+    controller.dispatch({ type: "UPDATE_CONTACT_DETAIL_DRAFT", field, value });
   });
 }
 

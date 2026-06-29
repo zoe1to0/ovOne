@@ -705,6 +705,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     settingsOpen: false,
     createWorldDraft: null,
     worldEditorDraft: null,
+    contactDetailDraft: null,
     worldCreationTransition: null,
     splashVisible: false,
     view

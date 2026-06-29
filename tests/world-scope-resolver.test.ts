@@ -75,6 +75,7 @@ describe("World scoped data model foundation", () => {
       settingsOpen: true,
       createWorldDraft: null,
       worldEditorDraft: null,
+      contactDetailDraft: null,
       worldCreationTransition: null,
       splashVisible: false,
       view: {} as SemanticMobileState["view"]

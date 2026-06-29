@@ -136,6 +136,10 @@ UI action
 - World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor must not expose contact-level communication controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
+- Contacts Detail preference/delete contract lives in `src/domain/contact-detail-contract.ts`.
+- `ContactDetailPreferencePatch` permits only `worldId`, `worldContactId`, `remark`, `perceivedPersonaNotes`, `answerMode`, `chatTone`, and `emojiPermission`.
+- `DeleteFriendCommand` permits only `worldId` and `worldContactId`; current scaffold validates and opens confirmation but performs no deletion.
+- Contact Detail must not mutate world name, worldview, world roles, weather/time permission, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, chats, memory, contacts, or other worlds in this scaffold.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
@@ -346,6 +350,11 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
+| `UPDATE_CONTACT_DETAIL_DRAFT` | Updates local current-world contact preference draft only. |
+| `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates local preference draft through `ContactDetailPreferencePatch`; no runtime save yet. |
+| `OPEN_DELETE_FRIEND_CONFIRMATION` | Validates a current-world contact and stores local Delete Friend confirmation. |
+| `CANCEL_DELETE_FRIEND` | Clears local Delete Friend confirmation. |
+| `CONFIRM_DELETE_FRIEND` | Validates a current-world contact and shows scaffold notice; no deletion yet. |
 | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
 | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
 | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
@@ -398,7 +407,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CHAT_LIST` | `createChatList(snapshot, state, controller)` |
 | `CHAT_VIEW` | `createChatView(snapshot, state.activeChatId, controller)` |
 | `CONTACTS` | `createContactsView(snapshot, state, controller)` |
-| `CONTACT_DETAIL` | `createContactDetailView(snapshot, state.selectedContactActorId, controller)` |
+| `CONTACT_DETAIL` | `createContactDetailView(snapshot, state, controller)` |
 | `ME` | `createMeView(snapshot, state.settingsOpen, controller)` |
 | `CREATE_WORLD_DRAFT` | `createCreateWorldDraftView(snapshot, state, controller)` |
 | `CREATE_WORLD_DETAIL_EDIT` | `createCreateWorldDetailEditView(snapshot, state, controller)` |
@@ -499,7 +508,7 @@ Current package version: `0.1.0`.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
-- `CONTACT_DETAIL` can render placeholder content.
+- `CONTACT_DETAIL` renders current-world preference/delete scaffold content; preference save and Delete Friend mutation remain scaffold-only.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
