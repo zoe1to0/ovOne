@@ -103,7 +103,8 @@ describe("World Editor role/member save contract", () => {
           worldRoleName: "Guide",
           worldPersonaNotes: "Knows the city",
           remark: "Not allowed",
-          relationshipPerception: "Not allowed"
+          relationshipPerception: "Not allowed",
+          "你认为他是怎样的人？": "Not allowed"
         }
       ]
     };
@@ -131,6 +132,7 @@ describe("World Editor role/member save contract", () => {
       memberRoles: [],
       GlobalAIModel: "not allowed",
       GlobalAILink: "not allowed",
+      ProviderConnection: "not allowed",
       WorldChat: "not allowed",
       WorldMemory: "not allowed",
       unapprovedField: "not allowed"
@@ -138,6 +140,7 @@ describe("World Editor role/member save contract", () => {
 
     assert.ok(forbidden.includes("GlobalAIModel"));
     assert.ok(forbidden.includes("GlobalAILink"));
+    assert.ok(forbidden.includes("ProviderConnection"));
     assert.ok(forbidden.includes("WorldChat"));
     assert.ok(forbidden.includes("WorldMemory"));
     assert.ok(forbidden.includes("UnknownField"));

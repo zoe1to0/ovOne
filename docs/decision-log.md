@@ -9,7 +9,7 @@ Rules:
 - `WorldRoleEditorPatch` allows only user role `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
 - Empty role fields are allowed and mean future fallback to world/create defaults.
 - Reality rejects role/member save patches.
-- World Editor role/member save contract forbids contact nickname/remark, `你认为他是怎样的人？`, answer mode, chat tone, emoji permission, weather/time permission, global AI link/model settings, chat mutation, and memory mutation.
+- World Editor role/member save contract forbids contact nickname/remark, `你认为他是怎样的人？`, answer mode, chat tone, emoji permission, weather/time permission, global AI link/model settings, provider connection mutation, chat mutation, and memory mutation.
 - `SAVE_WORLD_EDITOR` continues to save only custom world name/worldview metadata; role/member data remains scaffold-only until a later mutation path is implemented.
 
 ## 2026-06-29: Product responsibility boundaries clarified

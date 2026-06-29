@@ -29,6 +29,7 @@ export type WorldRoleEditorForbiddenField =
   | "weatherTimePermission"
   | "GlobalAIModel"
   | "GlobalAILink"
+  | "ProviderConnection"
   | "WorldChat"
   | "WorldMemory"
   | "UnknownField"
@@ -54,6 +55,7 @@ const FORBIDDEN_KEY_MAP: Readonly<Record<string, WorldRoleEditorForbiddenField>>
   contactNickname: "contactNickname",
   remark: "remark",
   relationshipPerception: "relationshipPerception",
+  "你认为他是怎样的人？": "relationshipPerception",
   answerMode: "answerMode",
   outputMode: "answerMode",
   chatTone: "chatTone",
@@ -65,6 +67,9 @@ const FORBIDDEN_KEY_MAP: Readonly<Record<string, WorldRoleEditorForbiddenField>>
   weatherTimePermission: "weatherTimePermission",
   GlobalAIModel: "GlobalAIModel",
   GlobalAILink: "GlobalAILink",
+  ProviderConnection: "ProviderConnection",
+  providerConnection: "ProviderConnection",
+  provider: "ProviderConnection",
   WorldChat: "WorldChat",
   WorldMemory: "WorldMemory",
   memory: "WorldMemory",
