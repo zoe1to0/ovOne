@@ -4,6 +4,7 @@ import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
 import { WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
+import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import { toWorldId } from "../src/world-domain/index.js";
@@ -262,6 +263,93 @@ describe("FlowExecutor", () => {
     assert.equal(state.settingsOpen, false);
     assert.equal(state.selectedWorldIdForEditing, targetWorldId);
     assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_MEMBER_ADD_SUCCESS_MESSAGE);
+  });
+
+  it("executes CONFIRM_REMOVE_WORLD_MEMBER only with matching confirmation state", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const deletedChatId = `chat:${targetWorldId}:ai:friend`;
+    const nextView = createView(null, targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      (command) => {
+        calls.push(command);
+        return nextView;
+      }
+    );
+    const state = createState(createView(deletedChatId, targetWorldId));
+    state.activeView = "WORLD_EDITOR";
+    state.activeChatId = deletedChatId;
+    state.selectedWorldIdForEditing = targetWorldId;
+    state.worldEditorDraft = {
+      worldId: targetWorldId,
+      worldName: "Studio",
+      worldviewText: "",
+      originalWorldviewText: "",
+      locked: false,
+      fieldErrors: { worldName: null },
+      warnings: [],
+      noticeMessage: null,
+      removeMemberConfirmation: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        warning: "warning"
+      }
+    };
+
+    const flow = createFlowExecutor().run(
+      { type: "CONFIRM_REMOVE_WORLD_MEMBER", worldId: targetWorldId, actorId: "ai:friend" },
+      { shell, state }
+    );
+
+    assert.equal(flow.executedFlow, "REMOVE_WORLD_MEMBER");
+    assert.equal(flow.shouldRender, true);
+    assert.deepEqual(calls, [{ worldId: targetWorldId, actorId: "ai:friend" }]);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE);
+    assert.equal(state.worldEditorDraft?.removeMemberConfirmation, null);
+  });
+
+  it("does not execute remove-member without confirmation", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      () => createView("unused"),
+      (command) => {
+        calls.push(command);
+        return createView("unused");
+      }
+    );
+    const state = createState(createView("chat-before-remove"));
+    state.worldEditorDraft = {
+      worldId: toWorldId("custom:studio"),
+      worldName: "Studio",
+      worldviewText: "",
+      originalWorldviewText: "",
+      locked: false,
+      fieldErrors: { worldName: null },
+      warnings: [],
+      noticeMessage: null,
+      removeMemberConfirmation: null
+    };
+
+    const flow = createFlowExecutor().run(
+      { type: "CONFIRM_REMOVE_WORLD_MEMBER", worldId: toWorldId("custom:studio"), actorId: "ai:friend" },
+      { shell, state }
+    );
+
+    assert.equal(flow.shouldRender, false);
+    assert.deepEqual(calls, []);
   });
 
   it("executes random-role create world flow and clears draft after success", () => {
@@ -603,7 +691,8 @@ function createShell(
   switchWorld: (worldId: string) => MinimalProductShellView = () => createView("initial"),
   createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"] = () => createView("initial"),
   saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial"),
-  addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial")
+  addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial"),
+  removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -612,6 +701,7 @@ function createShell(
     createWorldFromDraft,
     saveWorldMetadata,
     addWorldMember,
+    removeWorldMember,
     sendMessage,
     snapshot: () => view.product.snapshot,
     view: () => view

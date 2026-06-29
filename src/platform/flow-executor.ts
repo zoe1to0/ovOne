@@ -1,6 +1,7 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch } from "../domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
+import { privateChatIdForMember, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-remove-service.js";
 import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
@@ -12,7 +13,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "ADD_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -142,6 +143,44 @@ export function createFlowExecutor(): FlowExecutor {
           noticeMessage: WORLD_MEMBER_ADD_SUCCESS_MESSAGE
         });
         return Object.freeze({ shouldRender: true, executedFlow: "ADD_WORLD_MEMBER" });
+      }
+      if (action.type === "CONFIRM_REMOVE_WORLD_MEMBER") {
+        const draft = context.state.worldEditorDraft;
+        const confirmation = draft?.removeMemberConfirmation ?? null;
+        if (!draft || draft.worldId !== action.worldId || draft.locked || confirmation?.actorId !== action.actorId) {
+          return NO_FLOW;
+        }
+        const deletedChatId = privateChatIdForMember({ worldId: action.worldId, actorId: action.actorId });
+        try {
+          context.state.view = context.shell.removeWorldMember({
+            worldId: action.worldId,
+            actorId: action.actorId
+          });
+        } catch (error) {
+          context.state.worldEditorDraft = Object.freeze({
+            ...draft,
+            noticeMessage: error instanceof Error ? error.message : "删除失败"
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.selectedWorldIdForEditing = action.worldId;
+        context.state.selectedContactActorId = null;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        if (context.state.currentWorldId === action.worldId && context.state.activeChatId === deletedChatId) {
+          context.state.activeView = "CHAT_LIST";
+          context.state.activeChatId = null;
+        } else {
+          context.state.activeView = "WORLD_EDITOR";
+          context.state.activeChatId = context.state.activeChatId === deletedChatId ? null : context.state.activeChatId;
+        }
+        context.state.worldEditorDraft = Object.freeze({
+          ...draft,
+          noticeMessage: WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE,
+          removeMemberConfirmation: null
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "REMOVE_WORLD_MEMBER" });
       }
       return NO_FLOW;
     }

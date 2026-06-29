@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-06-29: World Editor Remove Member execution implemented
+
+Decision: Confirmed World Editor Remove Member now performs controlled custom-world deletion.
+
+Rules:
+- Remove Member remains custom-world only; Reality rejects remove-member through World Editor.
+- Remove requires existing confirmation state before runtime execution.
+- Confirmed removal deletes only the selected world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder metadata for that member.
+- Remove Member does not mutate Reality, other worlds, group chats, `GlobalAIModel`, `GlobalAILink`, or provider connections.
+- Re-adding the same AI later must create a brand-new world-scoped contact/chat/memory instance; old world memory is not recoverable.
+- Group cleanup, initial messages after member add/remove, and real memory engine cleanup remain out of scope.
+
 ## 2026-06-29: World Editor Remove Member contract scaffold added
 
 Decision: World Editor Remove Member is defined as a custom-world-only contract with confirmation UI before real deletion is implemented.
@@ -9,7 +21,7 @@ Rules:
 - Remove Member applies only to custom worlds; Reality rejects remove-member through World Editor.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - Remove Member confirmation must show: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
-- Confirming removal currently performs no deletion and shows scaffold/no-op behavior.
+- At this contract-scaffold decision point, confirming removal performed no deletion; this was superseded by the later Remove Member execution decision above.
 - Future deletion may remove only that AI's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` in the selected custom world.
 - Future deletion must not affect Reality, other worlds, `GlobalAIModel`, `GlobalAILink`, provider connections, or group chats in this scaffold phase.
 - Re-adding the same AI later should create a brand-new world-scoped contact/chat/memory instance; old world memory cannot be recovered.

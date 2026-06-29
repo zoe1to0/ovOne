@@ -111,6 +111,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    removeWorldMember: (command) => {
+      try {
+        return shell.removeWorldMember(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "removeWorldMember", worldId: command.worldId });
+        return decorate();
+      }
+    },
     sendMessage: (text) => {
       const trimmed = text.trim();
       if (!trimmed) {

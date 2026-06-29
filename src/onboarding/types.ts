@@ -18,6 +18,7 @@ export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "ope
   readonly createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"];
   readonly saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"];
   readonly addWorldMember: MinimalProductShellRuntime["addWorldMember"];
+  readonly removeWorldMember: MinimalProductShellRuntime["removeWorldMember"];
   readonly sendMessage: MinimalProductShellRuntime["sendMessage"];
   readonly view: () => OnboardedProductShellView;
   readonly onboarding: () => OnboardingState;

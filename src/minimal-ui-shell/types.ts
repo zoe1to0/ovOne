@@ -1,5 +1,5 @@
 import type { ChatId } from "../chat-kernel/index.js";
-import type { WorldAddMemberCommand, WorldEditorPatch } from "../domain/index.js";
+import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand } from "../domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 
 export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
@@ -128,6 +128,7 @@ export type MinimalProductShellRuntime = Readonly<{
   readonly createWorldFromDraft: (draft: CreateWorldDraftInput) => MinimalProductShellView;
   readonly saveWorldMetadata: (patch: WorldEditorPatch) => MinimalProductShellView;
   readonly addWorldMember: (command: WorldAddMemberCommand) => MinimalProductShellView;
+  readonly removeWorldMember: (command: WorldRemoveMemberCommand) => MinimalProductShellView;
   readonly sendMessage: (text: string) => MinimalProductShellView;
   readonly snapshot: () => WorldSnapshot;
   readonly view: () => MinimalProductShellView;

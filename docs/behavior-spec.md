@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / ADD_WORLD_MEMBER
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -74,7 +74,9 @@ UI event
 - World Editor Remove Member applies only to custom worlds.
 - Remove-member confirmation validates through `WorldRemoveMemberCommand`.
 - Opening remove-member confirmation stores local confirmation state and shows `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`.
-- Confirming remove-member is scaffold/no-op in this phase and does not delete contact, chat, memory, groups, Global AI links/models, provider connections, Reality, or other worlds.
+- Confirming remove-member requires existing confirmation state, then Flow Executor calls `shell.removeWorldMember(...)`.
+- Successful Remove Member deletes only the selected custom world's `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata for that member.
+- Remove Member does not mutate Reality, other worlds, groups, Global AI links/models, or provider connections.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -240,7 +242,7 @@ UI event
 | Add world member | `ADD_WORLD_MEMBER` | Validates a linked AI candidate and, for valid custom worlds, creates a world-scoped contact, private chat, and isolated memory placeholder while keeping the editor open. |
 | Open remove-member confirmation | `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates an existing custom-world AI member and stores local confirmation state with warning text. |
 | Cancel remove member | `CANCEL_REMOVE_WORLD_MEMBER` | Clears local remove-member confirmation state. |
-| Confirm remove member | `CONFIRM_REMOVE_WORLD_MEMBER` | Scaffold/no-op; validates again, shows delete-unavailable notice, and performs no deletion. |
+| Confirm remove member | `CONFIRM_REMOVE_WORLD_MEMBER` | Requires matching confirmation state; Flow Executor deletes the selected custom-world contact, private chat, and memory placeholder, then clears confirmation. |
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
@@ -301,11 +303,11 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, and `ADD_WORLD_MEMBER` are currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, Add Member can create custom-world contact/chat/memory placeholder data, and Remove Member can open confirmation only. Role editing, member deletion, group cleanup, initial member messages, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, Add Member can create custom-world contact/chat/memory placeholder data, and confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data. Role editing, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

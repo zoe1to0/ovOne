@@ -12,7 +12,7 @@ Last audited: 2026-06-28.
 - Normal `voice-button` mode is a foundation mode only and does not send real voice.
 - `renderShellPage` still owns the known route-to-view factory switch, but unknown-route fallback now lives in ViewRouter.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter. This is temporary fallback behavior.
-- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, custom world metadata saving, controlled custom-world Add Member execution scaffold, and Remove Member confirmation scaffold.
+- World-scoped data model foundation now supports minimal random-role world creation, detailed edit scaffold creation, World Editor page scaffold, custom world metadata saving, controlled custom-world Add Member execution scaffold, and confirmed custom-world Remove Member execution.
 - Create World random-role and detailed-edit scaffold confirmation can create a world from selected AI and switch into it, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
@@ -27,14 +27,14 @@ Last audited: 2026-06-28.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching, custom world metadata saving, Add Member execution for custom-world contact/chat/memory placeholder creation, and Remove Member confirmation, but no role editing, actual member deletion, group membership cleanup, initial member messages, or real memory engine integration yet.
+- ovO panel has read-only world switching, custom world metadata saving, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no role editing, group membership cleanup, initial member messages after member add, or real memory engine integration yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata only; it must not be treated as contact, role, member, chat, memory, GlobalAIModel, or GlobalAILink editing.
 - World Editor Add Member creates only custom-world `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata; it must not be treated as role editing, group membership, initial message generation, provider connection management, or real memory engine behavior.
-- World Editor Remove Member confirmation is scaffold-only; it must not be treated as implemented contact/chat/memory deletion.
+- World Editor Remove Member deletes only custom-world `WorldContact`, private `WorldChat`, and memory placeholder metadata after confirmation; it must not be treated as group cleanup, provider disconnect, Global AI Link deletion, Reality mutation, other-world mutation, or real memory-engine cleanup.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid custom-world `SAVE_WORLD_EDITOR`, and valid custom-world `ADD_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid custom-world `SAVE_WORLD_EDITOR`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning
@@ -66,7 +66,7 @@ Disabled explicit actions:
 - Unknown active views resolve to `CHAT_LIST` before the view layer renders.
 - Runtime effects and autosave are out of scope for Behavior Registry.
 - Flow Executor exists in `src/platform/flow-executor.ts`.
-- Flow Executor currently handles `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid Create World confirmations, custom world metadata save, and custom world Add Member.
+- Flow Executor currently handles `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid Create World confirmations, custom world metadata save, custom world Add Member, and confirmed custom world Remove Member.
 - Disabled explicit actions do not execute runtime effects.
 
 ## Freeze Review Result

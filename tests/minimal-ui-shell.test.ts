@@ -391,6 +391,143 @@ describe("Minimal UI Shell", () => {
     assert.throws(() => shell.addWorldMember({ worldId: customWorldId, globalAILinkId: "link:ai:friend" }));
   });
 
+  it("removes a member from a custom world without touching Reality, other worlds, or global links", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    shell.switchWorld(realityWorldId);
+    const realityBefore = shell.view();
+    const beforeRealityContacts = realityBefore.product.snapshot.contacts;
+    const beforeRealityChats = realityBefore.product.snapshot.chatState.chats;
+    const beforeRealityMemory = realityBefore.product.snapshot.memorySummary;
+    const beforeLinkedModels = realityBefore.linkedAIModels;
+
+    const currentCreated = shell.createWorldFromDraft({
+      worldName: "Remove Member World",
+      worldviewSourceType: "text",
+      worldviewText: "A small shared place.",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    });
+    const currentWorldId = currentCreated.activeWorldId;
+    const otherCreated = shell.createWorldFromDraft({
+      worldName: "Other Member World",
+      worldviewSourceType: "text",
+      worldviewText: "Another place.",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    });
+    const otherWorldId = otherCreated.activeWorldId;
+    const otherBefore = shell.switchWorld(otherWorldId);
+
+    const beforeRemove = shell.switchWorld(currentWorldId);
+    const privateChatId = `chat:${currentWorldId}:ai:friend`;
+    assert.equal(beforeRemove.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), true);
+    assert.equal(beforeRemove.product.snapshot.chatState.chats.has(privateChatId), true);
+    assert.equal(Boolean((beforeRemove.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
+
+    const removed = shell.removeWorldMember({
+      worldId: currentWorldId,
+      actorId: "ai:friend"
+    });
+
+    assert.equal(removed.activeWorldId, currentWorldId);
+    assert.equal(removed.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), false);
+    assert.equal(removed.product.snapshot.chatState.chats.has(privateChatId), false);
+    assert.equal(removed.product.snapshot.chatState.activeChatId, null);
+    assert.equal(removed.availableWorlds.find((world) => world.worldId === currentWorldId)?.memberActorIds?.includes("ai:friend"), false);
+    assert.equal(removed.linkedAIModels?.some((model) => model.globalAILinkId === "link:ai:friend"), true);
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.deepEqual(realityAfter.product.snapshot.contacts, beforeRealityContacts);
+    assert.deepEqual([...realityAfter.product.snapshot.chatState.chats], [...beforeRealityChats]);
+    assert.deepEqual(realityAfter.product.snapshot.memorySummary, beforeRealityMemory);
+    assert.deepEqual(realityAfter.linkedAIModels, beforeLinkedModels);
+
+    const otherAfter = shell.switchWorld(otherWorldId);
+    assert.deepEqual(otherAfter.product.snapshot.contacts, otherBefore.product.snapshot.contacts);
+    assert.deepEqual([...otherAfter.product.snapshot.chatState.chats], [...otherBefore.product.snapshot.chatState.chats]);
+  });
+
+  it("removes a member from a non-current custom world without switching currentWorldId", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Remove Non Current World",
+      worldviewSourceType: "text",
+      worldviewText: "A small shared place.",
+      selectedAIModelIds: [],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const added = shell.addWorldMember({
+      worldId: customWorldId,
+      globalAILinkId: "link:ai:friend"
+    });
+    assert.equal(Boolean((added.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), true);
+
+    shell.switchWorld(realityWorldId);
+    const removed = shell.removeWorldMember({
+      worldId: customWorldId,
+      actorId: "ai:friend"
+    });
+
+    assert.equal(removed.activeWorldId, realityWorldId);
+    assert.equal(removed.availableWorlds.find((world) => world.worldId === customWorldId)?.memberActorIds?.includes("ai:friend"), false);
+    const customAfter = shell.switchWorld(customWorldId);
+    assert.equal(customAfter.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), false);
+    assert.equal(Boolean((customAfter.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
+  });
+
+  it("rejects invalid member removes", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const created = shell.createWorldFromDraft({
+      worldName: "Reject Remove World",
+      worldviewSourceType: "text",
+      worldviewText: "A small shared place.",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+
+    assert.throws(() => shell.removeWorldMember({ worldId: realityWorldId, actorId: "ai:friend" }));
+    assert.throws(() => shell.removeWorldMember({ worldId: customWorldId, actorId: "ai:missing" }));
+  });
+
   it("rejects Reality metadata saves", () => {
     const shell = MinimalUiShell.init(App.init());
 

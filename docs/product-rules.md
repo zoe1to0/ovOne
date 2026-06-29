@@ -33,15 +33,15 @@
 - Current known engineering issue: Create World supports minimal Random Role direct creation and a Detailed Edit scaffold route with role-slot metadata, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented yet.
 - Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero groups. No real text generation or group creation is implemented yet.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
-- Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, and Add Member can add an existing linked AI to a custom world through a controlled scaffold.
+- Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.
 - World Editor Add Member: custom world add-member candidates come from existing Global AI Links and exclude AI already in the selected world.
 - World Editor Add Member creates only a new world-scoped `WorldContact`, private `WorldChat`, and isolated `WorldMemoryScope` placeholder metadata for that custom world.
 - World Editor Add Member does not affect Reality, other worlds, existing world data, group membership, provider connections, Global AI Links, or initial messages.
 - Reality cannot use World Editor to add members.
-- World Editor Remove Member applies only to custom worlds and currently opens confirmation only.
+- World Editor Remove Member applies only to custom worlds and requires confirmation before deletion.
 - Remove Member confirmation must say: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
-- Future Remove Member deletion may clear only that AI's WorldContact, private WorldChat, and WorldMemoryScope in that custom world.
+- Confirmed Remove Member clears only that AI's WorldContact, private WorldChat, and WorldMemoryScope placeholder in that custom world.
 - Remove Member must not disconnect Global AI Link, mutate Reality, mutate other worlds, mutate provider connections, or recover old world memory after re-add.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.

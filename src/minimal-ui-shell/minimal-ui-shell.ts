@@ -10,9 +10,10 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { WorldAddMemberCommand, WorldEditorPatch } from "../domain/index.js";
+import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { addWorldMember } from "./world-member-service.js";
+import { removeWorldMember } from "./world-member-remove-service.js";
 
 export const MinimalUiShell = Object.freeze({
   init
@@ -94,6 +95,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const removeMember = (command: WorldRemoveMemberCommand): MinimalProductShellView => {
+    removeWorldMember({ app, command });
+    screen = "chat";
+    return view();
+  };
+
   const sendMessage = (text: string): MinimalProductShellView => {
     const trimmed = text.trim();
     if (!trimmed) {
@@ -133,6 +140,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     createWorldFromDraft: createWorld,
     saveWorldMetadata,
     addWorldMember: addMember,
+    removeWorldMember: removeMember,
     sendMessage,
     snapshot,
     view
