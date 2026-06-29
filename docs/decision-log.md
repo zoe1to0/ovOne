@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-29: Product responsibility boundaries clarified
+
+Decision: World Editor, Contacts Detail, and Me Settings have separate product ownership boundaries.
+
+Rules:
+
+- World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
+- World Editor must not own contact-level communication preferences.
+- Contacts Detail owns contact-level preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
+- If `你认为他是怎样的人？` is blank in a custom world, its default may derive from world role/worldview; if blank in Reality, it starts from an unfamiliar/new friend relationship.
+- Me Settings owns global product-authorized context access such as weather/time.
+- Weather/time access is not configured per contact; after authorization, connected AI models can read it by default until the user revokes access in Me -> Settings.
+- Individual AI contacts cannot separately disable weather/time access.
+
 ## 2026-06-29: World Editor role/member scaffold added
 
 Decision: World Editor now exposes custom-world role/member draft fields as a scaffold for future world-level role/background setup.

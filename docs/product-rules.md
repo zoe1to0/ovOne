@@ -43,11 +43,15 @@
 - Remove Member confirmation must say: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
 - Confirmed Remove Member clears only that AI's WorldContact, private WorldChat, and WorldMemoryScope placeholder in that custom world.
 - Remove Member must not disconnect Global AI Link, mutate Reality, mutate other worlds, mutate provider connections, or recover old world memory after re-add.
-- World Editor owns world-level role/background setup only.
+- World Editor owns world-level setup only: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor role/member scaffold can show a user role row and current world AI member role rows for custom worlds.
 - World Editor role/member fields are local draft fields only until role save is explicitly implemented.
-- Contacts detail owns contact-level communication preferences.
-- World Editor must not expose contact nickname/user remark, answer mode, chat tone, or emoji permission controls.
+- World Editor must not own or expose contact-level communication preferences.
+- Contacts Detail owns contact-level communication preferences: remark/nickname, "你认为他是怎样的人？", answer mode, chat tone/how the contact speaks to the user, and emoji permission.
+- If "你认为他是怎样的人？" is blank in a custom world, its default may derive from the world role/worldview; if blank in Reality, it starts from an unfamiliar/new friend relationship.
+- Me Settings owns global product-authorized context access such as weather/time.
+- Weather/time access is not configured per contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
+- Individual AI contacts cannot separately disable weather/time access.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 

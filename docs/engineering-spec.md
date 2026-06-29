@@ -128,7 +128,13 @@ UI action
 - World Editor role/member scaffold is custom-world only and initializes local draft fields for a user role row plus current world AI member rows.
 - World Editor role/member draft fields are `userRole.roleName`, `userRole.personaNotes`, `memberRoles[].worldRoleName`, and `memberRoles[].worldPersonaNotes`.
 - World Editor role/member draft updates are local only and show `角色设定保存暂未开放`; `SAVE_WORLD_EDITOR` does not persist role/member draft data yet.
-- World Editor must not expose contact-level communication controls such as nickname/user remark, answer mode, chat tone, or emoji permission; those belong to Contacts detail.
+- World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
+- World Editor must not expose contact-level communication controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
+- Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
+- Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
+- Me Settings owns global product-authorized context access such as weather/time.
+- Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
+- Individual AI contacts cannot separately disable weather/time access.
 - `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` contract, then Flow Executor calls `shell.saveWorldMetadata(...)` for custom worlds.
 - Valid custom world saves update only world metadata name/title and worldview; the app remains on `WORLD_EDITOR`.
 - World Editor save contract permits only `worldId`, `name`, and `worldview` fields for custom worlds.

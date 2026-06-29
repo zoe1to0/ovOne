@@ -81,7 +81,13 @@ UI event
 - World Editor role/member scaffold has a user role row and current world AI member role rows.
 - `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` and `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` update local draft fields only and show `角色设定保存暂未开放`.
 - `SAVE_WORLD_EDITOR` still persists only custom world name/worldview metadata; it does not persist role/member draft data.
-- World Editor must not expose contact-level preference controls such as nickname/user remark, answer mode, chat tone, or emoji permission. Those belong to Contacts detail.
+- World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
+- World Editor must not expose contact-level preference controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
+- Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
+- Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
+- Me Settings owns global product-authorized context access such as weather/time.
+- Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
+- Individual AI contacts cannot separately disable weather/time access.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
