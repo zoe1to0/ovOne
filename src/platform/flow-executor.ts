@@ -1,8 +1,20 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
-import { WORLD_EDITOR_SAVE_SUCCESS_MESSAGE, validateWorldEditorPatch, validateWorldRoleEditorPatch } from "../domain/index.js";
+import {
+  CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
+  WORLD_EDITOR_SAVE_SUCCESS_MESSAGE,
+  validateContactDetailPreferencePatch,
+  validateWorldEditorPatch,
+  validateWorldRoleEditorPatch
+} from "../domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
 import { privateChatIdForMember, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-remove-service.js";
-import { sanitizeCreateWorldDraft, validateCreateWorldDraft, validateCreateWorldDraftFields } from "./behavior-registry.js";
+import {
+  contactDetailPreferencePatchFromDraft,
+  createContactDetailContractInput,
+  sanitizeCreateWorldDraft,
+  validateCreateWorldDraft,
+  validateCreateWorldDraftFields
+} from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
 
@@ -13,7 +25,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -125,6 +137,32 @@ export function createFlowExecutor(): FlowExecutor {
           noticeMessage: WORLD_EDITOR_SAVE_SUCCESS_MESSAGE
         });
         return Object.freeze({ shouldRender: true, executedFlow: "SAVE_WORLD_METADATA" });
+      }
+      if (action.type === "SAVE_CONTACT_DETAIL_PREFERENCES") {
+        const draft = context.state.contactDetailDraft;
+        if (!draft) {
+          return NO_FLOW;
+        }
+        const validation = validateContactDetailPreferencePatch(
+          contactDetailPreferencePatchFromDraft(draft),
+          createContactDetailContractInput(context.state)
+        );
+        if (!validation.valid || !validation.patch) {
+          return NO_FLOW;
+        }
+        context.state.view = context.shell.saveContactDetailPreferences(validation.patch);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CONTACT_DETAIL";
+        context.state.activeChatId = null;
+        context.state.selectedContactActorId = validation.patch.worldContactId;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.contactDetailDraft = Object.freeze({
+          ...draft,
+          noticeMessage: CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
+          deleteFriendConfirmation: null
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "SAVE_CONTACT_DETAIL_PREFERENCES" });
       }
       if (action.type === "ADD_WORLD_MEMBER") {
         const draft = context.state.worldEditorDraft;

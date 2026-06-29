@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-06-29: Contacts Detail preference save implemented
+
+Decision: `SAVE_CONTACT_DETAIL_PREFERENCES` now persists allowed current-world contact preference fields through a controlled runtime boundary.
+
+Rules:
+
+- Contacts Detail saves only `WorldContact.remark`, `WorldContact.perceivedPersonaNotes`, `WorldContact.answerMode`, `WorldContact.chatTone`, and `WorldContact.emojiPermission`.
+- Preference save is scoped to `worldId` plus `worldContactId`; saving one world does not affect Reality or other custom worlds.
+- Empty `perceivedPersonaNotes` is valid and remains available for later fallback behavior.
+- Preference save must not mutate world name, worldview, world role/background metadata, chats, memory, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, weather/time permission, or other worlds.
+- Delete Friend remains scaffold/no-op and does not delete contacts, chats, memory, global links, or provider connections.
+
 ## 2026-06-29: Contacts Detail preference and Delete Friend contract scaffold added
 
 Decision: Contacts Detail now has a current-world preference/delete contract and local UI scaffold without persistence or deletion mutation.

@@ -111,6 +111,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveContactDetailPreferences: (patch) => {
+      try {
+        return shell.saveContactDetailPreferences(patch);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveContactDetailPreferences", worldId: patch.worldId });
+        return decorate();
+      }
+    },
     addWorldMember: (command) => {
       try {
         return shell.addWorldMember(command);

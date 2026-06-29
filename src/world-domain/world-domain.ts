@@ -20,6 +20,8 @@ import { validateWorldEditorPatch } from "../domain/world-editor-contract.js";
 import type { WorldEditorPatch } from "../domain/world-editor-contract.js";
 import { validateWorldRoleEditorPatch } from "../domain/world-role-editor-contract.js";
 import type { WorldRoleEditorPatch } from "../domain/world-role-editor-contract.js";
+import { validateContactDetailPreferencePatch } from "../domain/contact-detail-contract.js";
+import type { ContactDetailPreferencePatch } from "../domain/contact-detail-contract.js";
 
 export type WorldDomainInit = Readonly<{
   readonly reality: RealityDefinition;
@@ -196,6 +198,29 @@ export class WorldDomain {
       targetField: "contacts.replace",
       operation: "replace",
       value: contacts
+    });
+    return queue.reduce();
+  }
+
+  applyContactDetailPreferencePatch(patch: ContactDetailPreferencePatch): WorldState {
+    const state = this.getWorldState(patch.worldId);
+    assertWorldAcceptsPatches(state);
+    const validation = validateContactDetailPreferencePatch(patch, {
+      worldId: state.world.id,
+      contactActorIds: state.contacts
+        .filter((contact) => contact.kind === "assistant" && contact.actorId !== state.world.assistantActorId)
+        .map((contact) => contact.actorId)
+    });
+    if (!validation.valid || !validation.patch) {
+      throw new Error(`WorldDomain: invalid Contacts Detail preference patch for world "${patch.worldId}".`);
+    }
+
+    const queue = this.getQueue(patch.worldId);
+    queue.enqueue({
+      source: "contact",
+      targetField: "contacts.preference",
+      operation: "set",
+      value: validation.patch
     });
     return queue.reduce();
   }

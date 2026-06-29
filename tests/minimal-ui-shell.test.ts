@@ -341,6 +341,95 @@ describe("Minimal UI Shell", () => {
     assert.deepEqual(shell.switchWorld(realityWorldId).product.snapshot.contacts, realityBefore.product.snapshot.contacts);
   });
 
+  it("saves contact detail preferences only on the current world contact", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+    const created = shell.createWorldFromDraft({
+      worldName: "Preference World",
+      worldviewSourceType: "text",
+      worldviewText: "Original worldview",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const customBefore = created.product.snapshot;
+    const customFriendBefore = customBefore.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    const chatsBefore = customBefore.chatState.chats;
+    const memoryBefore = customBefore.memorySummary;
+    const worldViewBefore = customBefore.runtimeState.metadata.worldView;
+    const settingsBefore = customBefore.runtimeState.metadata.settings;
+    const linkedBefore = created.linkedAIModels;
+
+    const savedCustom = shell.saveContactDetailPreferences({
+      worldId: customWorldId,
+      worldContactId: friend.actorId,
+      remark: "Custom Buddy",
+      perceivedPersonaNotes: "",
+      answerMode: "qa",
+      chatTone: "gentle",
+      emojiPermission: false
+    });
+    const customFriend = savedCustom.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    assert.equal(customFriend.remark, "Custom Buddy");
+    assert.equal(customFriend.perceivedPersonaNotes, "");
+    assert.equal(customFriend.answerMode, "qa");
+    assert.equal(customFriend.chatTone, "gentle");
+    assert.equal(customFriend.emojiPermission, false);
+    assert.equal(customFriend.worldRoleName, customFriendBefore.worldRoleName);
+    assert.equal(customFriend.worldPersonaNotes, customFriendBefore.worldPersonaNotes);
+    assert.equal(savedCustom.product.snapshot.worldMeta.title, customBefore.worldMeta.title);
+    assert.deepEqual(savedCustom.product.snapshot.runtimeState.metadata.worldView, worldViewBefore);
+    assert.deepEqual(savedCustom.product.snapshot.runtimeState.metadata.settings, settingsBefore);
+    assert.deepEqual([...savedCustom.product.snapshot.chatState.chats], [...chatsBefore]);
+    assert.deepEqual(savedCustom.product.snapshot.memorySummary, memoryBefore);
+    assert.deepEqual(savedCustom.linkedAIModels, linkedBefore);
+
+    const realityAfterCustomSave = shell.switchWorld(realityWorldId);
+    const realityFriendAfterCustomSave = realityAfterCustomSave.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    assert.equal(realityFriendAfterCustomSave.remark, undefined);
+    assert.equal(realityFriendAfterCustomSave.perceivedPersonaNotes, undefined);
+    assert.equal(realityFriendAfterCustomSave.answerMode, undefined);
+    assert.equal(realityFriendAfterCustomSave.chatTone, undefined);
+    assert.equal(realityFriendAfterCustomSave.emojiPermission, undefined);
+
+    const savedReality = shell.saveContactDetailPreferences({
+      worldId: realityWorldId,
+      worldContactId: friend.actorId,
+      remark: "Reality Buddy",
+      perceivedPersonaNotes: "New friend",
+      answerMode: "conversational",
+      chatTone: "direct",
+      emojiPermission: true
+    });
+    const realityFriend = savedReality.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    assert.equal(realityFriend.remark, "Reality Buddy");
+    assert.equal(realityFriend.perceivedPersonaNotes, "New friend");
+    assert.equal(realityFriend.answerMode, "conversational");
+    assert.equal(realityFriend.chatTone, "direct");
+    assert.equal(realityFriend.emojiPermission, true);
+
+    const customAfterRealitySave = shell.switchWorld(customWorldId);
+    const customFriendAfterRealitySave = customAfterRealitySave.product.snapshot.contacts.find((contact) => contact.actorId === friend.actorId)!;
+    assert.equal(customFriendAfterRealitySave.remark, "Custom Buddy");
+    assert.equal(customFriendAfterRealitySave.perceivedPersonaNotes, "");
+    assert.equal(customFriendAfterRealitySave.answerMode, "qa");
+    assert.equal(customFriendAfterRealitySave.chatTone, "gentle");
+    assert.equal(customFriendAfterRealitySave.emojiPermission, false);
+  });
+
   it("adds a linked AI member to a custom world without touching Reality, groups, or messages", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

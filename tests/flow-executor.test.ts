@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
-import { WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
+import { CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
@@ -225,6 +225,90 @@ describe("FlowExecutor", () => {
     assert.equal(flow.shouldRender, false);
     assert.deepEqual(calls, []);
     assert.equal(state.worldEditorDraft?.fieldErrors.worldName, WORLD_EDITOR_NAME_REQUIRED_MESSAGE);
+  });
+
+  it("executes SAVE_CONTACT_DETAIL_PREFERENCES through the runtime preference save boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView(null, targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (patch) => {
+        calls.push(patch);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-contact-save", targetWorldId));
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          contacts: [
+            {
+              worldId: targetWorldId,
+              actorId: "ai:friend",
+              displayName: "Friend",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            } as never
+          ]
+        }
+      }
+    };
+    state.activeView = "CONTACT_DETAIL";
+    state.activeChatId = "old-chat";
+    state.selectedContactActorId = "ai:friend";
+    state.overlay = "add-menu";
+    state.settingsOpen = true;
+    state.contactDetailDraft = {
+      worldId: targetWorldId,
+      worldContactId: "ai:friend",
+      remark: "Buddy",
+      perceivedPersonaNotes: "",
+      answerMode: "qa",
+      chatTone: "gentle",
+      emojiPermission: false,
+      noticeMessage: null,
+      deleteFriendConfirmation: {
+        worldContactId: "ai:friend",
+        displayName: "Friend",
+        warning: "warning"
+      }
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "SAVE_CONTACT_DETAIL_PREFERENCES" }, state);
+    const flow = executor.run({ type: "SAVE_CONTACT_DETAIL_PREFERENCES" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{
+      worldId: targetWorldId,
+      worldContactId: "ai:friend",
+      remark: "Buddy",
+      perceivedPersonaNotes: "",
+      answerMode: "qa",
+      chatTone: "gentle",
+      emojiPermission: false
+    }]);
+    assert.equal(flow.executedFlow, "SAVE_CONTACT_DETAIL_PREFERENCES");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.activeView, "CONTACT_DETAIL");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.selectedContactActorId, "ai:friend");
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.contactDetailDraft.noticeMessage, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE);
+    assert.equal(state.contactDetailDraft.deleteFriendConfirmation, null);
   });
 
   it("executes ADD_WORLD_MEMBER through the runtime member boundary", () => {
@@ -726,7 +810,8 @@ function createShell(
   saveWorldMetadata: MinimalProductShellRuntime["saveWorldMetadata"] = () => createView("initial"),
   addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial"),
   removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial"),
-  saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial")
+  saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial"),
+  saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -735,6 +820,7 @@ function createShell(
     createWorldFromDraft,
     saveWorldMetadata,
     saveWorldRoleMetadata,
+    saveContactDetailPreferences,
     addWorldMember,
     removeWorldMember,
     sendMessage,

@@ -88,7 +88,7 @@ UI event
 - World Editor owns only world-level setup: world name, worldview/world setting, user role name/identity notes in this world, and AI world role name/persona relationship/background in this world.
 - World Editor must not expose contact-level preference controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
-- Contacts Detail preference scaffold lives on current-world local draft state only; `SAVE_CONTACT_DETAIL_PREFERENCES` validates but does not persist preferences yet.
+- Contacts Detail preference draft is current-world local state until save; `SAVE_CONTACT_DETAIL_PREFERENCES` validates and persists only the allowed current-world `WorldContact` preference fields.
 - Contacts Detail Delete Friend opens confirmation with `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`; confirm is scaffold/no-op and does not delete contacts, chats, memory, global links, or provider connections yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
@@ -279,7 +279,7 @@ UI event
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | Open contact | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | Update contact detail draft | `UPDATE_CONTACT_DETAIL_DRAFT` | Updates local current-world contact preference draft only. |
-| Save contact detail preferences | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates current-world preference patch and shows scaffold notice; no persistence yet. |
+| Save contact detail preferences | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates current-world preference patch, persists only allowed `WorldContact` preference fields through Flow Executor, stays on `CONTACT_DETAIL`, and shows success notice. |
 | Open delete friend confirmation | `OPEN_DELETE_FRIEND_CONFIRMATION` | Validates current-world contact and stores local delete confirmation warning. |
 | Cancel delete friend | `CANCEL_DELETE_FRIEND` | Clears local delete friend confirmation. |
 | Confirm delete friend | `CONFIRM_DELETE_FRIEND` | Validates current-world contact and shows scaffold notice; no deletion yet. |
@@ -333,7 +333,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, and Contacts Detail has local preference/delete scaffolds. Contacts Detail preference persistence, Delete Friend mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, and Contacts Detail can save current-world contact preferences. Delete Friend mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

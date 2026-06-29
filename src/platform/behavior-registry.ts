@@ -1148,7 +1148,7 @@ function defaultPerceivedPersonaNotes(state: SemanticMobileState, worldContactId
   return roleNote || "";
 }
 
-function contactDetailPreferencePatchFromDraft(draft: ContactDetailDraft) {
+export function contactDetailPreferencePatchFromDraft(draft: ContactDetailDraft) {
   return {
     worldId: draft.worldId,
     worldContactId: draft.worldContactId,
@@ -1160,7 +1160,7 @@ function contactDetailPreferencePatchFromDraft(draft: ContactDetailDraft) {
   };
 }
 
-function createContactDetailContractInput(state: SemanticMobileState) {
+export function createContactDetailContractInput(state: SemanticMobileState) {
   return {
     worldId: state.currentWorldId,
     contactActorIds: state.view.product.snapshot.contacts

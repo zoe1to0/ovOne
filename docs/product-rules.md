@@ -49,6 +49,7 @@
 - User role metadata is world-level metadata; AI member role metadata is stored only on that world's `WorldContact.worldRoleName` and `WorldContact.worldPersonaNotes`.
 - World Editor role/member save contract may only allow user `roleName` / `personaNotes` and AI member `worldRoleName` / `worldPersonaNotes`.
 - World Editor must not own or expose contact-level communication preferences.
+- Contacts Detail preference save applies only to the current world's `WorldContact` and does not affect Reality, other worlds, world metadata, world role/background metadata, chats, memory, global AI links, or provider connections.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, "你认为他是怎样的人？", answer mode, chat tone/how the contact speaks to the user, and emoji permission.
 - If "你认为他是怎样的人？" is blank in a custom world, its default may derive from the world role/worldview; if blank in Reality, it starts from an unfamiliar/new friend relationship.
 - Contacts Detail Delete Friend applies only to the current world and must not disconnect the Global AI Link or provider connection.

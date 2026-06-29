@@ -63,6 +63,11 @@ export type WorldIdentity = Readonly<{
 export type WorldContact = Identity & Readonly<{
   readonly worldRoleName?: string;
   readonly worldPersonaNotes?: string;
+  readonly remark?: string;
+  readonly perceivedPersonaNotes?: string;
+  readonly answerMode?: "conversational" | "qa";
+  readonly chatTone?: string;
+  readonly emojiPermission?: boolean;
 }>;
 
 export type WorldGroup = Readonly<{

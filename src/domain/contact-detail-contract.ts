@@ -3,6 +3,7 @@ import type { WorldId } from "../world-domain/index.js";
 export const CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE = "删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。";
 
 export type ContactDetailAnswerMode = "conversational" | "qa";
+export const CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE = "\u5df2\u4fdd\u5b58";
 
 export type ContactDetailPreferencePatch = Readonly<{
   readonly worldId: WorldId;

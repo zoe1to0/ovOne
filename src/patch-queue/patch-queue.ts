@@ -157,6 +157,12 @@ function applyPatch(state: WorldState | null, patch: StatePatch): WorldState {
         contacts: patch.value as readonly WorldContact[]
       };
 
+    case "contacts.preference":
+      return {
+        ...state,
+        contacts: applyContactPreferencePatch(state.contacts, patch.value)
+      };
+
     case "groups":
       return {
         ...state,
@@ -215,6 +221,36 @@ function upsertChat(
   const next = new Map(chats);
   next.set(chat.id, chat);
   return next;
+}
+
+function applyContactPreferencePatch(
+  contacts: readonly WorldContact[],
+  value: unknown
+): readonly WorldContact[] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("PatchQueue: contact preference patch must be an object.");
+  }
+  const patch = value as Readonly<Record<string, unknown>>;
+  const actorId = patch.worldContactId;
+  if (typeof actorId !== "string") {
+    throw new Error("PatchQueue: contact preference patch requires worldContactId.");
+  }
+  return contacts.map((contact) =>
+    contact.actorId === actorId
+      ? {
+          ...contact,
+          remark: stringValue(patch.remark),
+          perceivedPersonaNotes: stringValue(patch.perceivedPersonaNotes),
+          answerMode: patch.answerMode === "qa" ? "qa" : "conversational",
+          chatTone: stringValue(patch.chatTone),
+          emojiPermission: Boolean(patch.emojiPermission)
+        }
+      : contact
+  );
+}
+
+function stringValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }
 
 function mergeRecord(

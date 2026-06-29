@@ -10,7 +10,7 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
+import type { ContactDetailPreferencePatch, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
@@ -102,6 +102,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const saveContactDetailPreferences = (patch: ContactDetailPreferencePatch): MinimalProductShellView => {
+    app.worldDomain.applyContactDetailPreferencePatch(patch);
+    screen = "chat";
+    return view();
+  };
+
   const addMember = (command: WorldAddMemberCommand): MinimalProductShellView => {
     addWorldMember({ app, command });
     screen = "chat";
@@ -153,6 +159,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     createWorldFromDraft: createWorld,
     saveWorldMetadata,
     saveWorldRoleMetadata,
+    saveContactDetailPreferences,
     addWorldMember: addMember,
     removeWorldMember: removeMember,
     sendMessage,

@@ -32,6 +32,7 @@ export type {
 } from "./world-bootstrap-planner.js";
 export {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
+  CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
   canDeleteFriendInCurrentWorld,
   getDeleteFriendWarning,
   validateContactDetailPreferencePatch,
