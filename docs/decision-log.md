@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-29: World Editor role/member scaffold added
+
+Decision: World Editor now exposes custom-world role/member draft fields as a scaffold for future world-level role/background setup.
+
+Rules:
+
+- World Editor role/member scaffold applies only to custom worlds; Reality remains locked.
+- The scaffold includes a user role row and current world AI member role rows.
+- Draft fields are local only and are not persisted by `SAVE_WORLD_EDITOR`.
+- `SAVE_WORLD_EDITOR` continues to mutate only custom world name/worldview metadata.
+- World Editor must not expose contact-level communication preferences such as nickname/user remark, answer mode, chat tone, or emoji permission.
+- Contacts detail remains the owner for contact-level communication preferences.
+
 ## 2026-06-29: World Editor Remove Member execution implemented
 
 Decision: Confirmed World Editor Remove Member now performs controlled custom-world deletion.
@@ -95,7 +108,7 @@ Rules:
 - Reality can be opened in World Editor but shows locked worldview state.
 - Custom worlds show editable-looking world name and worldview fields.
 - At this scaffold stage, `SAVE_WORLD_EDITOR` showed `保存暂未开放` and performed no world mutation; this is superseded by metadata save implementation.
-- Role/member editing, add member, memory mutation, and real saving remain unimplemented.
+- At this scaffold decision point, role/member editing, add member, memory mutation, and real saving were unimplemented; later decisions superseded add/remove member execution, metadata saving, and local role/member draft scaffolding.
 
 ## 2026-06-28: v0.2.1-create-world-lifecycle milestone tagged
 

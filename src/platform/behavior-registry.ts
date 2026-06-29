@@ -73,6 +73,15 @@ export type WorldCreationTransition = Readonly<{
   readonly loadingText: string;
   readonly welcomeText: string;
 }>;
+export type WorldEditorUserRoleDraft = Readonly<{
+  readonly roleName: string;
+  readonly personaNotes: string;
+}>;
+export type WorldEditorMemberRoleDraft = Readonly<{
+  readonly worldContactId: string;
+  readonly worldRoleName: string;
+  readonly worldPersonaNotes: string;
+}>;
 export type WorldEditorDraft = Readonly<{
   readonly worldId: WorldId;
   readonly worldName: string;
@@ -84,6 +93,8 @@ export type WorldEditorDraft = Readonly<{
   }>;
   readonly warnings: readonly string[];
   readonly noticeMessage: string | null;
+  readonly userRole?: WorldEditorUserRoleDraft;
+  readonly memberRoles?: readonly WorldEditorMemberRoleDraft[];
   readonly removeMemberConfirmation: Readonly<{
     readonly actorId: string;
     readonly displayName: string;
@@ -112,6 +123,8 @@ export type InteractionAction =
   | { readonly type: "OPEN_WORLD_EDITOR_SELECTOR" }
   | { readonly type: "OPEN_WORLD_EDITOR"; readonly worldId: WorldId }
   | { readonly type: "UPDATE_WORLD_EDITOR_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
+  | { readonly type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT"; readonly field: "roleName" | "personaNotes"; readonly value: string }
+  | { readonly type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT"; readonly worldContactId: string; readonly field: "worldRoleName" | "worldPersonaNotes"; readonly value: string }
   | { readonly type: "CANCEL_WORLD_EDITOR" }
   | { readonly type: "SAVE_WORLD_EDITOR" }
   | { readonly type: "ADD_WORLD_MEMBER"; readonly worldId: WorldId; readonly globalAILinkId: string }
@@ -190,6 +203,8 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_WORLD_EDITOR_SELECTOR"
   | "OPEN_WORLD_EDITOR"
   | "UPDATE_WORLD_EDITOR_DRAFT"
+  | "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT"
+  | "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT"
   | "CANCEL_WORLD_EDITOR"
   | "SAVE_WORLD_EDITOR"
   | "ADD_WORLD_MEMBER"
@@ -487,6 +502,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           }),
           warnings: Object.freeze([]),
           noticeMessage: null,
+          userRole: createWorldEditorUserRoleDraft(worldView),
+          memberRoles: createWorldEditorMemberRoleDrafts(state, action.worldId, worldView),
           removeMemberConfirmation: null
         });
         closeOverlay(state);
@@ -565,6 +582,36 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           }),
           noticeMessage: null
         }));
+        return RENDER;
+
+      case "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT":
+        if (!state.worldEditorDraft || state.worldEditorDraft.locked) {
+          return RENDER;
+        }
+        state.worldEditorDraft = Object.freeze({
+          ...state.worldEditorDraft,
+          userRole: Object.freeze({
+            ...(state.worldEditorDraft.userRole ?? createWorldEditorUserRoleDraft({})),
+            [action.field]: action.value
+          }),
+          noticeMessage: "角色设定保存暂未开放"
+        });
+        return RENDER;
+
+      case "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT":
+        if (!state.worldEditorDraft || state.worldEditorDraft.locked) {
+          return RENDER;
+        }
+        state.worldEditorDraft = Object.freeze({
+          ...state.worldEditorDraft,
+          memberRoles: updateWorldEditorMemberRoleDraft(
+            state.worldEditorDraft.memberRoles ?? createWorldEditorMemberRoleDrafts(state, state.worldEditorDraft.worldId, {}),
+            action.worldContactId,
+            action.field,
+            action.value
+          ),
+          noticeMessage: "角色设定保存暂未开放"
+        });
         return RENDER;
 
       case "SAVE_WORLD_EDITOR":
@@ -868,6 +915,91 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
 function worldEditorTextFromWorldView(worldView: Readonly<Record<string, unknown>>): string {
   return typeof worldView.text === "string" ? worldView.text : JSON.stringify(worldView);
+}
+
+function createWorldEditorUserRoleDraft(worldView: Readonly<Record<string, unknown>>): WorldEditorUserRoleDraft {
+  const roleDraft = worldEditorRoleMetadata(worldView);
+  const userRole = roleDraft.userRole;
+  return Object.freeze({
+    roleName: stringRecordValue(userRole, "roleName"),
+    personaNotes: stringRecordValue(userRole, "personaNotes")
+  });
+}
+
+function createWorldEditorMemberRoleDrafts(
+  state: SemanticMobileState,
+  worldId: WorldId,
+  worldView: Readonly<Record<string, unknown>>
+): readonly WorldEditorMemberRoleDraft[] {
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === worldId);
+  const existingRoles = new Map(
+    worldEditorRoleMetadata(worldView).memberRoles.map((role) => [role.worldContactId, role])
+  );
+  return Object.freeze((selectedWorld?.memberActorIds ?? []).map((actorId) => {
+    const existing = existingRoles.get(actorId);
+    return Object.freeze({
+      worldContactId: actorId,
+      worldRoleName: existing?.worldRoleName ?? "",
+      worldPersonaNotes: existing?.worldPersonaNotes ?? ""
+    });
+  }));
+}
+
+function updateWorldEditorMemberRoleDraft(
+  memberRoles: readonly WorldEditorMemberRoleDraft[],
+  worldContactId: string,
+  field: "worldRoleName" | "worldPersonaNotes",
+  value: string
+): readonly WorldEditorMemberRoleDraft[] {
+  return Object.freeze(memberRoles.map((role) =>
+    role.worldContactId === worldContactId
+      ? Object.freeze({ ...role, [field]: value })
+      : role
+  ));
+}
+
+function worldEditorRoleMetadata(worldView: Readonly<Record<string, unknown>>): Readonly<{
+  readonly userRole: Readonly<Record<string, unknown>>;
+  readonly memberRoles: readonly WorldEditorMemberRoleDraft[];
+}> {
+  const candidate = worldView.worldEditorRoleDraft;
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) {
+    return Object.freeze({
+      userRole: Object.freeze({}),
+      memberRoles: Object.freeze([])
+    });
+  }
+  const record = candidate as Readonly<Record<string, unknown>>;
+  const memberRoles = Array.isArray(record.memberRoles)
+    ? record.memberRoles.flatMap((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) {
+          return [];
+        }
+        const role = item as Readonly<Record<string, unknown>>;
+        const worldContactId = stringRecordValue(role, "worldContactId");
+        return worldContactId
+          ? [Object.freeze({
+              worldContactId,
+              worldRoleName: stringRecordValue(role, "worldRoleName"),
+              worldPersonaNotes: stringRecordValue(role, "worldPersonaNotes")
+            })]
+          : [];
+      })
+    : [];
+  return Object.freeze({
+    userRole: record.userRole && typeof record.userRole === "object" && !Array.isArray(record.userRole)
+      ? record.userRole as Readonly<Record<string, unknown>>
+      : Object.freeze({}),
+    memberRoles: Object.freeze(memberRoles)
+  });
+}
+
+function stringRecordValue(record: unknown, key: string): string {
+  if (!record || typeof record !== "object" || Array.isArray(record)) {
+    return "";
+  }
+  const value = (record as Readonly<Record<string, unknown>>)[key];
+  return typeof value === "string" ? value : "";
 }
 
 function createWorldMemberContractInputFromState(state: SemanticMobileState, worldId: WorldId) {

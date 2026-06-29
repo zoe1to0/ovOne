@@ -133,6 +133,8 @@ describe("Composer mode state machine", () => {
 
     registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
     assert.equal(state.worldEditorDraft?.noticeMessage, null);
+    registry.execute({ type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT", field: "roleName", value: "Should stay locked" }, state);
+    assert.equal(state.worldEditorDraft?.userRole?.roleName, "");
 
     registry.execute({ type: "CANCEL_WORLD_EDITOR" }, state);
     assert.equal(state.activeView, "CHAT_LIST");
@@ -167,6 +169,56 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
     assert.equal(state.worldEditorDraft?.noticeMessage, null);
     assert.equal(state.view.product.snapshot.worldMeta.title, "Reality");
+  });
+
+  it("updates world editor role member draft locally without mutating contacts", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const customWorldId = toWorldId("custom:studio");
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        { worldId: state.currentWorldId, title: "Reality", type: "reality", memberActorIds: [] },
+        { worldId: customWorldId, title: "Studio", type: "custom", memberActorIds: ["ai:friend"] }
+      ],
+      linkedAIModels: [
+        {
+          globalAILinkId: "link:ai:friend",
+          globalAIModelId: "ai:friend",
+          actorId: "ai:friend",
+          displayName: "Friend"
+        }
+      ]
+    };
+
+    registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: customWorldId }, state);
+    registry.execute({ type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT", field: "roleName", value: "Traveler" }, state);
+    registry.execute({ type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT", field: "personaNotes", value: "New arrival" }, state);
+    registry.execute({
+      type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT",
+      worldContactId: "ai:friend",
+      field: "worldRoleName",
+      value: "Guide"
+    }, state);
+    registry.execute({
+      type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT",
+      worldContactId: "ai:friend",
+      field: "worldPersonaNotes",
+      value: "Knows the city"
+    }, state);
+
+    assert.equal(state.worldEditorDraft?.userRole?.roleName, "Traveler");
+    assert.equal(state.worldEditorDraft?.userRole?.personaNotes, "New arrival");
+    assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldContactId, "ai:friend");
+    assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldRoleName, "Guide");
+    assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldPersonaNotes, "Knows the city");
+    assert.equal(state.worldEditorDraft?.noticeMessage, "角色设定保存暂未开放");
+    assert.deepEqual(state.view.product.snapshot.contacts, []);
+
+    registry.execute({ type: "SAVE_WORLD_EDITOR" }, state);
+    assert.equal(state.worldEditorDraft?.userRole?.roleName, "Traveler");
+    assert.equal(state.worldEditorDraft?.memberRoles?.[0]?.worldRoleName, "Guide");
+    assert.deepEqual(state.view.product.snapshot.contacts, []);
   });
 
   it("validates world editor name and allows cleared worldview with warning", () => {

@@ -386,6 +386,13 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /type: "ADD_WORLD_MEMBER"/);
     assert.match(adapter, /globalAILinkId: candidate\.globalAILinkId/);
     assert.match(adapter, /function createWorldEditorRemoveMemberScaffold/);
+    assert.match(adapter, /function createWorldEditorRoleMemberScaffold/);
+    assert.match(adapter, /"roleName"/);
+    assert.match(adapter, /"personaNotes"/);
+    assert.match(adapter, /"worldRoleName"/);
+    assert.match(adapter, /"worldPersonaNotes"/);
+    assert.match(adapter, /type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT"/);
+    assert.match(adapter, /type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT"/);
     assert.match(adapter, /type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION"/);
     assert.match(adapter, /type: "CANCEL_REMOVE_WORLD_MEMBER"/);
     assert.match(adapter, /type: "CONFIRM_REMOVE_WORLD_MEMBER"/);
@@ -403,6 +410,13 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /saveButton\.setAttribute\("disabled", "true"\)/);
     assert.match(adapter, /type: "CANCEL_WORLD_EDITOR"/);
     assert.equal(adapter.includes("EDIT_WORLD"), false);
+    const editorStart = adapter.indexOf("function createWorldEditorRoleMemberScaffold");
+    const editorEnd = adapter.indexOf("function createWorldEditorAddMemberScaffold");
+    const editorRoleScaffold = adapter.slice(editorStart, editorEnd);
+    assert.equal(editorRoleScaffold.includes("outputMode"), false);
+    assert.equal(editorRoleScaffold.includes("chatTone"), false);
+    assert.equal(editorRoleScaffold.includes("emoji"), false);
+    assert.equal(editorRoleScaffold.includes("nickname"), false);
   });
 
   it("locks the final UI to Chats, Contacts, and Me only", () => {
@@ -445,7 +459,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 6);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 8);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

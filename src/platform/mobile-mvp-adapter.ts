@@ -951,7 +951,7 @@ function createWorldEditorView(
 
   const roleSection = document.createElement("section");
   roleSection.className = "mvp-world-editor-section";
-  roleSection.append(createDraftNote("角色编辑稍后开放"));
+  roleSection.append(createWorldEditorRoleMemberScaffold(state, draft, controller));
   roleSection.append(createWorldEditorRemoveMemberScaffold(state, draft, controller));
 
   const memberSection = document.createElement("section");
@@ -978,6 +978,50 @@ function createWorldEditorView(
     actions
   );
   return screen;
+}
+
+function createWorldEditorRoleMemberScaffold(
+  state: SemanticMobileState,
+  draft: WorldEditorDraft,
+  controller: InteractionController
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-world-editor-role-member";
+  if (draft.locked) {
+    section.append(createDraftNote("现实世界不支持角色 / 成员设定编辑"));
+    return section;
+  }
+
+  const userRole = draft.userRole ?? { roleName: "", personaNotes: "" };
+  const userRow = document.createElement("section");
+  userRow.className = "mvp-world-editor-role-row";
+  const userTitle = document.createElement("strong");
+  userTitle.textContent = "我的角色";
+  const userRoleName = createWorldEditorRoleInput("roleName", "角色名", userRole.roleName);
+  bindWorldEditorUserRoleInput(userRoleName, controller, "roleName");
+  const userPersonaNotes = createWorldEditorRoleTextarea("personaNotes", "身份 / 人设备注", userRole.personaNotes);
+  bindWorldEditorUserRoleInput(userPersonaNotes, controller, "personaNotes");
+  userRow.append(userTitle, userRoleName, userPersonaNotes);
+  section.append(userRow);
+
+  const memberRoles = draft.memberRoles ?? [];
+  if (memberRoles.length === 0) {
+    section.append(createDraftNote("当前世界暂无 AI 成员角色设定"));
+  }
+  for (const role of memberRoles) {
+    const row = document.createElement("section");
+    row.className = "mvp-world-editor-member-role-row";
+    const title = document.createElement("strong");
+    title.textContent = linkedAiDisplayName(state, role.worldContactId);
+    const roleName = createWorldEditorRoleInput("worldRoleName", "世界角色名", role.worldRoleName);
+    bindWorldEditorMemberRoleInput(roleName, controller, role.worldContactId, "worldRoleName");
+    const personaNotes = createWorldEditorRoleTextarea("worldPersonaNotes", "此世界中的关系 / 背景", role.worldPersonaNotes);
+    bindWorldEditorMemberRoleInput(personaNotes, controller, role.worldContactId, "worldPersonaNotes");
+    row.append(title, roleName, personaNotes);
+    section.append(row);
+  }
+  section.append(createDraftNote("角色设定保存暂未开放"));
+  return section;
 }
 
 function createWorldEditorAddMemberScaffold(
@@ -1072,6 +1116,22 @@ function linkedAiDisplayName(state: SemanticMobileState, actorId: string): strin
   return state.view.linkedAIModels?.find((model) => model.actorId === actorId)?.displayName ?? actorId;
 }
 
+function createWorldEditorRoleInput(name: string, placeholder: string, value: string): HTMLInputElement {
+  const input = document.createElement("input");
+  input.name = name;
+  input.placeholder = placeholder;
+  input.value = value;
+  return input;
+}
+
+function createWorldEditorRoleTextarea(name: string, placeholder: string, value: string): HTMLTextAreaElement {
+  const textarea = document.createElement("textarea");
+  textarea.name = name;
+  textarea.placeholder = placeholder;
+  textarea.value = value;
+  return textarea;
+}
+
 function createWorldEditorFallbackDraft(
   snapshot: WorldSnapshot,
   state: SemanticMobileState
@@ -1097,6 +1157,15 @@ function createWorldEditorFallbackDraft(
     },
     warnings: [],
     noticeMessage: null,
+    userRole: {
+      roleName: "",
+      personaNotes: ""
+    },
+    memberRoles: (selectedWorld?.memberActorIds ?? []).map((actorId) => ({
+      worldContactId: actorId,
+      worldRoleName: "",
+      worldPersonaNotes: ""
+    })),
     removeMemberConfirmation: null
   };
 }
@@ -1442,6 +1511,27 @@ function bindWorldEditorInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_WORLD_EDITOR_DRAFT", field, value: input.value });
+  });
+}
+
+function bindWorldEditorUserRoleInput(
+  input: HTMLInputElement | HTMLTextAreaElement,
+  controller: InteractionController,
+  field: "roleName" | "personaNotes"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT", field, value: input.value });
+  });
+}
+
+function bindWorldEditorMemberRoleInput(
+  input: HTMLInputElement | HTMLTextAreaElement,
+  controller: InteractionController,
+  worldContactId: string,
+  field: "worldRoleName" | "worldPersonaNotes"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT", worldContactId, field, value: input.value });
   });
 }
 

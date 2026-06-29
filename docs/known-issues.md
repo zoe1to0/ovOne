@@ -27,8 +27,10 @@ Last audited: 2026-06-28.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` can render placeholder content.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching, custom world metadata saving, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no role editing, group membership cleanup, initial member messages after member add, or real memory engine integration yet.
+- ovO panel has read-only world switching, custom world metadata saving, local role/member draft scaffolding, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no role/member save mutation, group membership cleanup, initial member messages after member add, or real memory engine integration yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata only; it must not be treated as contact, role, member, chat, memory, GlobalAIModel, or GlobalAILink editing.
+- World Editor role/member scaffold now collects local user role and AI member role draft fields for custom worlds, but role/member save mutation is not implemented.
+- World Editor role/member scaffold must not be treated as Contacts detail behavior; contact nickname, answer mode, chat tone, and emoji permission remain outside World Editor.
 - World Editor Add Member creates only custom-world `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata; it must not be treated as role editing, group membership, initial message generation, provider connection management, or real memory engine behavior.
 - World Editor Remove Member deletes only custom-world `WorldContact`, private `WorldChat`, and memory placeholder metadata after confirmation; it must not be treated as group cleanup, provider disconnect, Global AI Link deletion, Reality mutation, other-world mutation, or real memory-engine cleanup.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.

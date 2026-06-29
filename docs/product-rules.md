@@ -43,6 +43,11 @@
 - Remove Member confirmation must say: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
 - Confirmed Remove Member clears only that AI's WorldContact, private WorldChat, and WorldMemoryScope placeholder in that custom world.
 - Remove Member must not disconnect Global AI Link, mutate Reality, mutate other worlds, mutate provider connections, or recover old world memory after re-add.
+- World Editor owns world-level role/background setup only.
+- World Editor role/member scaffold can show a user role row and current world AI member role rows for custom worlds.
+- World Editor role/member fields are local draft fields only until role save is explicitly implemented.
+- Contacts detail owns contact-level communication preferences.
+- World Editor must not expose contact nickname/user remark, answer mode, chat tone, or emoji permission controls.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 

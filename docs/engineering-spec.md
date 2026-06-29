@@ -125,6 +125,10 @@ UI action
 - World editor selector lists `state.view.availableWorlds`, marks the current world, marks Reality as locked, and dispatches `OPEN_WORLD_EDITOR`.
 - `OPEN_WORLD_EDITOR` routes to the page-like `WORLD_EDITOR` scaffold, stores `selectedWorldIdForEditing`, initializes local `worldEditorDraft`, and does not switch worlds.
 - World Editor shows world name, worldview/world setting, role/member scaffold, add AI member scaffold, and a Reality lock note when editing Reality.
+- World Editor role/member scaffold is custom-world only and initializes local draft fields for a user role row plus current world AI member rows.
+- World Editor role/member draft fields are `userRole.roleName`, `userRole.personaNotes`, `memberRoles[].worldRoleName`, and `memberRoles[].worldPersonaNotes`.
+- World Editor role/member draft updates are local only and show `角色设定保存暂未开放`; `SAVE_WORLD_EDITOR` does not persist role/member draft data yet.
+- World Editor must not expose contact-level communication controls such as nickname/user remark, answer mode, chat tone, or emoji permission; those belong to Contacts detail.
 - `SAVE_WORLD_EDITOR` validates the local draft through `WorldEditorPatch` contract, then Flow Executor calls `shell.saveWorldMetadata(...)` for custom worlds.
 - Valid custom world saves update only world metadata name/title and worldview; the app remains on `WORLD_EDITOR`.
 - World Editor save contract permits only `worldId`, `name`, and `worldview` fields for custom worlds.
@@ -213,6 +217,7 @@ UI action
 - `settingsOpen`
 - `createWorldDraft`
 - `worldEditorDraft`
+  - nested `userRole` and `memberRoles` local role/member scaffold fields
 - `worldCreationTransition`
 - `splashVisible`
 - `view`
@@ -261,6 +266,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `OPEN_WORLD_EDITOR_SELECTOR`
 - `OPEN_WORLD_EDITOR`
 - `UPDATE_WORLD_EDITOR_DRAFT`
+- `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT`
+- `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT`
 - `CANCEL_WORLD_EDITOR`
 - `SAVE_WORLD_EDITOR`
 - `ADD_WORLD_MEMBER`
@@ -347,6 +354,8 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CANCEL_CREATE_WORLD_DETAIL` | Clears local draft and returns to `CHAT_LIST`. |
 | `COMPLETE_WORLD_CREATION_TRANSITION` | Clears local `worldCreationTransition`, keeps the current world unchanged, and remains on `CHAT_LIST` with no active chat. |
 | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
+| `UPDATE_WORLD_EDITOR_USER_ROLE_DRAFT` | Updates local custom-world user role scaffold fields only; does not mutate world data or contact preferences. |
+| `UPDATE_WORLD_EDITOR_MEMBER_ROLE_DRAFT` | Updates local custom-world AI member role scaffold fields only; does not mutate `WorldContact`, chats, memory, or contact preferences. |
 | `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract; valid custom worlds are saved through Flow Executor and `shell.saveWorldMetadata(...)`. |
 | `ADD_WORLD_MEMBER` | Validates the selected linked AI against the add-member contract; Flow Executor creates the custom-world contact/chat/memory placeholder through `shell.addWorldMember(...)` and leaves the editor open. |
 | `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates the selected existing custom-world AI member and stores local confirmation state with deletion warning text. |
