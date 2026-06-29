@@ -10,7 +10,9 @@ import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
-  WORLD_EDITOR_NAME_REQUIRED_MESSAGE
+  WORLD_EDITOR_NAME_REQUIRED_MESSAGE,
+  WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE,
+  WORLD_MEMBER_REMOVE_WARNING_MESSAGE
 } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 
@@ -187,6 +189,70 @@ describe("Composer mode state machine", () => {
     assert.equal(state.worldEditorDraft?.fieldErrors.worldName, WORLD_EDITOR_NAME_REQUIRED_MESSAGE);
     assert.ok(state.worldEditorDraft?.warnings.includes(WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING));
     assert.equal(state.worldEditorDraft?.noticeMessage, null);
+  });
+
+  it("opens and cancels remove-member confirmation without mutating world data", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const customWorldId = toWorldId("custom:studio");
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        { worldId: state.currentWorldId, title: "Reality", type: "reality", memberActorIds: [] },
+        { worldId: customWorldId, title: "Studio", type: "custom", memberActorIds: ["ai:friend"] }
+      ],
+      linkedAIModels: [
+        {
+          globalAILinkId: "link:ai:friend",
+          globalAIModelId: "ai:friend",
+          actorId: "ai:friend",
+          displayName: "Friend"
+        }
+      ]
+    };
+
+    registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: customWorldId }, state);
+    registry.execute({
+      type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION",
+      worldId: customWorldId,
+      actorId: "ai:friend",
+      displayName: "Friend"
+    }, state);
+
+    assert.equal(state.worldEditorDraft?.removeMemberConfirmation?.actorId, "ai:friend");
+    assert.equal(state.worldEditorDraft?.removeMemberConfirmation?.warning, WORLD_MEMBER_REMOVE_WARNING_MESSAGE);
+    assert.equal(state.worldEditorDraft?.noticeMessage, null);
+    assert.equal(state.view.availableWorlds.find((world) => world.worldId === customWorldId)?.memberActorIds?.includes("ai:friend"), true);
+
+    registry.execute({ type: "CONFIRM_REMOVE_WORLD_MEMBER", worldId: customWorldId, actorId: "ai:friend" }, state);
+    assert.equal(state.worldEditorDraft?.noticeMessage, "删除暂未开放");
+    assert.equal(state.view.availableWorlds.find((world) => world.worldId === customWorldId)?.memberActorIds?.includes("ai:friend"), true);
+
+    registry.execute({ type: "CANCEL_REMOVE_WORLD_MEMBER" }, state);
+    assert.equal(state.worldEditorDraft?.removeMemberConfirmation, null);
+    assert.equal(state.worldEditorDraft?.noticeMessage, null);
+  });
+
+  it("rejects remove-member confirmation in Reality", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.view = {
+      ...state.view,
+      availableWorlds: [
+        { worldId: state.currentWorldId, title: "Reality", type: "reality", memberActorIds: ["ai:friend"] }
+      ]
+    };
+
+    registry.execute({ type: "OPEN_WORLD_EDITOR", worldId: state.currentWorldId }, state);
+    registry.execute({
+      type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION",
+      worldId: state.currentWorldId,
+      actorId: "ai:friend",
+      displayName: "Friend"
+    }, state);
+
+    assert.equal(state.worldEditorDraft?.removeMemberConfirmation, null);
+    assert.equal(state.worldEditorDraft?.noticeMessage, WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE);
   });
 
   it("opens and updates create world draft without creating or switching worlds", () => {

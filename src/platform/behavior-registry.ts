@@ -2,6 +2,7 @@ import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   getWorldEditorWarnings,
   validateWorldAddMemberCommand,
+  validateWorldRemoveMemberCommand,
   validateWorldEditorPatch
 } from "../domain/index.js";
 import type { GlobalAILink, GlobalAIModel, WorldContact as DomainWorldContact } from "../domain/index.js";
@@ -83,6 +84,11 @@ export type WorldEditorDraft = Readonly<{
   }>;
   readonly warnings: readonly string[];
   readonly noticeMessage: string | null;
+  readonly removeMemberConfirmation: Readonly<{
+    readonly actorId: string;
+    readonly displayName: string;
+    readonly warning: string;
+  }> | null;
 }>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -109,6 +115,9 @@ export type InteractionAction =
   | { readonly type: "CANCEL_WORLD_EDITOR" }
   | { readonly type: "SAVE_WORLD_EDITOR" }
   | { readonly type: "ADD_WORLD_MEMBER"; readonly worldId: WorldId; readonly globalAILinkId: string }
+  | { readonly type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION"; readonly worldId: WorldId; readonly actorId: string; readonly displayName: string }
+  | { readonly type: "CANCEL_REMOVE_WORLD_MEMBER" }
+  | { readonly type: "CONFIRM_REMOVE_WORLD_MEMBER"; readonly worldId: WorldId; readonly actorId: string }
   | { readonly type: "OPEN_EMOJI_PICKER" }
   | { readonly type: "OPEN_FILE_PICKER" }
   | { readonly type: "CLOSE_OVERLAY" }
@@ -184,6 +193,9 @@ type DisabledInteractionAction = Exclude<
   | "CANCEL_WORLD_EDITOR"
   | "SAVE_WORLD_EDITOR"
   | "ADD_WORLD_MEMBER"
+  | "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION"
+  | "CANCEL_REMOVE_WORLD_MEMBER"
+  | "CONFIRM_REMOVE_WORLD_MEMBER"
   | "OPEN_EMOJI_PICKER"
   | "OPEN_FILE_PICKER"
   | "CLOSE_OVERLAY"
@@ -474,7 +486,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
             worldName: null
           }),
           warnings: Object.freeze([]),
-          noticeMessage: null
+          noticeMessage: null,
+          removeMemberConfirmation: null
         });
         closeOverlay(state);
         state.settingsOpen = false;
@@ -568,7 +581,54 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         if (state.worldEditorDraft) {
           state.worldEditorDraft = Object.freeze({
             ...state.worldEditorDraft,
-            noticeMessage: validation.error
+            noticeMessage: validation.error,
+            removeMemberConfirmation: null
+          });
+        }
+        return RENDER;
+      }
+
+      case "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION": {
+        const validation = validateWorldRemoveMemberCommand(
+          { worldId: action.worldId, actorId: action.actorId },
+          createWorldMemberRemoveContractInputFromState(state, action.worldId)
+        );
+        if (state.worldEditorDraft) {
+          state.worldEditorDraft = Object.freeze({
+            ...state.worldEditorDraft,
+            noticeMessage: validation.error,
+            removeMemberConfirmation: validation.valid
+              ? Object.freeze({
+                  actorId: action.actorId,
+                  displayName: action.displayName,
+                  warning: validation.warning
+                })
+              : null
+          });
+        }
+        return RENDER;
+      }
+
+      case "CANCEL_REMOVE_WORLD_MEMBER":
+        if (state.worldEditorDraft) {
+          state.worldEditorDraft = Object.freeze({
+            ...state.worldEditorDraft,
+            noticeMessage: null,
+            removeMemberConfirmation: null
+          });
+        }
+        return RENDER;
+
+      case "CONFIRM_REMOVE_WORLD_MEMBER": {
+        const validation = validateWorldRemoveMemberCommand(
+          { worldId: action.worldId, actorId: action.actorId },
+          createWorldMemberRemoveContractInputFromState(state, action.worldId)
+        );
+        if (state.worldEditorDraft) {
+          state.worldEditorDraft = Object.freeze({
+            ...state.worldEditorDraft,
+            noticeMessage: validation.error ?? "删除暂未开放",
+            removeMemberConfirmation: validation.valid ? state.worldEditorDraft.removeMemberConfirmation : null
           });
         }
         return RENDER;
@@ -828,6 +888,20 @@ function createWorldMemberContractInputFromState(state: SemanticMobileState, wor
       connectedAt: index + 1,
       status: "connected" as const
     })) as readonly GlobalAILink[]
+  };
+}
+
+function createWorldMemberRemoveContractInputFromState(state: SemanticMobileState, worldId: WorldId) {
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === worldId);
+  const memberActorIds = selectedWorld?.memberActorIds ?? [];
+  return {
+    world: {
+      type: selectedWorld?.type === "custom" ? "custom" as const : "reality" as const
+    },
+    contacts: memberActorIds.map((actorId) => ({
+      actorId,
+      kind: "assistant" as const
+    }))
   };
 }
 

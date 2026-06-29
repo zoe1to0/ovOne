@@ -140,6 +140,11 @@ UI action
 - `ADD_WORLD_MEMBER` validates through the add-member contract and Flow Executor calls `shell.addWorldMember(...)` for valid custom worlds.
 - Add-member execution creates only a new world-scoped `WorldContact`, private `WorldChat`, and isolated `WorldMemoryScope` placeholder metadata for the selected custom world.
 - Add-member execution does not switch `currentWorldId`, does not mutate Reality, does not mutate other worlds, does not mutate existing contacts/chats/memory, does not mutate `GlobalAIModel` or `GlobalAILink`, does not create group chats, and does not trigger initial messages.
+- World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
+- `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
+- `canRemoveMemberFromWorld(...)` rejects Reality.
+- Remove-member scaffold opens a confirmation state only; it does not delete contact, chat, memory, group membership, Global AI links/models, provider connections, Reality, or other worlds.
+- Remove-member confirmation warning text is `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`.
 - Add menu Create World dispatches `OPEN_CREATE_WORLD_DRAFT` and routes to the page-like `CREATE_WORLD_DRAFT` view.
 - Create World draft state lives in `SemanticMobileState.createWorldDraft` until confirmation.
 - Create World validation state lives in `createWorldDraft.validationError`, `createWorldDraft.fieldErrors`, and `createWorldDraft.noticeMessage`.
@@ -257,6 +262,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `CANCEL_WORLD_EDITOR`
 - `SAVE_WORLD_EDITOR`
 - `ADD_WORLD_MEMBER`
+- `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION`
+- `CANCEL_REMOVE_WORLD_MEMBER`
+- `CONFIRM_REMOVE_WORLD_MEMBER`
 - `OPEN_CREATE_WORLD_DRAFT`
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
@@ -339,6 +347,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
 | `SAVE_WORLD_EDITOR` | Validates local World Editor draft with the save contract; valid custom worlds are saved through Flow Executor and `shell.saveWorldMetadata(...)`. |
 | `ADD_WORLD_MEMBER` | Validates the selected linked AI against the add-member contract; Flow Executor creates the custom-world contact/chat/memory placeholder through `shell.addWorldMember(...)` and leaves the editor open. |
+| `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates the selected existing custom-world AI member and stores local confirmation state with deletion warning text. |
+| `CANCEL_REMOVE_WORLD_MEMBER` | Clears local remove-member confirmation state. |
+| `CONFIRM_REMOVE_WORLD_MEMBER` | Scaffold/no-op confirmation; validates again, shows `删除暂未开放`, and performs no deletion. |
 | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
@@ -386,6 +397,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONFIRM_CREATE_WORLD_DETAIL` with missing name | No runtime effect. |
 | `ADD_WORLD_MEMBER` with a valid custom-world linked AI candidate | Calls `shell.addWorldMember(command)`, updates `state.view`, keeps `currentWorldId` unchanged, keeps `activeView = WORLD_EDITOR`, clears active chat/contact/overlay/settings state, and shows `已添加`. |
 | `ADD_WORLD_MEMBER` with Reality, unlinked AI, or existing world member | No world mutation; shows validation notice in the World Editor draft. |
+| `CONFIRM_REMOVE_WORLD_MEMBER` | No runtime effect; remove-member deletion is not implemented yet. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 

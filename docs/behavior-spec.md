@@ -71,6 +71,10 @@ UI event
 - `ADD_WORLD_MEMBER` validates the selected candidate through the add-member contract, then Flow Executor calls `shell.addWorldMember(...)`.
 - Successful Add Member creates only the selected custom world's `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata.
 - Add Member does not mutate Reality, other worlds, existing contacts/chats/memory, groups, provider connections, Global AI Links, or initial messages.
+- World Editor Remove Member applies only to custom worlds.
+- Remove-member confirmation validates through `WorldRemoveMemberCommand`.
+- Opening remove-member confirmation stores local confirmation state and shows `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`.
+- Confirming remove-member is scaffold/no-op in this phase and does not delete contact, chat, memory, groups, Global AI links/models, provider connections, Reality, or other worlds.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -165,6 +169,9 @@ UI event
 - `CANCEL_WORLD_EDITOR`
 - `SAVE_WORLD_EDITOR`
 - `ADD_WORLD_MEMBER`
+- `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION`
+- `CANCEL_REMOVE_WORLD_MEMBER`
+- `CONFIRM_REMOVE_WORLD_MEMBER`
 - `UPDATE_CREATE_WORLD_DRAFT`
 - `UPDATE_CREATE_WORLD_DETAIL`
 - `UPDATE_CREATE_WORLD_RANDOM_ROLE_SLOT`
@@ -231,6 +238,9 @@ UI event
 | Update world editor draft | `UPDATE_WORLD_EDITOR_DRAFT` | Updates local World Editor draft fields for custom worlds only; does not mutate world data. |
 | Save world editor | `SAVE_WORLD_EDITOR` | Validates local World Editor draft through the save contract; valid custom worlds update metadata name/worldview and remain on `WORLD_EDITOR`. |
 | Add world member | `ADD_WORLD_MEMBER` | Validates a linked AI candidate and, for valid custom worlds, creates a world-scoped contact, private chat, and isolated memory placeholder while keeping the editor open. |
+| Open remove-member confirmation | `OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION` | Validates an existing custom-world AI member and stores local confirmation state with warning text. |
+| Cancel remove member | `CANCEL_REMOVE_WORLD_MEMBER` | Clears local remove-member confirmation state. |
+| Confirm remove member | `CONFIRM_REMOVE_WORLD_MEMBER` | Scaffold/no-op; validates again, shows delete-unavailable notice, and performs no deletion. |
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
@@ -295,7 +305,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, and Add Member can create custom-world contact/chat/memory placeholder data. Role editing, group membership, initial member messages, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata, Add Member can create custom-world contact/chat/memory placeholder data, and Remove Member can open confirmation only. Role editing, member deletion, group cleanup, initial member messages, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

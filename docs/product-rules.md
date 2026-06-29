@@ -39,6 +39,10 @@
 - World Editor Add Member creates only a new world-scoped `WorldContact`, private `WorldChat`, and isolated `WorldMemoryScope` placeholder metadata for that custom world.
 - World Editor Add Member does not affect Reality, other worlds, existing world data, group membership, provider connections, Global AI Links, or initial messages.
 - Reality cannot use World Editor to add members.
+- World Editor Remove Member applies only to custom worlds and currently opens confirmation only.
+- Remove Member confirmation must say: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
+- Future Remove Member deletion may clear only that AI's WorldContact, private WorldChat, and WorldMemoryScope in that custom world.
+- Remove Member must not disconnect Global AI Link, mutate Reality, mutate other worlds, mutate provider connections, or recover old world memory after re-add.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 

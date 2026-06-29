@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-29: World Editor Remove Member contract scaffold added
+
+Decision: World Editor Remove Member is defined as a custom-world-only contract with confirmation UI before real deletion is implemented.
+
+Rules:
+
+- Remove Member applies only to custom worlds; Reality rejects remove-member through World Editor.
+- `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
+- Remove Member confirmation must show: `删除后，该 AI 在此世界的聊天与记忆将被清除，但不会断开全局接入。`
+- Confirming removal currently performs no deletion and shows scaffold/no-op behavior.
+- Future deletion may remove only that AI's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` in the selected custom world.
+- Future deletion must not affect Reality, other worlds, `GlobalAIModel`, `GlobalAILink`, provider connections, or group chats in this scaffold phase.
+- Re-adding the same AI later should create a brand-new world-scoped contact/chat/memory instance; old world memory cannot be recovered.
+
 ## 2026-06-29: World Editor Add Member execution scaffold implemented
 
 Decision: World Editor Add Member now performs a controlled custom-world mutation for existing linked AI models.

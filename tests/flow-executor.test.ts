@@ -137,7 +137,8 @@ describe("FlowExecutor", () => {
       locked: false,
       fieldErrors: { worldName: null },
       warnings: [],
-      noticeMessage: null
+      noticeMessage: null,
+      removeMemberConfirmation: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();
@@ -181,7 +182,8 @@ describe("FlowExecutor", () => {
       locked: false,
       fieldErrors: { worldName: null },
       warnings: [],
-      noticeMessage: null
+      noticeMessage: null,
+      removeMemberConfirmation: null
     };
 
     createBehaviorRegistry().execute({ type: "SAVE_WORLD_EDITOR" }, state);
@@ -239,7 +241,8 @@ describe("FlowExecutor", () => {
       locked: false,
       fieldErrors: { worldName: null },
       warnings: [],
-      noticeMessage: null
+      noticeMessage: null,
+      removeMemberConfirmation: null
     };
     const registry = createBehaviorRegistry();
     const executor = createFlowExecutor();

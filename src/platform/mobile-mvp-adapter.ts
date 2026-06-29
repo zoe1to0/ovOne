@@ -4,6 +4,7 @@ import {
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
+  WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE,
   resolveWorldChats,
   resolveWorldContacts
 } from "../domain/index.js";
@@ -950,7 +951,8 @@ function createWorldEditorView(
 
   const roleSection = document.createElement("section");
   roleSection.className = "mvp-world-editor-section";
-  roleSection.append(createDraftNote("角色 / 成员编辑稍后开放"));
+  roleSection.append(createDraftNote("角色编辑稍后开放"));
+  roleSection.append(createWorldEditorRemoveMemberScaffold(state, draft, controller));
 
   const memberSection = document.createElement("section");
   memberSection.className = "mvp-world-editor-section";
@@ -1010,6 +1012,66 @@ function createWorldEditorAddMemberScaffold(
   return section;
 }
 
+function createWorldEditorRemoveMemberScaffold(
+  state: SemanticMobileState,
+  draft: WorldEditorDraft,
+  controller: InteractionController
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-world-editor-remove-member";
+  if (draft.locked) {
+    section.append(createDraftNote(WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE));
+    return section;
+  }
+
+  const selectedWorld = state.view.availableWorlds.find((world) => world.worldId === draft.worldId);
+  const memberActorIds = selectedWorld?.memberActorIds ?? [];
+  if (memberActorIds.length === 0) {
+    section.append(createDraftNote("当前世界暂无可删除 AI 成员"));
+    return section;
+  }
+
+  for (const actorId of memberActorIds) {
+    const displayName = linkedAiDisplayName(state, actorId);
+    const row = document.createElement("div");
+    row.className = "mvp-world-editor-member-row";
+    const label = document.createElement("span");
+    label.textContent = displayName;
+    row.append(
+      label,
+      createMenuButton("删除", controller, {
+        type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION",
+        worldId: draft.worldId,
+        actorId,
+        displayName
+      })
+    );
+    section.append(row);
+  }
+
+  if (draft.removeMemberConfirmation) {
+    const confirmation = document.createElement("section");
+    confirmation.className = "mvp-world-editor-remove-confirmation";
+    confirmation.append(
+      createValidationNote(draft.removeMemberConfirmation.warning),
+      createMenuButton("取消删除", controller, { type: "CANCEL_REMOVE_WORLD_MEMBER" }),
+      createMenuButton("确认删除", controller, {
+        type: "CONFIRM_REMOVE_WORLD_MEMBER",
+        worldId: draft.worldId,
+        actorId: draft.removeMemberConfirmation.actorId
+      })
+    );
+    section.append(confirmation);
+  }
+
+  section.append(createDraftNote("删除成员暂未开放，确认不会删除联系人、聊天或记忆。"));
+  return section;
+}
+
+function linkedAiDisplayName(state: SemanticMobileState, actorId: string): string {
+  return state.view.linkedAIModels?.find((model) => model.actorId === actorId)?.displayName ?? actorId;
+}
+
 function createWorldEditorFallbackDraft(
   snapshot: WorldSnapshot,
   state: SemanticMobileState
@@ -1034,7 +1096,8 @@ function createWorldEditorFallbackDraft(
       worldName: null
     },
     warnings: [],
-    noticeMessage: null
+    noticeMessage: null,
+    removeMemberConfirmation: null
   };
 }
 

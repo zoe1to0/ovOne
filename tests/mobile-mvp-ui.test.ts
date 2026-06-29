@@ -337,6 +337,7 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
     const contract = readFileSync("src/domain/world-editor-contract.ts", "utf8");
+    const removeContract = readFileSync("src/domain/world-member-remove-contract.ts", "utf8");
 
     assert.match(registry, /\| \{ readonly type: "OPEN_OVO_WORLD_MENU" \}/);
     assert.match(registry, /\| \{ readonly type: "OPEN_WORLD_SWITCHER" \}/);
@@ -384,6 +385,14 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /memberActorIds/);
     assert.match(adapter, /type: "ADD_WORLD_MEMBER"/);
     assert.match(adapter, /globalAILinkId: candidate\.globalAILinkId/);
+    assert.match(adapter, /function createWorldEditorRemoveMemberScaffold/);
+    assert.match(adapter, /type: "OPEN_REMOVE_WORLD_MEMBER_CONFIRMATION"/);
+    assert.match(adapter, /type: "CANCEL_REMOVE_WORLD_MEMBER"/);
+    assert.match(adapter, /type: "CONFIRM_REMOVE_WORLD_MEMBER"/);
+    assert.match(removeContract, /WorldRemoveMemberCommand/);
+    assert.match(removeContract, /DeleteWorldContact/);
+    assert.match(removeContract, /DeletePrivateWorldChat/);
+    assert.match(removeContract, /DeleteWorldMemoryScope/);
     assert.match(adapter, /只会创建当前世界内的联系人、私聊和独立记忆占位/);
     assert.match(contract, /WorldContact/);
     assert.match(contract, /WorldChat/);

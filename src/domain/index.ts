@@ -63,3 +63,19 @@ export type {
   WorldMemberAllowedFutureMutation,
   WorldMemberForbiddenMutation
 } from "./world-member-contract.js";
+export {
+  WORLD_MEMBER_REMOVE_NOT_FOUND_MESSAGE,
+  WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE,
+  WORLD_MEMBER_REMOVE_WARNING_MESSAGE,
+  canRemoveMemberFromWorld,
+  getForbiddenWorldMemberRemoveMutations,
+  getRemoveMemberWarning,
+  validateWorldRemoveMemberCommand
+} from "./world-member-remove-contract.js";
+export type {
+  ValidateWorldRemoveMemberInput,
+  WorldMemberRemoveAllowedFutureMutation,
+  WorldMemberRemoveForbiddenMutation,
+  WorldRemoveMemberCommand,
+  WorldRemoveMemberValidation
+} from "./world-member-remove-contract.js";
