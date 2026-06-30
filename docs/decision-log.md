@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-30: v0.4-contacts-detail-core milestone tagged
+
+Decision: `v0.4-contacts-detail-core` marks the completed Contacts Detail Core milestone.
+
+Rules:
+
+- The milestone includes the Contacts Detail preference contract.
+- The milestone includes Contacts Detail preference save execution.
+- The milestone includes Delete Friend confirmation and confirmed Delete Friend execution.
+- Confirmed Delete Friend performs current-world-only contact, private chat, and memory placeholder cleanup.
+- Reality Delete Friend does not disconnect the Global AI Link or provider connection.
+- World Editor responsibility boundaries remain preserved.
+- No new runtime behavior is introduced by this tag record.
+
 ## 2026-06-30: Contacts Detail Delete Friend execution implemented
 
 Decision: Confirmed Contacts Detail Delete Friend now performs controlled current-world deletion.
