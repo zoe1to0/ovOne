@@ -72,7 +72,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /return createChatView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactsView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createContactDetailView\(snapshot, state, controller\)/);
-    assert.match(adapter, /return createMeView\(snapshot, state\.settingsOpen, controller\)/);
+    assert.match(adapter, /return createMeView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createCreateWorldDraftView\(snapshot, state, controller\)/);
     assert.match(adapter, /return createCreateWorldDetailEditView\(snapshot, state, controller\)/);
     assert.match(adapter, /function createShellPageFrame\(routeState: ViewRouteResolution, page: HTMLElement\)/);
@@ -492,6 +492,10 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /"更像问答"/);
     assert.match(adapter, /"他 \/ 她如何和你说话"/);
     assert.match(adapter, /emojiPermission/);
+    assert.match(adapter, /state\.view\.linkedAIModels/);
+    assert.match(adapter, /OPEN_LINKED_AI_DISCONNECT_CONFIRMATION/);
+    assert.match(adapter, /CANCEL_LINKED_AI_DISCONNECT/);
+    assert.match(adapter, /CONFIRM_LINKED_AI_DISCONNECT/);
     assert.match(adapter, /"删除好友"/);
     assert.match(adapter, /已连接 AI/);
     assert.match(adapter, /断开连接/);

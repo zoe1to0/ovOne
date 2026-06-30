@@ -3,6 +3,7 @@ import {
   getWorldEditorWarnings,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
+  validateLinkedAIDisconnectCommand,
   validateWorldAddMemberCommand,
   validateWorldRemoveMemberCommand,
   validateWorldEditorPatch
@@ -118,6 +119,11 @@ export type ContactDetailDraft = Readonly<{
     readonly warning: string;
   }> | null;
 }>;
+export type LinkedAIDisconnectConfirmation = Readonly<{
+  readonly globalAILinkId: string;
+  readonly displayName: string;
+  readonly warning: string;
+}>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
   readonly fallbackApplied: boolean;
@@ -157,6 +163,9 @@ export type InteractionAction =
   | { readonly type: "SUBMIT_MESSAGE"; readonly text: string }
   | { readonly type: "OPEN_SETTINGS" }
   | { readonly type: "CLOSE_SETTINGS" }
+  | { readonly type: "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION"; readonly globalAILinkId: string; readonly displayName: string }
+  | { readonly type: "CANCEL_LINKED_AI_DISCONNECT" }
+  | { readonly type: "CONFIRM_LINKED_AI_DISCONNECT"; readonly globalAILinkId: string }
   | { readonly type: "OPEN_CONTACT"; readonly actorId: string }
   | { readonly type: "UPDATE_CONTACT_DETAIL_DRAFT"; readonly field: "remark" | "perceivedPersonaNotes" | "answerMode" | "chatTone" | "emojiPermission"; readonly value: string | boolean }
   | { readonly type: "SAVE_CONTACT_DETAIL_PREFERENCES" }
@@ -183,8 +192,7 @@ export type InteractionAction =
   | { readonly type: "COMPLETE_WORLD_CREATION_TRANSITION" }
   | { readonly type: "CHAT_OPEN_GROUP_MEMBERS" }
   | { readonly type: "CHAT_OPEN_SETTINGS" }
-  | { readonly type: "CHAT_OPEN_BACKGROUND_SETTINGS" }
-  | { readonly type: "SETTINGS_DISCONNECT_AI" };
+  | { readonly type: "CHAT_OPEN_BACKGROUND_SETTINGS" };
 
 export type SemanticMobileState = {
   activeView: ViewState;
@@ -199,6 +207,7 @@ export type SemanticMobileState = {
   createWorldDraft: CreateWorldDraft | null;
   worldEditorDraft: WorldEditorDraft | null;
   contactDetailDraft: ContactDetailDraft | null;
+  linkedAIDisconnectConfirmation: LinkedAIDisconnectConfirmation | null;
   worldCreationTransition: WorldCreationTransition | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
@@ -243,6 +252,9 @@ type DisabledInteractionAction = Exclude<
   | "SUBMIT_MESSAGE"
   | "OPEN_SETTINGS"
   | "CLOSE_SETTINGS"
+  | "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION"
+  | "CANCEL_LINKED_AI_DISCONNECT"
+  | "CONFIRM_LINKED_AI_DISCONNECT"
   | "OPEN_CONTACT"
   | "UPDATE_CONTACT_DETAIL_DRAFT"
   | "SAVE_CONTACT_DETAIL_PREFERENCES"
@@ -413,6 +425,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -424,6 +437,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -435,6 +449,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -447,6 +462,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         state.settingsOpen = false;
         return RENDER;
@@ -458,6 +474,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         return RENDER;
 
@@ -468,6 +485,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
+        state.linkedAIDisconnectConfirmation = null;
         state.composerMode = resolveDefaultComposerMode("ovo");
         closeOverlay(state);
         state.settingsOpen = false;
@@ -491,6 +509,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.activeView = "CHAT_LIST";
           state.activeChatId = null;
         }
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         return RENDER;
 
@@ -526,6 +545,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "WORLD_EDITOR";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.linkedAIDisconnectConfirmation = null;
         state.selectedWorldIdForEditing = action.worldId;
         state.worldEditorDraft = Object.freeze({
           worldId: action.worldId,
@@ -589,13 +609,50 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "OPEN_SETTINGS":
         state.settingsOpen = true;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         return RENDER;
 
       case "CLOSE_SETTINGS":
         state.settingsOpen = false;
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         return RENDER;
+
+      case "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION": {
+        const validation = validateLinkedAIDisconnectCommand(
+          { globalAILinkId: action.globalAILinkId },
+          createLinkedAIDisconnectContractInputFromState(state)
+        );
+        state.linkedAIDisconnectConfirmation = validation.valid
+          ? Object.freeze({
+              globalAILinkId: action.globalAILinkId,
+              displayName: action.displayName,
+              warning: validation.warning
+            })
+          : null;
+        state.settingsOpen = true;
+        closeOverlay(state);
+        return RENDER;
+      }
+
+      case "CANCEL_LINKED_AI_DISCONNECT":
+        state.linkedAIDisconnectConfirmation = null;
+        closeOverlay(state);
+        return RENDER;
+
+      case "CONFIRM_LINKED_AI_DISCONNECT": {
+        const confirmation = state.linkedAIDisconnectConfirmation;
+        if (confirmation?.globalAILinkId !== action.globalAILinkId) {
+          return RENDER;
+        }
+        validateLinkedAIDisconnectCommand(
+          { globalAILinkId: action.globalAILinkId },
+          createLinkedAIDisconnectContractInputFromState(state)
+        );
+        closeOverlay(state);
+        return RENDER;
+      }
 
       case "OPEN_CONTACT":
         state.activeView = "CONTACT_DETAIL";
@@ -603,6 +660,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedWorldIdForEditing = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = createContactDetailDraft(state, action.actorId);
+        state.linkedAIDisconnectConfirmation = null;
         closeOverlay(state);
         return RENDER;
 
@@ -1017,7 +1075,6 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "CHAT_OPEN_GROUP_MEMBERS":
       case "CHAT_OPEN_SETTINGS":
       case "CHAT_OPEN_BACKGROUND_SETTINGS":
-      case "SETTINGS_DISCONNECT_AI":
         return disabled(state, action.type);
     }
   };
@@ -1166,6 +1223,15 @@ export function createContactDetailContractInput(state: SemanticMobileState) {
     contactActorIds: state.view.product.snapshot.contacts
       .filter((contact) => contact.kind === "assistant" && contact.actorId !== state.view.product.snapshot.worldMeta.assistantActorId)
       .map((contact) => contact.actorId)
+  };
+}
+
+function createLinkedAIDisconnectContractInputFromState(state: SemanticMobileState) {
+  return {
+    globalAILinks: (state.view.linkedAIModels ?? []).map((model) => ({
+      linkId: model.globalAILinkId,
+      status: "connected" as const
+    }))
   };
 }
 

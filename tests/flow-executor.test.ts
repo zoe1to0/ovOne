@@ -914,6 +914,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
+    linkedAIDisconnectConfirmation: null,
     worldCreationTransition: null,
     splashVisible: false,
     view

@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-06-30: Me Settings Linked AI disconnect contract scaffold added
+
+Decision: Me Settings now owns a linked-AI global disconnect contract and confirmation scaffold without runtime disconnect mutation.
+
+Rules:
+
+- Delete Friend and Disconnect Linked AI are separate actions.
+- Contacts Detail Delete Friend remains current-world-only and does not affect the Global AI Link.
+- Linked AI disconnect can only be initiated from Me -> Settings -> Linked AI.
+- The linked-AI list is derived from Global AI Links, not world contacts.
+- Disconnect opens strong confirmation text: `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`
+- Confirming disconnect is scaffold/no-op in this milestone.
+- The scaffold must not delete `GlobalAIModel`, `GlobalAILink`, provider connections, world contacts, chats, memory, Reality, or custom worlds.
+- Weather/time-style global context permission remains Me Settings responsibility and is not contact-level.
+
 ## 2026-06-30: v0.4-contacts-detail-core milestone tagged
 
 Decision: `v0.4-contacts-detail-core` marks the completed Contacts Detail Core milestone.

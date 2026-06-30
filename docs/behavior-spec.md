@@ -95,6 +95,10 @@ UI event
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
 - Individual AI contacts cannot separately disable weather/time access.
+- Me Settings Linked AI disconnect is governed by `src/domain/linked-ai-disconnect-contract.ts`.
+- Disconnect linked AI is separate from Contacts Detail Delete Friend.
+- Opening disconnect confirmation validates an existing connected Global AI Link and shows `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`.
+- Confirming linked-AI disconnect remains scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, worlds, contacts, chats, or memory.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -219,7 +223,9 @@ UI event
 
 - `OPEN_SETTINGS`
 - `CLOSE_SETTINGS`
-- `SETTINGS_DISCONNECT_AI`
+- `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION`
+- `CANCEL_LINKED_AI_DISCONNECT`
+- `CONFIRM_LINKED_AI_DISCONNECT`
 
 ### Creation Actions
 
@@ -278,6 +284,9 @@ UI event
 | Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the send-message runtime effect. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
+| Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning. |
+| Cancel linked AI disconnect | `CANCEL_LINKED_AI_DISCONNECT` | Clears local linked-AI disconnect confirmation. |
+| Confirm linked AI disconnect | `CONFIRM_LINKED_AI_DISCONNECT` | Scaffold/no-op for now; validates matching confirmation but does not mutate Global AI Link, provider connection, worlds, contacts, chats, or memory. |
 | Open contact | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | Update contact detail draft | `UPDATE_CONTACT_DETAIL_DRAFT` | Updates local current-world contact preference draft only. |
 | Save contact detail preferences | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates current-world preference patch, persists only allowed `WorldContact` preference fields through Flow Executor, stays on `CONTACT_DETAIL`, and shows success notice. |
@@ -305,7 +314,6 @@ UI event
 | Group members | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | Chat settings | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
 | Background settings | `CHAT_OPEN_BACKGROUND_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
-| Disconnect AI | `SETTINGS_DISCONNECT_AI` | Explicit disabled/no-op behavior; closes overlay. |
 
 ## Disabled Actions
 
@@ -316,7 +324,6 @@ These actions are named and routed but intentionally do not implement product be
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
-- `SETTINGS_DISCONNECT_AI`
 
 ## Composer Modes
 
@@ -334,7 +341,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, and Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend. Group cleanup, initial member messages after member add, Me Settings disconnect, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

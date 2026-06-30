@@ -9,6 +9,7 @@ import { createBehaviorRegistry, OVO_CHAT_ID } from "../src/platform/behavior-re
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
+  LINKED_AI_DISCONNECT_WARNING_MESSAGE,
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_EDITOR_NAME_REQUIRED_MESSAGE,
@@ -158,6 +159,42 @@ describe("Composer mode state machine", () => {
     }, state);
     assert.equal(state.contactDetailDraft?.noticeMessage, "删除好友暂未开放");
     assert.equal(state.view.product.snapshot.contacts.length, 1);
+  });
+
+  it("opens and cancels linked AI disconnect confirmation without mutating data", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.activeView = "ME";
+    state.settingsOpen = true;
+    state.view = {
+      ...state.view,
+      linkedAIModels: [
+        {
+          globalAILinkId: "link:ai:friend",
+          globalAIModelId: "ai:friend",
+          actorId: "ai:friend",
+          displayName: "Friend"
+        }
+      ]
+    };
+
+    registry.execute({
+      type: "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION",
+      globalAILinkId: "link:ai:friend",
+      displayName: "Friend"
+    }, state);
+
+    assert.equal(state.linkedAIDisconnectConfirmation?.globalAILinkId, "link:ai:friend");
+    assert.equal(state.linkedAIDisconnectConfirmation?.warning, LINKED_AI_DISCONNECT_WARNING_MESSAGE);
+    assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
+
+    registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:friend" }, state);
+    assert.equal(state.linkedAIDisconnectConfirmation?.globalAILinkId, "link:ai:friend");
+    assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
+
+    registry.execute({ type: "CANCEL_LINKED_AI_DISCONNECT" }, state);
+    assert.equal(state.linkedAIDisconnectConfirmation, null);
+    assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
   });
 
   it("opens ovO world menu and routes to switcher/editor selector overlays", () => {
@@ -601,6 +638,7 @@ function createState(): SemanticMobileState {
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
+    linkedAIDisconnectConfirmation: null,
     worldCreationTransition: null,
     splashVisible: false,
     view: {

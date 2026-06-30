@@ -4,7 +4,7 @@ Last audited: 2026-06-29.
 
 ## Current Known Engineering Issues
 
-- Disabled explicit actions exist for creation/settings flows but do not implement product behavior yet.
+- Disabled explicit actions exist for creation/chat menu flows but do not implement product behavior yet.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
@@ -27,12 +27,13 @@ Last audited: 2026-06-29.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` now renders Contacts Detail preference/delete content; preference saving and confirmed current-world Delete Friend are implemented.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching, custom world metadata saving, world-level role/member metadata saving, Contacts Detail preference saving, Contacts Detail confirmed Delete Friend, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no group membership cleanup, initial member messages after member add, Me Settings disconnect, or real memory engine integration yet.
+- ovO panel has read-only world switching, custom world metadata saving, world-level role/member metadata saving, Contacts Detail preference saving, Contacts Detail confirmed Delete Friend, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no group membership cleanup, initial member messages after member add, real Me Settings disconnect execution, or real memory engine integration yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata plus allowed world-level role/member metadata; it must not be treated as Contacts Detail preference editing, chat editing, memory editing, GlobalAIModel editing, or GlobalAILink editing.
 - World Editor role/member scaffold now collects and saves world-level user role and AI member role metadata for custom worlds.
 - World Editor role/member scaffold must not be treated as Contacts Detail behavior; contact remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission remain outside World Editor.
 - Contacts Detail preference controls persist current-world `WorldContact` preference fields; confirmed Delete Friend removes current-world contact/private chat/memory placeholder data but does not perform group cleanup or global disconnect.
 - Me Settings global context authorization for weather/time is documented as an account-level boundary, but real authorization UI and permission enforcement are not implemented yet.
+- Me Settings Linked AI shows a disconnect confirmation scaffold from Global AI Links, but confirmed global disconnect mutation is not implemented yet.
 - World Editor Add Member creates only custom-world `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata; it must not be treated as role editing, group membership, initial message generation, provider connection management, or real memory engine behavior.
 - World Editor Remove Member deletes only custom-world `WorldContact`, private `WorldChat`, and memory placeholder metadata after confirmation; it must not be treated as group cleanup, provider disconnect, Global AI Link deletion, Reality mutation, other-world mutation, or real memory-engine cleanup.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
@@ -52,7 +53,6 @@ Disabled explicit actions:
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
-- `SETTINGS_DISCONNECT_AI`
 
 ## Stable As Of v0.1
 

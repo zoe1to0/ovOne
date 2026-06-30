@@ -143,6 +143,10 @@ UI action
 - Confirmed Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder, then routes to `CONTACTS` and clears active contact/chat selection.
 - Confirmed Delete Friend preserves `currentWorldId` and must not mutate other worlds, group chats, world metadata, world role/background metadata, `GlobalAIModel`, `GlobalAILink`, provider connections, weather/time permission, or Me Settings disconnect state.
 - Contact Detail preference save must not mutate world name, worldview, world roles, weather/time permission, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, chats, memory, or other worlds.
+- Me Settings Linked AI disconnect contract lives in `src/domain/linked-ai-disconnect-contract.ts`.
+- Linked AI disconnect is global and separate from Contacts Detail Delete Friend.
+- Me Settings disconnect confirmation validates an existing connected Global AI Link and shows `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`.
+- `CONFIRM_LINKED_AI_DISCONNECT` is scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, Reality/custom worlds, contacts, chats, or memory.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
@@ -317,13 +321,15 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `SUBMIT_MESSAGE`
 - `OPEN_SETTINGS`
 - `CLOSE_SETTINGS`
+- `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION`
+- `CANCEL_LINKED_AI_DISCONNECT`
+- `CONFIRM_LINKED_AI_DISCONNECT`
 - `OPEN_CONTACT`
 - `CREATE_AI_FRIEND`
 - `CREATE_GROUP`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
-- `SETTINGS_DISCONNECT_AI`
 
 ## Current Action Behavior
 
@@ -352,6 +358,9 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `SUBMIT_MESSAGE` | Behavior Registry trims text, clears draft/overlay, and Flow Executor calls `shell.sendMessage(text)`. |
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
+| `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning. |
+| `CANCEL_LINKED_AI_DISCONNECT` | Clears local linked-AI disconnect confirmation state. |
+| `CONFIRM_LINKED_AI_DISCONNECT` | Scaffold/no-op for now; validates matching confirmation but does not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, worlds, contacts, chats, or memory. |
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | `UPDATE_CONTACT_DETAIL_DRAFT` | Updates local current-world contact preference draft only. |
 | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates local preference draft through `ContactDetailPreferencePatch`; Flow Executor persists only current-world `WorldContact` preference fields and stays on `CONTACT_DETAIL`. |
@@ -388,7 +397,6 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CHAT_OPEN_GROUP_MEMBERS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
 | `CHAT_OPEN_BACKGROUND_SETTINGS` | Explicit disabled/no-op behavior; closes overlay. |
-| `SETTINGS_DISCONNECT_AI` | Explicit disabled/no-op behavior; closes overlay. |
 
 ## Current Router Behavior
 

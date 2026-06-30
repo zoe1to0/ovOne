@@ -59,6 +59,10 @@
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not configured per contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
 - Individual AI contacts cannot separately disable weather/time access.
+- Me -> Settings -> Linked AI shows connected Global AI Links.
+- Linked AI disconnect is global and is separate from Contacts Detail Delete Friend.
+- Linked AI disconnect requires strong confirmation: `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`
+- Current Linked AI disconnect is scaffold-only; confirming disconnect must not delete `GlobalAIModel`, `GlobalAILink`, provider connection, world contacts, chats, memory, Reality, or custom worlds yet.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 

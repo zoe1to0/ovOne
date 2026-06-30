@@ -110,3 +110,17 @@ export type {
   WorldRemoveMemberCommand,
   WorldRemoveMemberValidation
 } from "./world-member-remove-contract.js";
+export {
+  LINKED_AI_DISCONNECT_UNLINKED_MESSAGE,
+  LINKED_AI_DISCONNECT_WARNING_MESSAGE,
+  canDisconnectLinkedAI,
+  getForbiddenLinkedAIDisconnectMutations,
+  getLinkedAIDisconnectWarning,
+  validateLinkedAIDisconnectCommand
+} from "./linked-ai-disconnect-contract.js";
+export type {
+  LinkedAIDisconnectCommand,
+  LinkedAIDisconnectForbiddenMutation,
+  LinkedAIDisconnectValidation,
+  ValidateLinkedAIDisconnectInput
+} from "./linked-ai-disconnect-contract.js";

@@ -69,6 +69,7 @@ export function mountChatShell(
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
+    linkedAIDisconnectConfirmation: null,
     worldCreationTransition: null,
     splashVisible: true,
     view: initialView
@@ -195,7 +196,7 @@ function renderShellPage(
     case "CONTACT_DETAIL":
       return createContactDetailView(snapshot, state, controller);
     case "ME":
-      return createMeView(snapshot, state.settingsOpen, controller);
+      return createMeView(snapshot, state, controller);
     case "CREATE_WORLD_DRAFT":
       return createCreateWorldDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DETAIL_EDIT":
@@ -415,15 +416,15 @@ function createContactsView(
 
 function createMeView(
   snapshot: WorldSnapshot,
-  settingsOpen: boolean,
+  state: SemanticMobileState,
   controller: InteractionController
 ): HTMLElement {
   const screen = document.createElement("section");
   screen.className = "mvp-screen";
   screen.append(createScreenHeader("我的", null));
 
-  if (settingsOpen) {
-    screen.append(createSettingsView(snapshot, controller));
+  if (state.settingsOpen) {
+    screen.append(createSettingsView(state, controller));
     return screen;
   }
 
@@ -431,7 +432,7 @@ function createMeView(
   return screen;
 }
 
-function createSettingsView(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
+function createSettingsView(state: SemanticMobileState, controller: InteractionController): HTMLElement {
   const panel = document.createElement("section");
   panel.className = "mvp-settings-panel";
 
@@ -450,17 +451,35 @@ function createSettingsView(snapshot: WorldSnapshot, controller: InteractionCont
 
   const list = document.createElement("ol");
   list.className = "mvp-connected-list";
-  for (const contact of assistantContacts(snapshot)) {
+  for (const linkedAI of state.view.linkedAIModels ?? []) {
     const item = document.createElement("li");
     const name = document.createElement("span");
-    name.textContent = isOvoContact(snapshot, contact) ? "ovO" : contactDisplayName(contact);
+    name.textContent = linkedAI.displayName;
     const disconnect = document.createElement("button");
     disconnect.type = "button";
     disconnect.textContent = "断开连接";
-    disconnect.disabled = isOvoContact(snapshot, contact);
-    bindControllerAction(disconnect, controller, { type: "SETTINGS_DISCONNECT_AI" });
+    bindControllerAction(disconnect, controller, {
+      type: "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION",
+      globalAILinkId: linkedAI.globalAILinkId,
+      displayName: linkedAI.displayName
+    });
     item.append(name, disconnect);
     list.append(item);
+  }
+  if (state.linkedAIDisconnectConfirmation) {
+    const confirmationItem = document.createElement("li");
+    const confirmation = document.createElement("section");
+    confirmation.className = "mvp-danger-section";
+    confirmation.append(
+      createDraftNote(state.linkedAIDisconnectConfirmation.warning),
+      createMenuButton("取消", controller, { type: "CANCEL_LINKED_AI_DISCONNECT" }),
+      createMenuButton("确认断开", controller, {
+        type: "CONFIRM_LINKED_AI_DISCONNECT",
+        globalAILinkId: state.linkedAIDisconnectConfirmation.globalAILinkId
+      })
+    );
+    confirmationItem.append(confirmation);
+    list.append(confirmationItem);
   }
 
   const language = document.createElement("section");
