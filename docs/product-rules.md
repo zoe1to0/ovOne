@@ -53,7 +53,8 @@
 - Contacts Detail owns contact-level communication preferences: remark/nickname, "你认为他是怎样的人？", answer mode, chat tone/how the contact speaks to the user, and emoji permission.
 - If "你认为他是怎样的人？" is blank in a custom world, its default may derive from the world role/worldview; if blank in Reality, it starts from an unfamiliar/new friend relationship.
 - Contacts Detail Delete Friend applies only to the current world and must not disconnect the Global AI Link or provider connection.
-- Contacts Detail Delete Friend later may delete only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope`; the current scaffold opens confirmation only and performs no deletion.
+- Contacts Detail Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder after confirmation.
+- Contacts Detail Delete Friend does not delete group chats yet and does not disconnect `GlobalAILink`, `GlobalAIModel`, or provider connections.
 - Delete Friend confirmation must say: `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not configured per contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.

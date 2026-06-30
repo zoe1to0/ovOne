@@ -119,6 +119,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    deleteFriend: (command) => {
+      try {
+        return shell.deleteFriend(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "deleteFriend", worldId: command.worldId });
+        return decorate();
+      }
+    },
     addWorldMember: (command) => {
       try {
         return shell.addWorldMember(command);

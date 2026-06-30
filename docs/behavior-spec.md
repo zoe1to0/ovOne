@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -89,7 +89,8 @@ UI event
 - World Editor must not expose contact-level preference controls such as nickname/user remark, answer mode, chat tone, or emoji permission.
 - Contacts Detail owns contact-level communication preferences: remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission.
 - Contacts Detail preference draft is current-world local state until save; `SAVE_CONTACT_DETAIL_PREFERENCES` validates and persists only the allowed current-world `WorldContact` preference fields.
-- Contacts Detail Delete Friend opens confirmation with `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`; confirm is scaffold/no-op and does not delete contacts, chats, memory, global links, or provider connections yet.
+- Contacts Detail Delete Friend opens confirmation with `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`; confirmed delete removes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder, then routes safely to `CONTACTS`.
+- Contacts Detail Delete Friend does not mutate other worlds, group chats, `GlobalAIModel`, `GlobalAILink`, provider connections, or Me Settings disconnect state.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
@@ -282,7 +283,7 @@ UI event
 | Save contact detail preferences | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates current-world preference patch, persists only allowed `WorldContact` preference fields through Flow Executor, stays on `CONTACT_DETAIL`, and shows success notice. |
 | Open delete friend confirmation | `OPEN_DELETE_FRIEND_CONFIRMATION` | Validates current-world contact and stores local delete confirmation warning. |
 | Cancel delete friend | `CANCEL_DELETE_FRIEND` | Clears local delete friend confirmation. |
-| Confirm delete friend | `CONFIRM_DELETE_FRIEND` | Validates current-world contact and shows scaffold notice; no deletion yet. |
+| Confirm delete friend | `CONFIRM_DELETE_FRIEND` | Requires matching confirmation state; Flow Executor deletes the current-world contact, private chat, and memory placeholder, then routes to `CONTACTS`. |
 | Add AI friend | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
 | Create group | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
 | Create world | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
@@ -329,11 +330,11 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, and Contacts Detail can save current-world contact preferences. Delete Friend mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, and Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend. Group cleanup, initial member messages after member add, Me Settings disconnect, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

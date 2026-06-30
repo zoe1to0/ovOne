@@ -10,10 +10,11 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { ContactDetailPreferencePatch, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
+import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
+import { deleteFriendInCurrentWorld } from "./contact-detail-delete-service.js";
 
 export const MinimalUiShell = Object.freeze({
   init
@@ -108,6 +109,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const deleteFriend = (command: DeleteFriendCommand): MinimalProductShellView => {
+    deleteFriendInCurrentWorld({ app, command });
+    screen = "chat";
+    return view();
+  };
+
   const addMember = (command: WorldAddMemberCommand): MinimalProductShellView => {
     addWorldMember({ app, command });
     screen = "chat";
@@ -160,6 +167,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     saveWorldMetadata,
     saveWorldRoleMetadata,
     saveContactDetailPreferences,
+    deleteFriend,
     addWorldMember: addMember,
     removeWorldMember: removeMember,
     sendMessage,
@@ -174,14 +182,54 @@ function linkedAIModels(realitySnapshot: WorldSnapshot): readonly Readonly<{
   readonly actorId: string;
   readonly displayName: string;
 }>[] {
-  return Object.freeze(realitySnapshot.contacts
+  const fromContacts = realitySnapshot.contacts
     .filter((contact) => contact.kind === "assistant" && contact.actorId !== realitySnapshot.worldMeta.assistantActorId)
-    .map((contact) => Object.freeze({
+    .map((contact) => ({
       globalAILinkId: `link:${contact.actorId}`,
       globalAIModelId: contact.actorId,
       actorId: contact.actorId,
       displayName: contact.displayName
-    })));
+    }));
+  const fromSettings = linkedAIModelsFromSettings(realitySnapshot.runtimeState.metadata.settings);
+  const byActorId = new Map<string, Readonly<{
+    readonly globalAILinkId: string;
+    readonly globalAIModelId: string;
+    readonly actorId: string;
+    readonly displayName: string;
+  }>>();
+  for (const link of [...fromContacts, ...fromSettings]) {
+    byActorId.set(link.actorId, Object.freeze(link));
+  }
+  return Object.freeze([...byActorId.values()]);
+}
+
+function linkedAIModelsFromSettings(settings: Readonly<Record<string, unknown>>): readonly Readonly<{
+  readonly globalAILinkId: string;
+  readonly globalAIModelId: string;
+  readonly actorId: string;
+  readonly displayName: string;
+}>[] {
+  const value = settings.globalAILinks;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return Object.freeze([]);
+  }
+  return Object.freeze(Object.values(value as Readonly<Record<string, unknown>>).flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return [];
+    }
+    const record = item as Readonly<Record<string, unknown>>;
+    return typeof record.globalAILinkId === "string" &&
+      typeof record.globalAIModelId === "string" &&
+      typeof record.actorId === "string" &&
+      typeof record.displayName === "string"
+      ? [Object.freeze({
+          globalAILinkId: record.globalAILinkId,
+          globalAIModelId: record.globalAIModelId,
+          actorId: record.actorId,
+          displayName: record.displayName
+        })]
+      : [];
+  }));
 }
 
 function uniqueWorldIds(worldIds: readonly WorldId[]): WorldId[] {

@@ -13,6 +13,8 @@ import {
 import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.js";
 import { App } from "../src/app/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
+import { toChatEventId, toChatId, transition } from "../src/chat-kernel/index.js";
+import type { ChatId } from "../src/chat-kernel/index.js";
 
 describe("Minimal UI Shell", () => {
   it("renders product views as pure functions of WorldSnapshot", () => {
@@ -428,6 +430,124 @@ describe("Minimal UI Shell", () => {
     assert.equal(customFriendAfterRealitySave.answerMode, "qa");
     assert.equal(customFriendAfterRealitySave.chatTone, "gentle");
     assert.equal(customFriendAfterRealitySave.emojiPermission, false);
+  });
+
+  it("deletes a friend only from the current world without disconnecting global AI", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9000,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    let realityState = app.worldDomain.getWorldState(realityWorldId);
+    realityState = transition(realityState, {
+      id: toChatEventId("event:test:reality-private-chat"),
+      type: "chat.started",
+      worldId: realityWorldId,
+      timestamp: 9001,
+      payload: {
+        chatId: toChatId(`chat:${realityWorldId}:ai:friend`) as ChatId,
+        title: "Original Friend"
+      }
+    });
+    app.worldDomain.commitState(realityState);
+    app.worldDomain.applyStructuralPatch({
+      type: "world.settings.adjusted",
+      worldId: realityWorldId,
+      timestamp: 9002,
+      settings: {
+        memberMemoryScopes: {
+          "ai:friend": {
+            worldId: realityWorldId,
+            actorId: "ai:friend",
+            namespace: `world:${realityWorldId}:contact:ai:friend`,
+            status: "placeholder"
+          }
+        }
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const friend = realityBefore.product.snapshot.contacts.find((contact) => contact.actorId === "ai:friend")!;
+    const linkedBefore = realityBefore.linkedAIModels;
+    const created = shell.createWorldFromDraft({
+      worldName: "Delete Friend World",
+      worldviewSourceType: "text",
+      worldviewText: "A scoped place.",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    app.worldDomain.applyStructuralPatch({
+      type: "world.settings.adjusted",
+      worldId: customWorldId,
+      timestamp: 9100,
+      settings: {
+        memberMemoryScopes: {
+          "ai:friend": {
+            worldId: customWorldId,
+            actorId: "ai:friend",
+            namespace: `world:${customWorldId}:contact:ai:friend`,
+            status: "placeholder"
+          }
+        }
+      }
+    });
+    const customBefore = shell.switchWorld(customWorldId);
+    const otherWorld = shell.createWorldFromDraft({
+      worldName: "Other Delete Friend World",
+      worldviewSourceType: "text",
+      worldviewText: "Another scoped place.",
+      selectedAIModelIds: [friend.actorId],
+      nextMode: "random-role"
+    });
+    const otherWorldId = otherWorld.activeWorldId;
+    const otherContactsBefore = otherWorld.product.snapshot.contacts;
+    const otherChatsBefore = otherWorld.product.snapshot.chatState.chats;
+    const customChatId = `chat:${customWorldId}:ai:friend`;
+
+    shell.switchWorld(customWorldId);
+    const deletedCustom = shell.deleteFriend({
+      worldId: customWorldId,
+      worldContactId: friend.actorId
+    });
+
+    assert.equal(deletedCustom.activeWorldId, customWorldId);
+    assert.equal(deletedCustom.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId), false);
+    assert.equal(deletedCustom.product.snapshot.chatState.chats.has(customChatId), false);
+    assert.equal(Boolean((deletedCustom.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
+    assert.equal(deletedCustom.product.snapshot.groups.length, customBefore.product.snapshot.groups.length);
+
+    const realityAfterCustomDelete = shell.switchWorld(realityWorldId);
+    assert.equal(realityAfterCustomDelete.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId), true);
+    assert.equal(realityAfterCustomDelete.product.snapshot.chatState.chats.has(`chat:${realityWorldId}:ai:friend`), true);
+    assert.deepEqual(realityAfterCustomDelete.linkedAIModels, linkedBefore);
+
+    const otherAfterCustomDelete = shell.switchWorld(otherWorldId);
+    assert.deepEqual(otherAfterCustomDelete.product.snapshot.contacts, otherContactsBefore);
+    assert.deepEqual([...otherAfterCustomDelete.product.snapshot.chatState.chats], [...otherChatsBefore]);
+
+    shell.switchWorld(realityWorldId);
+    const deletedReality = shell.deleteFriend({
+      worldId: realityWorldId,
+      worldContactId: friend.actorId
+    });
+    assert.equal(deletedReality.activeWorldId, realityWorldId);
+    assert.equal(deletedReality.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId), false);
+    assert.equal(deletedReality.product.snapshot.chatState.chats.has(`chat:${realityWorldId}:ai:friend`), false);
+    assert.equal(Boolean((deletedReality.product.snapshot.runtimeState.metadata.settings.memberMemoryScopes as Record<string, unknown> | undefined)?.["ai:friend"]), false);
+    assert.deepEqual(deletedReality.linkedAIModels, linkedBefore);
+
+    const customAfterRealityDelete = shell.switchWorld(customWorldId);
+    assert.equal(customAfterRealityDelete.product.snapshot.contacts.some((contact) => contact.actorId === friend.actorId), false);
+    const otherAfterRealityDelete = shell.switchWorld(otherWorldId);
+    assert.deepEqual(otherAfterRealityDelete.product.snapshot.contacts, otherContactsBefore);
   });
 
   it("adds a linked AI member to a custom world without touching Reality, groups, or messages", () => {

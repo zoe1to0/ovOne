@@ -121,6 +121,7 @@ export function createPersistentMinimalUiShell(
     saveWorldMetadata: (patch) => withAutosave(shell.saveWorldMetadata(patch)),
     saveWorldRoleMetadata: (patch) => withAutosave(shell.saveWorldRoleMetadata(patch)),
     saveContactDetailPreferences: (patch) => withAutosave(shell.saveContactDetailPreferences(patch)),
+    deleteFriend: (command) => withAutosave(shell.deleteFriend(command)),
     addWorldMember: (command) => withAutosave(shell.addWorldMember(command)),
     removeWorldMember: (command) => withAutosave(shell.removeWorldMember(command)),
     sendMessage: (text) => withAutosave(shell.sendMessage(text)),

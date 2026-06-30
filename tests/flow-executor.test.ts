@@ -311,6 +311,130 @@ describe("FlowExecutor", () => {
     assert.equal(state.contactDetailDraft.deleteFriendConfirmation, null);
   });
 
+  it("executes CONFIRM_DELETE_FRIEND only with matching contact detail confirmation", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView(`chat:${targetWorldId}:other`, targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (command) => {
+        calls.push(command);
+        return nextView;
+      }
+    );
+    const state = createState(createView(`chat:${targetWorldId}:ai:friend`, targetWorldId));
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          contacts: [
+            {
+              worldId: targetWorldId,
+              actorId: "ai:friend",
+              displayName: "Friend",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            } as never
+          ]
+        }
+      }
+    };
+    state.activeView = "CONTACT_DETAIL";
+    state.activeChatId = `chat:${targetWorldId}:ai:friend`;
+    state.selectedContactActorId = "ai:friend";
+    state.overlay = "add-menu";
+    state.settingsOpen = true;
+    state.contactDetailDraft = {
+      worldId: targetWorldId,
+      worldContactId: "ai:friend",
+      remark: "",
+      perceivedPersonaNotes: "",
+      answerMode: "conversational",
+      chatTone: "",
+      emojiPermission: true,
+      noticeMessage: null,
+      deleteFriendConfirmation: {
+        worldContactId: "ai:friend",
+        displayName: "Friend",
+        warning: "warning"
+      }
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({
+      type: "CONFIRM_DELETE_FRIEND",
+      worldId: targetWorldId,
+      worldContactId: "ai:friend"
+    }, state);
+    const flow = executor.run({
+      type: "CONFIRM_DELETE_FRIEND",
+      worldId: targetWorldId,
+      worldContactId: "ai:friend"
+    }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{ worldId: targetWorldId, worldContactId: "ai:friend" }]);
+    assert.equal(flow.executedFlow, "DELETE_FRIEND");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CONTACTS");
+    assert.equal(state.activeChatId, null);
+    assert.equal(state.selectedContactActorId, null);
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.contactDetailDraft, null);
+  });
+
+  it("does not execute delete friend without confirmation", () => {
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (command) => {
+        calls.push(command);
+        return createView("unused");
+      }
+    );
+    const state = createState(createView("chat-before-delete"));
+    state.contactDetailDraft = {
+      worldId: state.currentWorldId,
+      worldContactId: "ai:friend",
+      remark: "",
+      perceivedPersonaNotes: "",
+      answerMode: "conversational",
+      chatTone: "",
+      emojiPermission: true,
+      noticeMessage: null,
+      deleteFriendConfirmation: null
+    };
+
+    const flow = createFlowExecutor().run({
+      type: "CONFIRM_DELETE_FRIEND",
+      worldId: state.currentWorldId,
+      worldContactId: "ai:friend"
+    }, { shell, state });
+
+    assert.equal(flow.shouldRender, false);
+    assert.deepEqual(calls, []);
+  });
+
   it("executes ADD_WORLD_MEMBER through the runtime member boundary", () => {
     const targetWorldId = toWorldId("custom:studio");
     const nextView = createView(null, toWorldId("reality"));
@@ -811,7 +935,8 @@ function createShell(
   addWorldMember: MinimalProductShellRuntime["addWorldMember"] = () => createView("initial"),
   removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial"),
   saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial"),
-  saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial")
+  saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial"),
+  deleteFriend: MinimalProductShellRuntime["deleteFriend"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -821,6 +946,7 @@ function createShell(
     saveWorldMetadata,
     saveWorldRoleMetadata,
     saveContactDetailPreferences,
+    deleteFriend,
     addWorldMember,
     removeWorldMember,
     sendMessage,

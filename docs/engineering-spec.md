@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -139,7 +139,9 @@ UI action
 - Contacts Detail preference/delete contract lives in `src/domain/contact-detail-contract.ts`.
 - `ContactDetailPreferencePatch` permits only `worldId`, `worldContactId`, `remark`, `perceivedPersonaNotes`, `answerMode`, `chatTone`, and `emojiPermission`.
 - `SAVE_CONTACT_DETAIL_PREFERENCES` persists only the allowed current-world `WorldContact` preference fields through `shell.saveContactDetailPreferences(...)`.
-- `DeleteFriendCommand` permits only `worldId` and `worldContactId`; current scaffold validates and opens confirmation but performs no deletion.
+- `DeleteFriendCommand` permits only `worldId` and `worldContactId`; confirmed Delete Friend requires matching confirmation state and runs through `shell.deleteFriend(...)`.
+- Confirmed Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder, then routes to `CONTACTS` and clears active contact/chat selection.
+- Confirmed Delete Friend preserves `currentWorldId` and must not mutate other worlds, group chats, world metadata, world role/background metadata, `GlobalAIModel`, `GlobalAILink`, provider connections, weather/time permission, or Me Settings disconnect state.
 - Contact Detail preference save must not mutate world name, worldview, world roles, weather/time permission, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, chats, memory, or other worlds.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
@@ -355,7 +357,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates local preference draft through `ContactDetailPreferencePatch`; Flow Executor persists only current-world `WorldContact` preference fields and stays on `CONTACT_DETAIL`. |
 | `OPEN_DELETE_FRIEND_CONFIRMATION` | Validates a current-world contact and stores local Delete Friend confirmation. |
 | `CANCEL_DELETE_FRIEND` | Clears local Delete Friend confirmation. |
-| `CONFIRM_DELETE_FRIEND` | Validates a current-world contact and shows scaffold notice; no deletion yet. |
+| `CONFIRM_DELETE_FRIEND` | Requires matching confirmation state; Flow Executor deletes the current-world contact, private chat, and memory placeholder through `shell.deleteFriend(...)`, then routes to `CONTACTS`. |
 | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
 | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
 | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
@@ -460,7 +462,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -509,11 +511,11 @@ Current package version: `0.1.0`.
 - No real memory engine or AI provider integration exists behind the world-scoped model foundation.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
-- `CONTACT_DETAIL` renders current-world preference/delete content; preference save is implemented for current-world `WorldContact` fields, while Delete Friend mutation remains scaffold-only.
+- `CONTACT_DETAIL` renders current-world preference/delete content; preference save is implemented for current-world `WorldContact` fields, and confirmed Delete Friend deletes only current-world contact/private chat/memory placeholder data.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `CONFIRM_DELETE_FRIEND`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

@@ -86,21 +86,47 @@ function createContractInput(state: WorldState, realitySnapshot: WorldSnapshot) 
 }
 
 function linkedAIModels(realitySnapshot: WorldSnapshot): readonly GlobalAIModel[] {
-  return Object.freeze(realitySnapshot.contacts
+  const fromContacts = realitySnapshot.contacts
     .filter((contact) => contact.kind === "assistant" && contact.actorId !== realitySnapshot.worldMeta.assistantActorId)
-    .map((contact) => Object.freeze({
+    .map((contact) => ({
       modelId: contact.actorId,
       displayName: contact.displayName
-    })));
+    }));
+  const fromSettings = linkedAIModelsFromSettings(realitySnapshot.runtimeState.metadata.settings);
+  const byId = new Map<string, GlobalAIModel>();
+  for (const model of [...fromContacts, ...fromSettings]) {
+    byId.set(model.modelId, Object.freeze(model));
+  }
+  return Object.freeze([...byId.values()]);
 }
 
 function linkedAILinks(realitySnapshot: WorldSnapshot): readonly GlobalAILink[] {
-  return Object.freeze(linkedAIModels(realitySnapshot).map((model, index) => Object.freeze({
+  const fromModels = linkedAIModels(realitySnapshot).map((model, index) => Object.freeze({
     linkId: `link:${model.modelId}`,
     modelId: model.modelId,
     connectedAt: index + 1,
     status: "connected" as const
-  })));
+  }));
+  return Object.freeze(fromModels);
+}
+
+function linkedAIModelsFromSettings(settings: Readonly<Record<string, unknown>>): readonly GlobalAIModel[] {
+  const value = settings.globalAILinks;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return Object.freeze([]);
+  }
+  return Object.freeze(Object.values(value as Readonly<Record<string, unknown>>).flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return [];
+    }
+    const record = item as Readonly<Record<string, unknown>>;
+    return typeof record.globalAIModelId === "string" && typeof record.displayName === "string"
+      ? [Object.freeze({
+          modelId: record.globalAIModelId,
+          displayName: record.displayName
+        })]
+      : [];
+  }));
 }
 
 function memberMemoryScopesFromSettings(settings: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> {

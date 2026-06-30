@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-06-30: Contacts Detail Delete Friend execution implemented
+
+Decision: Confirmed Contacts Detail Delete Friend now performs controlled current-world deletion.
+
+Rules:
+
+- Delete Friend requires existing Contacts Detail confirmation state.
+- Confirmed Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder for that AI.
+- Reality Delete Friend removes only the Reality contact/chat/memory placeholder and preserves the global AI link/provider connection.
+- Custom-world Delete Friend does not mutate Reality or other custom worlds.
+- Delete Friend routes safely to `CONTACTS`, clears `activeChatId`, clears `selectedContactActorId`, and preserves `currentWorldId`.
+- Delete Friend does not mutate group chats, world metadata, world role/background metadata, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, weather/time permission, or Me Settings disconnect state.
+
 ## 2026-06-29: Contacts Detail preference save implemented
 
 Decision: `SAVE_CONTACT_DETAIL_PREFERENCES` now persists allowed current-world contact preference fields through a controlled runtime boundary.
@@ -10,7 +23,7 @@ Rules:
 - Preference save is scoped to `worldId` plus `worldContactId`; saving one world does not affect Reality or other custom worlds.
 - Empty `perceivedPersonaNotes` is valid and remains available for later fallback behavior.
 - Preference save must not mutate world name, worldview, world role/background metadata, chats, memory, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, weather/time permission, or other worlds.
-- Delete Friend remains scaffold/no-op and does not delete contacts, chats, memory, global links, or provider connections.
+- At this decision point Delete Friend remained scaffold/no-op; this is superseded by the later Contacts Detail Delete Friend execution decision above.
 
 ## 2026-06-29: Contacts Detail preference and Delete Friend contract scaffold added
 

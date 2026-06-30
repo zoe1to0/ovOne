@@ -1,12 +1,14 @@
 import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import {
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
+  validateDeleteFriendCommand,
   WORLD_EDITOR_SAVE_SUCCESS_MESSAGE,
   validateContactDetailPreferencePatch,
   validateWorldEditorPatch,
   validateWorldRoleEditorPatch
 } from "../domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
+import { privateChatIdForFriend } from "../minimal-ui-shell/contact-detail-delete-service.js";
 import { privateChatIdForMember, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-remove-service.js";
 import {
   contactDetailPreferencePatchFromDraft,
@@ -25,7 +27,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -163,6 +165,35 @@ export function createFlowExecutor(): FlowExecutor {
           deleteFriendConfirmation: null
         });
         return Object.freeze({ shouldRender: true, executedFlow: "SAVE_CONTACT_DETAIL_PREFERENCES" });
+      }
+      if (action.type === "CONFIRM_DELETE_FRIEND") {
+        const draft = context.state.contactDetailDraft;
+        const confirmation = draft?.deleteFriendConfirmation ?? null;
+        if (!draft || confirmation?.worldContactId !== action.worldContactId || draft.worldId !== action.worldId) {
+          return NO_FLOW;
+        }
+        const validation = validateDeleteFriendCommand(
+          { worldId: action.worldId, worldContactId: action.worldContactId },
+          createContactDetailContractInput(context.state)
+        );
+        if (!validation.valid || !validation.command) {
+          return NO_FLOW;
+        }
+        const deletedChatId = privateChatIdForFriend(validation.command);
+        context.state.view = context.shell.deleteFriend(validation.command);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CONTACTS";
+        context.state.activeChatId = null;
+        context.state.selectedContactActorId = null;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.contactDetailDraft = null;
+        context.state.worldEditorDraft = null;
+        context.state.selectedWorldIdForEditing = null;
+        return Object.freeze({
+          shouldRender: true,
+          executedFlow: "DELETE_FRIEND"
+        });
       }
       if (action.type === "ADD_WORLD_MEMBER") {
         const draft = context.state.worldEditorDraft;
