@@ -38,7 +38,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
   -> FlowExecutor.run(action, context)
-  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
   -> DOM
@@ -329,7 +329,7 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.

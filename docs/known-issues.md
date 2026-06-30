@@ -38,7 +38,7 @@ Last audited: 2026-06-29.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid custom-world `SAVE_WORLD_EDITOR`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid custom-world `SAVE_WORLD_EDITOR`, valid `SAVE_CONTACT_DETAIL_PREFERENCES`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning

@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -460,7 +460,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -513,7 +513,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria
