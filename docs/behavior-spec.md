@@ -99,6 +99,10 @@ UI event
 - Disconnect linked AI is separate from Contacts Detail Delete Friend.
 - Opening disconnect confirmation validates an existing connected Global AI Link and shows `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`.
 - Confirming linked-AI disconnect remains scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, worlds, contacts, chats, or memory.
+- Future linked-AI disconnect cleanup planning is defined in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
+- `LinkedAIDisconnectCleanupPlan` records the target Global AI Link/model, affected worlds, world contact ids, private chat ids, memory scope ids, deferred provider/global-link actions, and group cleanup status.
+- Cleanup planning is deterministic and read-only; it does not execute disconnect, delete Global AI Links, delete provider connections, or mutate world contacts/chats/memory.
+- Group cleanup is recorded as `not-supported-yet` when affected AI appears in groups; group mutation remains future work.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.

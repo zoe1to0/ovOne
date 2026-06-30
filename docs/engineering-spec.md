@@ -147,6 +147,11 @@ UI action
 - Linked AI disconnect is global and separate from Contacts Detail Delete Friend.
 - Me Settings disconnect confirmation validates an existing connected Global AI Link and shows `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`.
 - `CONFIRM_LINKED_AI_DISCONNECT` is scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, Reality/custom worlds, contacts, chats, or memory.
+- Linked AI disconnect cleanup planning lives in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
+- `createLinkedAIDisconnectCleanupPlan(...)` produces a deterministic read-only plan for every world containing the linked AI model.
+- Cleanup plan items include `worldId`, `worldTitle`, `worldContactIds`, `privateChatIds`, `memoryScopeIds`, and `groupCleanupStatus`.
+- Cleanup plans keep `providerConnectionAction = "not-executed-yet"`, `globalLinkAction = "not-executed-yet"`, and `status = "planned"`.
+- Cleanup planning does not mutate Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.

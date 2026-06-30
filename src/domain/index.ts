@@ -124,3 +124,15 @@ export type {
   LinkedAIDisconnectValidation,
   ValidateLinkedAIDisconnectInput
 } from "./linked-ai-disconnect-contract.js";
+export {
+  createLinkedAIDisconnectCleanupPlan,
+  validateLinkedAIDisconnectCleanupPlan
+} from "./linked-ai-disconnect-cleanup-plan.js";
+export type {
+  LinkedAIDisconnectCleanupPlan,
+  LinkedAIDisconnectCleanupPlanStatus,
+  LinkedAIDisconnectCleanupPlanValidation,
+  LinkedAIDisconnectDeferredAction,
+  LinkedAIDisconnectGroupCleanupStatus,
+  WorldCleanupPlanItem
+} from "./linked-ai-disconnect-cleanup-plan.js";

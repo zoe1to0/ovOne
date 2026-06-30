@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-06-30: Linked AI disconnect cleanup plan scaffold added
+
+Decision: Global linked-AI disconnect now has a deterministic read-only cleanup plan scaffold before real disconnect execution.
+
+Rules:
+
+- The cleanup planner lives in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
+- `LinkedAIDisconnectCleanupPlan` targets one Global AI Link/model and records affected worlds.
+- Each affected world item records world contact ids, private chat ids, memory scope ids, and group cleanup status.
+- Provider connection and Global AI Link actions remain `not-executed-yet`; plan status remains `planned`.
+- Cleanup planning must not mutate runtime state, Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
+- Worlds without the linked AI are excluded, and other AI are excluded.
+- Group cleanup is recorded as `not-supported-yet` when needed; real group mutation remains future work.
+
 ## 2026-06-30: Me Settings Linked AI disconnect contract scaffold added
 
 Decision: Me Settings now owns a linked-AI global disconnect contract and confirmation scaffold without runtime disconnect mutation.
