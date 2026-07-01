@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-07-01: Linked AI disconnect execution contract scaffold added
+
+Decision: Global linked-AI disconnect now has an execution contract that defines the future mutation boundary without executing disconnect.
+
+Rules:
+
+- The execution contract lives in `src/domain/linked-ai-disconnect-execution-contract.ts`.
+- `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus `LinkedAIDisconnectCleanupPlan`.
+- Execution plans remain `planned`; `CONFIRM_LINKED_AI_DISCONNECT` still performs no runtime cleanup.
+- Future allowed mutations are limited to the selected Global AI Link status/removal flag, selected AI world contacts, selected AI private chats, selected AI world memory scopes, and future provider connection status if explicitly supported.
+- The contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat execution, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
+- Unsupported group cleanup must surface as a warning and must not be silently executed.
+- Reconnect is a separate future lifecycle and remains out of scope.
+
 ## 2026-06-30: Linked AI disconnect cleanup plan scaffold added
 
 Decision: Global linked-AI disconnect now has a deterministic read-only cleanup plan scaffold before real disconnect execution.

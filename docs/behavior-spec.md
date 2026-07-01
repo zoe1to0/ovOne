@@ -103,6 +103,10 @@ UI event
 - `LinkedAIDisconnectCleanupPlan` records the target Global AI Link/model, affected worlds, world contact ids, private chat ids, memory scope ids, deferred provider/global-link actions, and group cleanup status.
 - Cleanup planning is deterministic and read-only; it does not execute disconnect, delete Global AI Links, delete provider connections, or mutate world contacts/chats/memory.
 - Group cleanup is recorded as `not-supported-yet` when affected AI appears in groups; group mutation remains future work.
+- Linked AI disconnect execution boundaries are defined in `src/domain/linked-ai-disconnect-execution-contract.ts`.
+- `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus cleanup plan, records only future allowed mutations, and remains planned.
+- The execution contract rejects plans that include other AI, unrelated worlds, world deletion, group cleanup execution, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
+- Confirming linked-AI disconnect still does not run execution; this milestone adds validation/contract only.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.

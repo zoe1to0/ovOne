@@ -136,3 +136,23 @@ export type {
   LinkedAIDisconnectGroupCleanupStatus,
   WorldCleanupPlanItem
 } from "./linked-ai-disconnect-cleanup-plan.js";
+export {
+  LINKED_AI_DISCONNECT_GROUP_CLEANUP_UNSUPPORTED_WARNING,
+  canExecuteLinkedAIDisconnect,
+  createLinkedAIDisconnectExecutionPlan,
+  getLinkedAIDisconnectAllowedFutureMutations,
+  getLinkedAIDisconnectExecutionWarnings,
+  getLinkedAIDisconnectForbiddenFutureMutations,
+  validateLinkedAIDisconnectExecutionCommand,
+  validateLinkedAIDisconnectExecutionPlan
+} from "./linked-ai-disconnect-execution-contract.js";
+export type {
+  LinkedAIDisconnectAllowedFutureMutation,
+  LinkedAIDisconnectExecutionCommand,
+  LinkedAIDisconnectExecutionPlan,
+  LinkedAIDisconnectExecutionStatus,
+  LinkedAIDisconnectExecutionValidation,
+  LinkedAIDisconnectForbiddenFutureMutation,
+  LinkedAIDisconnectGlobalLinkAction,
+  LinkedAIDisconnectProviderConnectionAction
+} from "./linked-ai-disconnect-execution-contract.js";

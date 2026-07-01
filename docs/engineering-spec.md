@@ -152,6 +152,11 @@ UI action
 - Cleanup plan items include `worldId`, `worldTitle`, `worldContactIds`, `privateChatIds`, `memoryScopeIds`, and `groupCleanupStatus`.
 - Cleanup plans keep `providerConnectionAction = "not-executed-yet"`, `globalLinkAction = "not-executed-yet"`, and `status = "planned"`.
 - Cleanup planning does not mutate Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
+- Linked AI disconnect execution contract lives in `src/domain/linked-ai-disconnect-execution-contract.ts`.
+- `LinkedAIDisconnectExecutionPlan` is derived from the existing command plus cleanup plan and remains `status = "planned"`.
+- The execution contract allows only future selected Global AI Link status/removal flag changes, selected AI world-contact cleanup, selected AI private-chat cleanup, selected AI memory-scope cleanup, and future provider connection status handling.
+- The execution contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat execution, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
+- `CONFIRM_LINKED_AI_DISCONNECT` remains scaffold/no-op; the execution contract validates boundaries only and does not run through Flow Executor yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.

@@ -66,6 +66,9 @@
 - Future Linked AI disconnect cleanup planning must target only that linked AI across worlds where it appears.
 - Future cleanup may plan Global AI Link removal/disable and per-world contact/private chat/memory cleanup, but must not delete worlds, affect other AI, or mutate unrelated contacts/chats/memory.
 - Group cleanup for global disconnect remains unsupported and may only be recorded as future work in the cleanup plan.
+- Future Linked AI disconnect execution is governed by a contract in `src/domain/linked-ai-disconnect-execution-contract.ts`.
+- The future execution boundary may only affect the selected Global AI Link, selected AI world contacts, selected AI private chats, selected AI world memory scopes, and later provider connection status if explicitly supported.
+- The future execution boundary must not delete worlds, affect other AI, mutate unrelated contacts/chats/memory, mutate world metadata, mutate unrelated Contacts Detail preferences, execute group cleanup, change weather/time permission, or change user profile.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 
