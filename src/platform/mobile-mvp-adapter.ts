@@ -62,11 +62,13 @@ export function mountChatShell(
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
+    selectedChatIdForSettings: null,
     selectedWorldIdForEditing: null,
     composerMode: resolveDefaultComposerMode("normal"),
     inputDraft: "",
     settingsOpen: false,
     createGroupDraft: null,
+    chatSettingsDraft: null,
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
@@ -198,6 +200,8 @@ function renderShellPage(
       return createContactDetailView(snapshot, state, controller);
     case "ME":
       return createMeView(snapshot, state, controller);
+    case "CHAT_SETTINGS":
+      return createChatSettingsView(snapshot, state, controller);
     case "CREATE_GROUP_DRAFT":
       return createCreateGroupDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DRAFT":
@@ -310,7 +314,7 @@ function createChatView(
   menu.className = "mvp-chat-menu-button";
   menu.textContent = "⋯";
   menu.setAttribute("aria-label", "更多");
-  bindControllerAction(menu, controller, { type: "OPEN_CHAT_MENU" });
+  bindControllerAction(menu, controller, { type: "OPEN_CHAT_SETTINGS" });
 
   const header = document.createElement("header");
   header.className = "mvp-chat-page-header";
@@ -808,6 +812,118 @@ function createCreateGroupDraftView(
     actions
   );
   return screen;
+}
+
+function createChatSettingsView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
+  const chat = chatById(snapshot, state.selectedChatIdForSettings ?? state.activeChatId);
+  const group = chat ? snapshot.groups.find((candidate) => candidate.id === chat.id) ?? null : null;
+  const draft = state.chatSettingsDraft ?? {
+    chatId: chat?.id ?? "",
+    backgroundImagePlaceholder: "",
+    backgroundColor: "#ffffff",
+    myBubbleColor: "#dcecff",
+    otherBubbleColor: "#f2f2f2",
+    noticeMessage: null
+  };
+  const screen = document.createElement("section");
+  screen.className = "mvp-screen mvp-chat-settings";
+
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "mvp-back-button";
+  back.textContent = "聊天";
+  bindControllerAction(back, controller, { type: "CANCEL_CHAT_SETTINGS" });
+
+  const content = document.createElement("section");
+  content.className = "mvp-create-world-section";
+
+  if (group) {
+    content.append(
+      createDraftStage("群成员", createGroupMembersSettings(snapshot, group, controller)),
+      createDraftStage("群规则", createScaffoldAction("群规则暂未开放", controller, { type: "OPEN_GROUP_RULES" })),
+      createDraftStage("群文件", createScaffoldAction("群文件暂未开放", controller, { type: "OPEN_GROUP_FILES" }))
+    );
+  }
+
+  content.append(createDraftStage("当前聊天设置", createChatAppearanceSettings(draft, controller)));
+  if (draft.noticeMessage) {
+    content.append(createDraftNote(draft.noticeMessage));
+  }
+
+  const actions = document.createElement("section");
+  actions.className = "mvp-create-world-actions";
+  actions.append(
+    createMenuButton("取消", controller, { type: "CANCEL_CHAT_SETTINGS" }),
+    createMenuButton("保存", controller, { type: "SAVE_CHAT_SETTINGS" })
+  );
+
+  screen.append(createScreenHeader(chat ? chatHeaderTitle(snapshot, chat) : "聊天设置", back), content, actions);
+  return screen;
+}
+
+function createGroupMembersSettings(
+  snapshot: WorldSnapshot,
+  group: WorldSnapshot["groups"][number],
+  controller: InteractionController
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-create-world-section";
+  for (const actorId of group.actorIds) {
+    const contact = contactByActorId(snapshot, actorId);
+    section.append(createDraftNote(contact ? contactDisplayName(contact) : actorId));
+  }
+  section.append(
+    createMenuButton("添加群成员", controller, { type: "OPEN_GROUP_ADD_MEMBER" }),
+    createMenuButton("移除群成员", controller, { type: "OPEN_GROUP_REMOVE_MEMBER" })
+  );
+  return section;
+}
+
+function createScaffoldAction(label: string, controller: InteractionController, action: InteractionAction): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-create-world-section";
+  section.append(createMenuButton(label, controller, action));
+  return section;
+}
+
+function createChatAppearanceSettings(
+  draft: NonNullable<SemanticMobileState["chatSettingsDraft"]>,
+  controller: InteractionController
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-create-world-section";
+  section.append(createMenuButton("上传聊天背景图片", controller, { type: "UPLOAD_CHAT_BACKGROUND_IMAGE" }));
+  if (draft.backgroundImagePlaceholder) {
+    section.append(createDraftNote(draft.backgroundImagePlaceholder));
+  }
+  section.append(
+    createColorField("聊天背景颜色", draft.backgroundColor, controller, "backgroundColor"),
+    createColorField("我的气泡颜色", draft.myBubbleColor, controller, "myBubbleColor"),
+    createColorField("对方气泡颜色", draft.otherBubbleColor, controller, "otherBubbleColor")
+  );
+  return section;
+}
+
+function createColorField(
+  label: string,
+  value: string,
+  controller: InteractionController,
+  field: "backgroundColor" | "myBubbleColor" | "otherBubbleColor"
+): HTMLElement {
+  const wrapper = document.createElement("label");
+  wrapper.className = "mvp-create-world-field";
+  const text = document.createElement("span");
+  text.textContent = label;
+  const input = document.createElement("input");
+  input.type = "color";
+  input.value = value;
+  bindChatSettingsDraftInput(input, controller, field);
+  wrapper.append(text, input);
+  return wrapper;
 }
 
 function createCreateWorldDraftView(
@@ -1712,6 +1828,16 @@ function bindCreateGroupDraftInput(
   });
 }
 
+function bindChatSettingsDraftInput(
+  input: HTMLInputElement,
+  controller: InteractionController,
+  field: "backgroundColor" | "myBubbleColor" | "otherBubbleColor"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_CHAT_SETTINGS_DRAFT", field, value: input.value });
+  });
+}
+
 function bindCreateWorldDetailInput(
   input: HTMLInputElement | HTMLTextAreaElement,
   controller: InteractionController,
@@ -1999,6 +2125,10 @@ function contactForChat(snapshot: WorldSnapshot, chat: WorldChatSession | null):
     return contacts[0] ?? null;
   }
   return contacts.find((contact) => chat.title.includes(contact.displayName) || chat.id.includes(contact.actorId)) ?? contacts[0] ?? null;
+}
+
+function contactByActorId(snapshot: WorldSnapshot, actorId: string): WorldContact | null {
+  return contactsFromSnapshot(snapshot).find((contact) => contact.actorId === actorId) ?? null;
 }
 
 function isGroupChat(snapshot: WorldSnapshot, chat: WorldChatSession | null): boolean {

@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-07-03: Chat settings page scaffold added
+
+Decision: Chat `...` settings now opens a full `CHAT_SETTINGS` route/page for private and group chats.
+
+Rules:
+
+- Private chat settings show only current chat appearance scaffolds.
+- Group chat settings show group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and current chat appearance scaffolds.
+- Background image upload, color settings save, group add/remove member, group rules, and group files are scaffold/no-op behavior only.
+- Chat settings must not mutate group membership, chat messages/history, group rules/files, chat identity, or persisted appearance settings yet.
+
 ## 2026-07-03: v0.6 create group core milestone
 
 Decision: `v0.6-create-group-core` marks the Create Group core milestone.

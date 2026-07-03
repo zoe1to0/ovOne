@@ -305,7 +305,15 @@ UI event
 | Cancel world editor | `CANCEL_WORLD_EDITOR` | Clears local World Editor state and returns safely to `CHAT_LIST`. |
 | Open ovO control overlay | `OPEN_OVO_CONTROL` | Existing scaffold action that forces `CHAT_LIST`, clears active chat, and opens the first-level ovO world menu; not the direct ovO click path. |
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
-| Chat menu button | `OPEN_CHAT_MENU` | Opens chat menu overlay. |
+| Chat menu button | `OPEN_CHAT_SETTINGS` | Opens `CHAT_SETTINGS` as a full page for the active private or group chat. |
+| Update chat settings draft | `UPDATE_CHAT_SETTINGS_DRAFT` | Updates local chat appearance draft values only. |
+| Cancel chat settings | `CANCEL_CHAT_SETTINGS` | Clears local chat settings draft and returns to the previous chat. |
+| Save chat settings | `SAVE_CHAT_SETTINGS` | Scaffold/no-op; shows `保存暂未开放` and does not mutate chat data. |
+| Upload chat background image | `UPLOAD_CHAT_BACKGROUND_IMAGE` | Scaffold/no-op; shows `背景图片上传暂未开放` and does not upload files. |
+| Open group add member scaffold | `OPEN_GROUP_ADD_MEMBER` | Scaffold/no-op on group chat settings page. |
+| Open group remove member scaffold | `OPEN_GROUP_REMOVE_MEMBER` | Scaffold/no-op on group chat settings page. |
+| Open group rules scaffold | `OPEN_GROUP_RULES` | Scaffold/no-op on group chat settings page. |
+| Open group files scaffold | `OPEN_GROUP_FILES` | Scaffold/no-op on group chat settings page. |
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
 | File button | `OPEN_FILE_PICKER` | Opens file picker overlay. |
 | Close overlay | `CLOSE_OVERLAY` | Clears current overlay. |
@@ -355,11 +363,12 @@ UI event
 These actions are named and routed but intentionally do not implement product behavior yet:
 
 - `CREATE_AI_FRIEND`
-- `OPEN_CREATE_GROUP_DRAFT`
-- `UPDATE_CREATE_GROUP_DRAFT`
-- `TOGGLE_CREATE_GROUP_MEMBER`
-- `CONFIRM_CREATE_GROUP`
-- `CANCEL_CREATE_GROUP`
+- `SAVE_CHAT_SETTINGS`
+- `UPLOAD_CHAT_BACKGROUND_IMAGE`
+- `OPEN_GROUP_ADD_MEMBER`
+- `OPEN_GROUP_REMOVE_MEMBER`
+- `OPEN_GROUP_RULES`
+- `OPEN_GROUP_FILES`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`

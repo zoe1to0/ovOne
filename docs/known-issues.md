@@ -18,6 +18,7 @@ Last audited: 2026-06-29.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
 - Create Group can create a current-world group chat with selected current-world AI contacts, but group member management, group rules, group files, initial AI messages, and real group memory behavior are not implemented.
+- Chat Settings / Group Detail is a full-page scaffold only: background upload, color settings save, group add/remove member, group rules, and group files are visible but do not persist or mutate runtime data.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
 - ovO world menu supports read-only world switching and a World Editor page scaffold.

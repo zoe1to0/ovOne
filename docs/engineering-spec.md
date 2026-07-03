@@ -202,6 +202,12 @@ UI action
 - Create Group defaults blank group names to `群聊`.
 - Chat List uses plain group title only; Chat View header uses `chatHeaderTitle(...)` to display `群名称（x）`, where `x = 1 + selected AI member count`.
 - Create Group does not support post-creation member management, group rules, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
+- Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
+- The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
+- `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local scaffold state only.
+- Group chat settings render group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and shared appearance controls.
+- Private chat settings render only shared appearance controls.
+- `SAVE_CHAT_SETTINGS`, `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `OPEN_GROUP_RULES`, and `OPEN_GROUP_FILES` are UI scaffold/no-op actions and must not mutate chat data, group membership, messages/history, files, rules, or persisted appearance data.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.

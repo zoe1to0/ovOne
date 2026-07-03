@@ -22,6 +22,7 @@ export type ViewState =
   | "CONTACTS"
   | "CONTACT_DETAIL"
   | "ME"
+  | "CHAT_SETTINGS"
   | "CREATE_GROUP_DRAFT"
   | "CREATE_WORLD_DRAFT"
   | "CREATE_WORLD_DETAIL_EDIT"
@@ -131,6 +132,14 @@ export type CreateGroupDraft = Readonly<{
   }>;
   readonly noticeMessage: string | null;
 }>;
+export type ChatSettingsDraft = Readonly<{
+  readonly chatId: string;
+  readonly backgroundImagePlaceholder: string;
+  readonly backgroundColor: string;
+  readonly myBubbleColor: string;
+  readonly otherBubbleColor: string;
+  readonly noticeMessage: string | null;
+}>;
 export type LinkedAIDisconnectConfirmation = Readonly<{
   readonly globalAILinkId: string;
   readonly displayName: string;
@@ -154,6 +163,15 @@ export type InteractionAction =
   | { readonly type: "OPEN_CHAT"; readonly chatId: string }
   | { readonly type: "OPEN_OVO_CHAT" }
   | { readonly type: "NAV_BACK" }
+  | { readonly type: "OPEN_CHAT_SETTINGS" }
+  | { readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" | "myBubbleColor" | "otherBubbleColor"; readonly value: string }
+  | { readonly type: "CANCEL_CHAT_SETTINGS" }
+  | { readonly type: "SAVE_CHAT_SETTINGS" }
+  | { readonly type: "OPEN_GROUP_ADD_MEMBER" }
+  | { readonly type: "OPEN_GROUP_REMOVE_MEMBER" }
+  | { readonly type: "OPEN_GROUP_RULES" }
+  | { readonly type: "OPEN_GROUP_FILES" }
+  | { readonly type: "UPLOAD_CHAT_BACKGROUND_IMAGE" }
   | { readonly type: "OPEN_ADD_MENU" }
   | { readonly type: "OPEN_CHAT_MENU" }
   | { readonly type: "OPEN_OVO_CONTROL" }
@@ -220,11 +238,13 @@ export type SemanticMobileState = {
   activeChatId: string | null;
   overlay: MobileOverlay;
   selectedContactActorId: string | null;
+  selectedChatIdForSettings: string | null;
   selectedWorldIdForEditing: WorldId | null;
   composerMode: ComposerMode;
   inputDraft: string;
   settingsOpen: boolean;
   createGroupDraft: CreateGroupDraft | null;
+  chatSettingsDraft: ChatSettingsDraft | null;
   createWorldDraft: CreateWorldDraft | null;
   worldEditorDraft: WorldEditorDraft | null;
   contactDetailDraft: ContactDetailDraft | null;
@@ -248,6 +268,15 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_CHAT"
   | "OPEN_OVO_CHAT"
   | "NAV_BACK"
+  | "OPEN_CHAT_SETTINGS"
+  | "UPDATE_CHAT_SETTINGS_DRAFT"
+  | "CANCEL_CHAT_SETTINGS"
+  | "SAVE_CHAT_SETTINGS"
+  | "OPEN_GROUP_ADD_MEMBER"
+  | "OPEN_GROUP_REMOVE_MEMBER"
+  | "OPEN_GROUP_RULES"
+  | "OPEN_GROUP_FILES"
+  | "UPLOAD_CHAT_BACKGROUND_IMAGE"
   | "OPEN_ADD_MENU"
   | "OPEN_CHAT_MENU"
   | "OPEN_OVO_CONTROL"
@@ -352,6 +381,19 @@ export function validateCreateGroupDraft(draft: CreateGroupDraft): CreateGroupDr
   });
 }
 
+function scaffoldNoticeForChatSettingsAction(action: "OPEN_GROUP_ADD_MEMBER" | "OPEN_GROUP_REMOVE_MEMBER" | "OPEN_GROUP_RULES" | "OPEN_GROUP_FILES"): string {
+  switch (action) {
+    case "OPEN_GROUP_ADD_MEMBER":
+      return "添加群成员暂未开放";
+    case "OPEN_GROUP_REMOVE_MEMBER":
+      return "移除群成员暂未开放";
+    case "OPEN_GROUP_RULES":
+      return "群规则暂未开放";
+    case "OPEN_GROUP_FILES":
+      return "群文件暂未开放";
+  }
+}
+
 function createEmptyRandomRoleSlot(index: number): RandomRoleSlotDraft {
   return Object.freeze({
     id: `role-slot:${index + 1}`,
@@ -453,6 +495,15 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     noticeMessage: null
   });
 
+  const createEmptyChatSettingsDraft = (chatId: string): ChatSettingsDraft => Object.freeze({
+    chatId,
+    backgroundImagePlaceholder: "",
+    backgroundColor: "#ffffff",
+    myBubbleColor: "#dcecff",
+    otherBubbleColor: "#f2f2f2",
+    noticeMessage: null
+  });
+
   const disabled = (
     state: SemanticMobileState,
     action: DisabledInteractionAction
@@ -471,8 +522,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.selectedWorldIdForEditing = null;
         state.createGroupDraft = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -484,8 +537,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CONTACTS";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.selectedWorldIdForEditing = null;
         state.createGroupDraft = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -499,6 +554,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.createGroupDraft = null;
+        state.selectedChatIdForSettings = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -513,6 +570,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
         state.createGroupDraft = null;
+        state.selectedChatIdForSettings = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -551,6 +610,11 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.activeView = "CONTACTS";
           state.selectedContactActorId = null;
           state.contactDetailDraft = null;
+        } else if (state.activeView === "CHAT_SETTINGS") {
+          state.activeView = "CHAT_VIEW";
+          state.activeChatId = state.selectedChatIdForSettings;
+          state.selectedChatIdForSettings = null;
+          state.chatSettingsDraft = null;
         } else if (state.activeView === "CREATE_WORLD_DETAIL_EDIT") {
           state.activeView = "CREATE_WORLD_DRAFT";
         } else if (state.activeView === "CREATE_GROUP_DRAFT") {
@@ -563,11 +627,83 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.selectedWorldIdForEditing = null;
           state.worldEditorDraft = null;
           state.contactDetailDraft = null;
+          state.selectedChatIdForSettings = null;
+          state.chatSettingsDraft = null;
         } else {
           state.activeView = "CHAT_LIST";
           state.activeChatId = null;
         }
         state.linkedAIDisconnectConfirmation = null;
+        closeOverlay(state);
+        return RENDER;
+
+      case "OPEN_CHAT_SETTINGS": {
+        const chatId = state.activeChatId ?? state.view.product.snapshot.chatState.activeChatId;
+        if (!chatId || chatId === OVO_CHAT_ID) {
+          return RENDER;
+        }
+        state.activeView = "CHAT_SETTINGS";
+        state.activeChatId = chatId;
+        state.selectedChatIdForSettings = chatId;
+        state.chatSettingsDraft = createEmptyChatSettingsDraft(chatId);
+        state.createGroupDraft = null;
+        state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+      }
+
+      case "UPDATE_CHAT_SETTINGS_DRAFT":
+        if (!state.chatSettingsDraft) {
+          return RENDER;
+        }
+        state.chatSettingsDraft = Object.freeze({
+          ...state.chatSettingsDraft,
+          [action.field]: action.value,
+          noticeMessage: null
+        });
+        return RENDER;
+
+      case "CANCEL_CHAT_SETTINGS":
+        state.activeView = "CHAT_VIEW";
+        state.activeChatId = state.selectedChatIdForSettings;
+        state.selectedChatIdForSettings = null;
+        state.chatSettingsDraft = null;
+        closeOverlay(state);
+        return RENDER;
+
+      case "SAVE_CHAT_SETTINGS":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: "保存暂未开放"
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "UPLOAD_CHAT_BACKGROUND_IMAGE":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            backgroundImagePlaceholder: "背景图片上传暂未开放",
+            noticeMessage: "背景图片上传暂未开放"
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "OPEN_GROUP_ADD_MEMBER":
+      case "OPEN_GROUP_REMOVE_MEMBER":
+      case "OPEN_GROUP_RULES":
+      case "OPEN_GROUP_FILES":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: scaffoldNoticeForChatSettingsAction(action.type)
+          });
+        }
         closeOverlay(state);
         return RENDER;
 
@@ -603,6 +739,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "WORLD_EDITOR";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.linkedAIDisconnectConfirmation = null;
         state.selectedWorldIdForEditing = action.worldId;
         state.worldEditorDraft = Object.freeze({
@@ -946,8 +1083,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CREATE_GROUP_DRAFT";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.selectedWorldIdForEditing = null;
         state.createWorldDraft = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         closeOverlay(state);
@@ -988,7 +1127,9 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.selectedWorldIdForEditing = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         closeOverlay(state);
@@ -1001,7 +1142,9 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CREATE_WORLD_DRAFT";
         state.activeChatId = null;
         state.selectedContactActorId = null;
+        state.selectedChatIdForSettings = null;
         state.selectedWorldIdForEditing = null;
+        state.chatSettingsDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         closeOverlay(state);
@@ -1412,6 +1555,7 @@ export function resolveView(activeView: string): ViewRouteResolution {
     activeView === "CONTACTS" ||
     activeView === "CONTACT_DETAIL" ||
     activeView === "ME" ||
+    activeView === "CHAT_SETTINGS" ||
     activeView === "CREATE_GROUP_DRAFT" ||
     activeView === "CREATE_WORLD_DRAFT" ||
     activeView === "CREATE_WORLD_DETAIL_EDIT" ||
@@ -1438,6 +1582,7 @@ export function tabForView(activeView: ViewState): MobileMvpTab {
   }
   if (
     activeView === "CREATE_GROUP_DRAFT" ||
+    activeView === "CHAT_SETTINGS" ||
     activeView === "CREATE_WORLD_DRAFT" ||
     activeView === "CREATE_WORLD_DETAIL_EDIT" ||
     activeView === "WORLD_EDITOR"

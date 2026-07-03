@@ -131,16 +131,15 @@ describe("Mobile MVP Product Shell", () => {
 
   it("renders chat pages with back, name, menu, scroll messages, fixed input, and message avatars", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /header\.className = "mvp-chat-page-header"/);
     assert.match(adapter, /menu\.className = "mvp-chat-menu-button"/);
-    assert.match(adapter, /bindControllerAction\(menu, controller, \{ type: "OPEN_CHAT_MENU" \}\)/);
-    assert.match(adapter, /function createChatMenu/);
-    assert.match(adapter, /const CHAT_PANEL_ACTIONS = Object\.freeze/);
-    assert.match(adapter, /type: "CHAT_OPEN_GROUP_MEMBERS"/);
-    assert.match(adapter, /type: "CHAT_OPEN_SETTINGS"/);
-    assert.match(adapter, /type: "CHAT_OPEN_BACKGROUND_SETTINGS"/);
+    assert.match(adapter, /bindControllerAction\(menu, controller, \{ type: "OPEN_CHAT_SETTINGS" \}\)/);
+    assert.match(registry, /\| "CHAT_SETTINGS"/);
+    assert.match(adapter, /case "CHAT_SETTINGS":[\s\S]*return createChatSettingsView\(snapshot, state, controller\);/);
+    assert.match(adapter, /function createChatSettingsView\(\s*snapshot: WorldSnapshot,\s*state: SemanticMobileState,\s*controller: InteractionController\s*\)/);
     assert.match(adapter, /item\.className = mine \? "mvp-message-row is-mine" : "mvp-message-row"/);
     assert.match(adapter, /createAvatarWithStatus\(createUserAvatar\(\), true\)/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
@@ -152,6 +151,30 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-avatar-wrap \.mvp-presence-dot \{[\s\S]*position: absolute;/);
     assert.equal(html.includes("column-reverse"), false);
     assert.equal(html.includes("row-reverse"), false);
+  });
+
+  it("renders chat settings as a full page with group-only scaffolds and local appearance controls", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
+
+    assert.match(registry, /selectedChatIdForSettings: string \| null;/);
+    assert.match(registry, /chatSettingsDraft: ChatSettingsDraft \| null;/);
+    assert.match(registry, /\| \{ readonly type: "OPEN_CHAT_SETTINGS" \}/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" \| "myBubbleColor" \| "otherBubbleColor"; readonly value: string \}/);
+    assert.match(registry, /state\.activeView = "CHAT_SETTINGS"/);
+    assert.match(registry, /noticeMessage: "保存暂未开放"/);
+    assert.match(registry, /noticeMessage: "背景图片上传暂未开放"/);
+    assert.match(registry, /scaffoldNoticeForChatSettingsAction/);
+    assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, controller\)\)/);
+    assert.match(adapter, /createMenuButton\("添加群成员", controller, \{ type: "OPEN_GROUP_ADD_MEMBER" \}\)/);
+    assert.match(adapter, /createMenuButton\("移除群成员", controller, \{ type: "OPEN_GROUP_REMOVE_MEMBER" \}\)/);
+    assert.match(adapter, /createDraftStage\("群规则", createScaffoldAction\("群规则暂未开放", controller, \{ type: "OPEN_GROUP_RULES" \}\)\)/);
+    assert.match(adapter, /createDraftStage\("群文件", createScaffoldAction\("群文件暂未开放", controller, \{ type: "OPEN_GROUP_FILES" \}\)\)/);
+    assert.match(adapter, /content\.append\(createDraftStage\("当前聊天设置", createChatAppearanceSettings\(draft, controller\)\)\)/);
+    assert.match(adapter, /createMenuButton\("上传聊天背景图片", controller, \{ type: "UPLOAD_CHAT_BACKGROUND_IMAGE" \}\)/);
+    assert.match(adapter, /createColorField\("聊天背景颜色", draft\.backgroundColor, controller, "backgroundColor"\)/);
+    assert.match(adapter, /createColorField\("我的气泡颜色", draft\.myBubbleColor, controller, "myBubbleColor"\)/);
+    assert.match(adapter, /createColorField\("对方气泡颜色", draft\.otherBubbleColor, controller, "otherBubbleColor"\)/);
   });
 
   it("keeps expandable chat input tools in the floating overlay layer", () => {
@@ -464,7 +487,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 10);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 11);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

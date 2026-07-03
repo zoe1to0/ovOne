@@ -120,6 +120,45 @@ describe("Composer mode state machine", () => {
     assert.equal(state.createGroupDraft, null);
   });
 
+  it("opens chat settings as a route and keeps settings actions scaffolded locally", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.activeView = "CHAT_VIEW";
+    state.activeChatId = "chat:friend";
+
+    assert.equal(registry.execute({ type: "OPEN_CHAT_SETTINGS" }, state).shouldRender, true);
+    assert.equal(state.activeView, "CHAT_SETTINGS");
+    assert.equal(state.selectedChatIdForSettings, "chat:friend");
+    assert.equal(state.chatSettingsDraft?.chatId, "chat:friend");
+    assert.equal(state.overlay, null);
+
+    registry.execute({ type: "UPDATE_CHAT_SETTINGS_DRAFT", field: "backgroundColor", value: "#111111" }, state);
+    registry.execute({ type: "UPDATE_CHAT_SETTINGS_DRAFT", field: "myBubbleColor", value: "#222222" }, state);
+    registry.execute({ type: "UPDATE_CHAT_SETTINGS_DRAFT", field: "otherBubbleColor", value: "#333333" }, state);
+    assert.equal(state.chatSettingsDraft?.backgroundColor, "#111111");
+    assert.equal(state.chatSettingsDraft?.myBubbleColor, "#222222");
+    assert.equal(state.chatSettingsDraft?.otherBubbleColor, "#333333");
+
+    registry.execute({ type: "UPLOAD_CHAT_BACKGROUND_IMAGE" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "背景图片上传暂未开放");
+    registry.execute({ type: "OPEN_GROUP_ADD_MEMBER" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "添加群成员暂未开放");
+    registry.execute({ type: "OPEN_GROUP_REMOVE_MEMBER" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除群成员暂未开放");
+    registry.execute({ type: "OPEN_GROUP_RULES" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "群规则暂未开放");
+    registry.execute({ type: "OPEN_GROUP_FILES" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
+    registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "保存暂未开放");
+
+    registry.execute({ type: "CANCEL_CHAT_SETTINGS" }, state);
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.activeChatId, "chat:friend");
+    assert.equal(state.selectedChatIdForSettings, null);
+    assert.equal(state.chatSettingsDraft, null);
+  });
+
   it("updates contact detail preference draft locally and scaffolds delete friend confirmation", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
@@ -712,11 +751,13 @@ function createState(): SemanticMobileState {
     activeChatId: null,
     overlay: null,
     selectedContactActorId: null,
+    selectedChatIdForSettings: null,
     selectedWorldIdForEditing: null,
     composerMode: "text",
     inputDraft: "",
     settingsOpen: false,
     createGroupDraft: null,
+    chatSettingsDraft: null,
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
