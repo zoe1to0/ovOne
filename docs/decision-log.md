@@ -1,5 +1,22 @@
 # ovOne Decision Log
 
+## 2026-07-03: v0.7 chat settings core milestone
+
+Decision: `v0.7-chat-settings-core` marks the Chat Settings core milestone.
+
+Scope:
+
+- Chat Settings / Group Detail route/page scaffold.
+- Private chat settings page.
+- Group chat settings page.
+- Group members, group rules, and group files scaffolds.
+- Upload background image scaffold.
+- Chat background color save.
+- My bubble color save.
+- Opposite side bubble color save.
+- Per-chat appearance save scoped by `worldId + chatId`.
+- No mutation to messages/history, group membership, group rules/files, contact preferences, world metadata/role metadata, Global AI data, provider connections, or weather/time permission.
+
 ## 2026-07-03: Chat settings appearance save implemented
 
 Decision: `SAVE_CHAT_SETTINGS` now persists allowed per-chat appearance metadata through Flow Executor and the shell runtime boundary.
