@@ -1,5 +1,21 @@
 # ovOne Decision Log
 
+## 2026-07-03: v0.5.1 settings disconnect execution safety milestone
+
+Decision: `v0.5.1-settings-disconnect-execution-safety` marks the Settings disconnect execution safety milestone.
+
+Scope:
+
+- Linked AI disconnect contract.
+- Deterministic cleanup plan.
+- Read-only disconnect preview.
+- Guarded confirmation.
+- Execution snapshot and rollback plan.
+- Preflight operation order.
+- Disabled atomic executor.
+- `execute` mode remains rejected.
+- No `GlobalAILink`, provider connection, world, contact, chat, memory, group membership, group chat, or group message mutation is enabled.
+
 ## 2026-07-03: Disabled Linked AI disconnect atomic executor added
 
 Decision: Linked AI disconnect now has a disabled atomic executor scaffold for future execution simulation, but real disconnect remains unavailable.
