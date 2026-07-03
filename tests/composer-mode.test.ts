@@ -176,7 +176,7 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "OPEN_GROUP_FILES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
     registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);
-    assert.equal(state.chatSettingsDraft?.noticeMessage, "保存暂未开放");
+    assert.equal(state.chatSettingsDraft?.noticeMessage, null);
     assert.equal(state.view.product.snapshot.chatState.chats.get("chat:friend"), originalChat);
     assert.equal(state.view.product.snapshot.chatState.chats.get("chat:friend")?.messages.length, 1);
 

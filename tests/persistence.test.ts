@@ -109,6 +109,32 @@ describe("Persistence Layer", () => {
     assert.equal(second.restoredWorlds.length >= 1, true);
   });
 
+  it("persists and restores chat appearance settings", () => {
+    const storage = createMemoryWorldStorage();
+    const first = createPersistentProductRuntime({ storage });
+    const worldId = first.shell.view().activeWorldId;
+    const chatId = first.shell.view().product.snapshot.chatState.activeChatId!;
+
+    first.shell.saveChatAppearanceSettings({
+      worldId,
+      chatId,
+      backgroundImageRef: "",
+      backgroundColor: "#123456",
+      myBubbleColor: "#abcdef",
+      otherBubbleColor: ""
+    });
+
+    const second = createPersistentProductRuntime({ storage });
+    const restored = second.shell.view().product.snapshot.chatState.chats.get(chatId);
+
+    assert.deepEqual(restored?.appearance, {
+      backgroundImageRef: "",
+      backgroundColor: "#123456",
+      myBubbleColor: "#abcdef",
+      otherBubbleColor: ""
+    });
+  });
+
   it("restores structural and persona snapshot state without changing core layers", () => {
     const app = App.init();
     const worldId = app.snapshot().worldMeta.id;

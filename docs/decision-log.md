@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-07-03: Chat settings appearance save implemented
+
+Decision: `SAVE_CHAT_SETTINGS` now persists allowed per-chat appearance metadata through Flow Executor and the shell runtime boundary.
+
+Rules:
+
+- The save path validates `ChatSettingsPatch` before runtime mutation.
+- Only the selected `WorldChatSession.appearance` can be updated.
+- The mutation is scoped to `worldId + chatId`.
+- Empty appearance fields remain valid and mean default appearance.
+- Saving a private chat does not affect other private chats; saving a group chat does not affect other group chats; saving in one world does not affect another world.
+- Save success stays on `CHAT_SETTINGS` and shows `已保存`.
+- Background image upload remains scaffold/no-op; saving `backgroundImageRef` only stores an existing draft/reference value.
+- The save path must not mutate messages/history, group membership, group rules/files, contact preferences, world metadata, world role metadata, Global AI data, provider connections, or weather/time permission.
+
 ## 2026-07-03: Chat settings save contract added
 
 Decision: Chat Settings now has a pure save contract for future per-chat appearance persistence.
@@ -10,7 +25,7 @@ Rules:
 - The patch must target a chat that exists in the selected/current world.
 - Empty appearance fields are allowed and mean default appearance.
 - The contract forbids chat messages/history, group membership, group rules, group files, contact/world/global/provider settings, and weather/time permission mutation.
-- `SAVE_CHAT_SETTINGS` validates the contract but remains scaffold/no-op; no runtime mutation is enabled yet.
+- At this decision point, `SAVE_CHAT_SETTINGS` validated the contract but remained scaffold/no-op; this is superseded by the later Chat settings appearance save implementation above.
 
 ## 2026-07-03: Chat settings page scaffold added
 
@@ -20,8 +35,9 @@ Rules:
 
 - Private chat settings show only current chat appearance scaffolds.
 - Group chat settings show group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and current chat appearance scaffolds.
-- Background image upload, color settings save, group add/remove member, group rules, and group files are scaffold/no-op behavior only.
-- Chat settings must not mutate group membership, chat messages/history, group rules/files, chat identity, or persisted appearance settings yet.
+- Background image upload, group add/remove member, group rules, and group files remain scaffold/no-op behavior only.
+- At this scaffold stage, color settings save did not persist; this is superseded by the later Chat settings appearance save implementation above.
+- Chat settings must not mutate group membership, chat messages/history, group rules/files, or chat identity.
 
 ## 2026-07-03: v0.6 create group core milestone
 

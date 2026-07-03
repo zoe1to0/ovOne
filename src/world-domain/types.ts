@@ -83,11 +83,19 @@ export type WorldChatMessage = Readonly<{
   readonly createdAt: number;
 }>;
 
+export type ChatAppearanceSettings = Readonly<{
+  readonly backgroundImageRef: string;
+  readonly backgroundColor: string;
+  readonly myBubbleColor: string;
+  readonly otherBubbleColor: string;
+}>;
+
 export type WorldChatSession = Readonly<{
   readonly id: string;
   readonly worldId: WorldId;
   readonly title: string;
   readonly messages: readonly WorldChatMessage[];
+  readonly appearance?: ChatAppearanceSettings;
 }>;
 
 export type WorldChatState = Readonly<{

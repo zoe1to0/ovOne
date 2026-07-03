@@ -121,6 +121,7 @@ export function createPersistentMinimalUiShell(
     saveWorldMetadata: (patch) => withAutosave(shell.saveWorldMetadata(patch)),
     saveWorldRoleMetadata: (patch) => withAutosave(shell.saveWorldRoleMetadata(patch)),
     saveContactDetailPreferences: (patch) => withAutosave(shell.saveContactDetailPreferences(patch)),
+    saveChatAppearanceSettings: (patch) => withAutosave(shell.saveChatAppearanceSettings(patch)),
     deleteFriend: (command) => withAutosave(shell.deleteFriend(command)),
     addWorldMember: (command) => withAutosave(shell.addWorldMember(command)),
     removeWorldMember: (command) => withAutosave(shell.removeWorldMember(command)),
@@ -392,6 +393,24 @@ function restoreChats(app: AppRuntime, snapshot: WorldSnapshot): void {
           createdAt: message.createdAt
         }
       }) as WorldState;
+      app.worldDomain.commitState(state);
+    }
+
+    state = app.worldDomain.getWorldState(snapshot.worldMeta.id);
+    const currentChat = state.chat.chats.get(chat.id);
+    if (currentChat && chat.appearance) {
+      const nextChats = new Map<string, WorldChatSession>(state.chat.chats);
+      nextChats.set(chat.id, {
+        ...currentChat,
+        appearance: { ...chat.appearance }
+      });
+      state = createSnapshotState({
+        ...state,
+        chat: {
+          ...state.chat,
+          chats: nextChats
+        }
+      });
       app.worldDomain.commitState(state);
     }
   }

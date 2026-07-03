@@ -18,8 +18,8 @@ Last audited: 2026-06-29.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
 - Create Group can create a current-world group chat with selected current-world AI contacts, but group member management, group rules, group files, initial AI messages, and real group memory behavior are not implemented.
-- Chat Settings / Group Detail is a full-page scaffold only: background upload, color settings save, group add/remove member, group rules, and group files are visible but do not persist or mutate runtime data.
-- Chat Settings save contract is defined and validated for appearance fields only, but actual persistence of background image/color settings is not implemented yet.
+- Chat Settings / Group Detail still has scaffold-only background upload, group add/remove member, group rules, and group files. Appearance color/background reference save is implemented for selected-chat metadata only.
+- Chat Settings image upload remains unimplemented; `backgroundImageRef` can be saved only as an existing draft/reference value, not through real upload.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
 - ovO world menu supports read-only world switching and a World Editor page scaffold.
@@ -47,7 +47,7 @@ Last audited: 2026-06-29.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid `CONFIRM_CREATE_GROUP`, valid custom-world `SAVE_WORLD_EDITOR`, valid `SAVE_CONTACT_DETAIL_PREFERENCES`, confirmed `CONFIRM_DELETE_FRIEND`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid `CONFIRM_CREATE_GROUP`, valid custom-world `SAVE_WORLD_EDITOR`, valid `SAVE_CONTACT_DETAIL_PREFERENCES`, valid `SAVE_CHAT_SETTINGS`, confirmed `CONFIRM_DELETE_FRIEND`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning
@@ -77,7 +77,7 @@ Disabled explicit actions:
 - Unknown active views resolve to `CHAT_LIST` before the view layer renders.
 - Runtime effects and autosave are out of scope for Behavior Registry.
 - Flow Executor exists in `src/platform/flow-executor.ts`.
-- Flow Executor currently handles `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid Create World confirmations, custom world metadata save, Contacts Detail preference save, confirmed Contacts Detail Delete Friend, custom world Add Member, and confirmed custom world Remove Member.
+- Flow Executor currently handles `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid Create World confirmations, custom world metadata save, Contacts Detail preference save, Chat Settings appearance save, confirmed Contacts Detail Delete Friend, custom world Add Member, and confirmed custom world Remove Member.
 - Disabled explicit actions do not execute runtime effects.
 
 ## Freeze Review Result

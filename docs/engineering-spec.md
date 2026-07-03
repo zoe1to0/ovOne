@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -204,13 +204,16 @@ UI action
 - Create Group does not support post-creation member management, group rules, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
 - Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
 - The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
-- `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local scaffold state only.
+- `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local chat appearance draft state.
 - Group chat settings render group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and shared appearance controls.
 - Private chat settings render only shared appearance controls.
 - Chat Settings save contract lives in `src/domain/chat-settings-contract.ts`.
 - `ChatSettingsPatch` may only contain `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
 - `validateChatSettingsPatch(...)` requires the chat to exist in the selected/current world and rejects fields outside appearance settings.
-- `SAVE_CHAT_SETTINGS`, `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `OPEN_GROUP_RULES`, and `OPEN_GROUP_FILES` are UI scaffold/no-op actions and must not mutate chat data, group membership, messages/history, files, rules, or persisted appearance data.
+- `SAVE_CHAT_SETTINGS` validates `ChatSettingsPatch`, then Flow Executor calls `shell.saveChatAppearanceSettings(...)` to persist only the selected chat's appearance metadata and stay on `CHAT_SETTINGS`.
+- Chat appearance settings are stored on the selected `WorldChatSession.appearance` and scoped by `worldId + chatId`.
+- `SAVE_CHAT_SETTINGS` must not mutate messages/history, group membership, group rules/files, contact preferences, world metadata/role metadata, global/provider data, or weather/time permission.
+- `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `OPEN_GROUP_RULES`, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.
@@ -496,6 +499,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `ADD_WORLD_MEMBER` with Reality, unlinked AI, or existing world member | No world mutation; shows validation notice in the World Editor draft. |
 | `CONFIRM_REMOVE_WORLD_MEMBER` with matching confirmation state | Calls `shell.removeWorldMember(command)`, updates `state.view`, keeps `currentWorldId` unchanged, clears confirmation, shows `已删除`, and if the deleted chat was active lands on `CHAT_LIST` with `activeChatId = null`. |
 | `CONFIRM_REMOVE_WORLD_MEMBER` without matching confirmation state | No runtime effect; remove requires explicit confirmation state. |
+| `SAVE_CHAT_SETTINGS` with a valid appearance patch | Calls `shell.saveChatAppearanceSettings(...)`, updates `state.view`, stays on `CHAT_SETTINGS`, keeps the selected chat id, and shows `已保存`. |
+| `SAVE_CHAT_SETTINGS` with an invalid appearance patch | No chat mutation; local draft keeps an invalid patch notice. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -524,7 +529,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -540,7 +545,7 @@ Exceptions:
 - Disabled explicit actions do not execute Flow Executor runtime effects.
 - Emoji/file picker panel buttons created without controller/action do not dispatch follow-up behavior.
 - Create World draft edit actions mutate only local `createWorldDraft` state.
-- Random-role Create World draft confirmation, valid Detailed Edit confirmation, and valid custom-world Add Member are the world actions with Flow Executor runtime effects.
+- Random-role Create World draft confirmation, valid Detailed Edit confirmation, valid Chat Settings appearance save, and valid custom-world Add Member are examples of actions with Flow Executor runtime effects.
 - Create World transition is currently immediate scaffold state with an explicit completion action; no real animation timing or generated role identity exists yet.
 
 ## Current Test/Verification Surface
@@ -577,7 +582,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `CONFIRM_DELETE_FRIEND`, and `ADD_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `CONFIRM_CREATE_GROUP`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `SAVE_CHAT_SETTINGS`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

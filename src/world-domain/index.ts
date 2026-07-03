@@ -13,6 +13,7 @@ export type {
   RealityDefinition,
   StructuralPatchEvent,
   WorldDefinition,
+  ChatAppearanceSettings,
   WorldChatMessage,
   WorldChatSession,
   WorldChatState,

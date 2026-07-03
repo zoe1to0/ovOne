@@ -42,7 +42,8 @@
 - Private chat settings show only current chat appearance scaffolds.
 - Chat settings appearance scaffolds include upload chat background image, chat background color, my bubble color, and opposite-side bubble color.
 - Chat Settings save contract may only target current-chat appearance fields: `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
-- Chat settings save, background image upload, group add/remove member, group rules, and group files are no-op scaffolds for now and must not mutate group membership, messages/history, chat identity, or persisted appearance data.
+- Chat settings save persists only the selected chat's appearance metadata. Background image upload, group add/remove member, group rules, and group files remain no-op scaffolds.
+- Chat settings save must not mutate group membership, messages/history, chat identity, contact preferences, world metadata, world role metadata, global/provider data, or weather/time permission.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.

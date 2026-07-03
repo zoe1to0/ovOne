@@ -10,12 +10,13 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
+import type { ChatSettingsPatch, ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { createGroupChat } from "./create-group-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
 import { deleteFriendInCurrentWorld } from "./contact-detail-delete-service.js";
+import { saveChatAppearanceSettings } from "./chat-settings-service.js";
 
 export const MinimalUiShell = Object.freeze({
   init
@@ -111,6 +112,12 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const saveChatAppearance = (patch: ChatSettingsPatch): MinimalProductShellView => {
+    saveChatAppearanceSettings({ app, patch });
+    screen = "chat";
+    return view();
+  };
+
   const deleteFriend = (command: DeleteFriendCommand): MinimalProductShellView => {
     deleteFriendInCurrentWorld({ app, command });
     screen = "chat";
@@ -181,6 +188,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     saveWorldMetadata,
     saveWorldRoleMetadata,
     saveContactDetailPreferences,
+    saveChatAppearanceSettings: saveChatAppearance,
     deleteFriend,
     addWorldMember: addMember,
     removeWorldMember: removeMember,

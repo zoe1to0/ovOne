@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
-import { CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
+import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
@@ -309,6 +309,88 @@ describe("FlowExecutor", () => {
     assert.equal(state.settingsOpen, false);
     assert.equal(state.contactDetailDraft.noticeMessage, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE);
     assert.equal(state.contactDetailDraft.deleteFriendConfirmation, null);
+  });
+
+  it("executes SAVE_CHAT_SETTINGS through the runtime appearance save boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView("chat:studio", targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (patch) => {
+        calls.push(patch);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat:studio", targetWorldId));
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          chatState: {
+            activeChatId: "chat:studio",
+            chats: new Map([[
+              "chat:studio",
+              {
+                id: "chat:studio",
+                worldId: targetWorldId,
+                title: "Studio",
+                messages: []
+              }
+            ]])
+          }
+        }
+      }
+    };
+    state.activeView = "CHAT_SETTINGS";
+    state.activeChatId = "chat:studio";
+    state.selectedChatIdForSettings = "chat:studio";
+    state.overlay = "chat-menu";
+    state.settingsOpen = true;
+    state.chatSettingsDraft = {
+      chatId: "chat:studio",
+      backgroundImagePlaceholder: "local:background",
+      backgroundColor: "#111111",
+      myBubbleColor: "#222222",
+      otherBubbleColor: "#333333",
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);
+    const flow = executor.run({ type: "SAVE_CHAT_SETTINGS" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{
+      worldId: targetWorldId,
+      chatId: "chat:studio",
+      backgroundImageRef: "local:background",
+      backgroundColor: "#111111",
+      myBubbleColor: "#222222",
+      otherBubbleColor: "#333333"
+    }]);
+    assert.equal(flow.executedFlow, "SAVE_CHAT_SETTINGS");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_SETTINGS");
+    assert.equal(state.activeChatId, "chat:studio");
+    assert.equal(state.selectedChatIdForSettings, "chat:studio");
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.chatSettingsDraft.noticeMessage, CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE);
   });
 
   it("executes CONFIRM_DELETE_FRIEND only with matching contact detail confirmation", () => {
@@ -982,7 +1064,8 @@ function createShell(
   saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial"),
   saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial"),
   deleteFriend: MinimalProductShellRuntime["deleteFriend"] = () => createView("initial"),
-  createGroupChat: MinimalProductShellRuntime["createGroupChat"] = () => createView("initial")
+  createGroupChat: MinimalProductShellRuntime["createGroupChat"] = () => createView("initial"),
+  saveChatAppearanceSettings: MinimalProductShellRuntime["saveChatAppearanceSettings"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -992,6 +1075,7 @@ function createShell(
     saveWorldMetadata,
     saveWorldRoleMetadata,
     saveContactDetailPreferences,
+    saveChatAppearanceSettings,
     deleteFriend,
     addWorldMember,
     removeWorldMember,

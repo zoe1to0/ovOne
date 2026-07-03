@@ -245,6 +245,126 @@ describe("Minimal UI Shell", () => {
     assert.equal(realityAfterCustomGroup.product.snapshot.chatState.chats.has(customGroupId), false);
   });
 
+  it("saves chat appearance settings only on the selected world chat", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other Friend",
+        kind: "assistant"
+      }
+    });
+
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Appearance World",
+      worldviewSourceType: "text",
+      worldviewText: "A small shared place.",
+      selectedAIModelIds: ["ai:friend", "ai:other"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const privateChatId = `chat:${customWorldId}:ai:friend`;
+    const otherPrivateChatId = `chat:${customWorldId}:ai:other`;
+    const group = shell.createGroupChat({
+      groupName: "Appearance Group",
+      selectedWorldContactIds: ["ai:friend", "ai:other"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+    const secondGroup = shell.createGroupChat({
+      groupName: "Other Group",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const secondGroupChatId = secondGroup.product.snapshot.chatState.activeChatId!;
+    const privateMessagesBefore = secondGroup.product.snapshot.chatState.chats.get(privateChatId)?.messages;
+    const groupMembersBefore = secondGroup.product.snapshot.groups.find((candidate) => candidate.id === groupChatId)?.actorIds;
+    const contactsBefore = secondGroup.product.snapshot.contacts;
+    const metadataBefore = secondGroup.product.snapshot.runtimeState.metadata;
+
+    const savedPrivate = shell.saveChatAppearanceSettings({
+      worldId: customWorldId,
+      chatId: privateChatId,
+      backgroundImageRef: "",
+      backgroundColor: "#101010",
+      myBubbleColor: "#202020",
+      otherBubbleColor: "#303030"
+    });
+    assert.deepEqual(savedPrivate.product.snapshot.chatState.chats.get(privateChatId)?.appearance, {
+      backgroundImageRef: "",
+      backgroundColor: "#101010",
+      myBubbleColor: "#202020",
+      otherBubbleColor: "#303030"
+    });
+    assert.equal(savedPrivate.product.snapshot.chatState.chats.get(otherPrivateChatId)?.appearance, undefined);
+    assert.deepEqual(savedPrivate.product.snapshot.chatState.chats.get(privateChatId)?.messages, privateMessagesBefore);
+    assert.deepEqual(savedPrivate.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual(savedPrivate.product.snapshot.runtimeState.metadata, metadataBefore);
+
+    const savedGroup = shell.saveChatAppearanceSettings({
+      worldId: customWorldId,
+      chatId: groupChatId,
+      backgroundImageRef: "local:background",
+      backgroundColor: "",
+      myBubbleColor: "#abcdef",
+      otherBubbleColor: ""
+    });
+    assert.deepEqual(savedGroup.product.snapshot.chatState.chats.get(groupChatId)?.appearance, {
+      backgroundImageRef: "local:background",
+      backgroundColor: "",
+      myBubbleColor: "#abcdef",
+      otherBubbleColor: ""
+    });
+    assert.equal(savedGroup.product.snapshot.chatState.chats.get(secondGroupChatId)?.appearance, undefined);
+    assert.deepEqual(savedGroup.product.snapshot.groups.find((candidate) => candidate.id === groupChatId)?.actorIds, groupMembersBefore);
+
+    const reality = shell.switchWorld(realityWorldId);
+    const realityChatId = reality.product.snapshot.chatState.activeChatId!;
+    assert.equal(reality.product.snapshot.chatState.chats.get(realityChatId)?.appearance, undefined);
+    const savedReality = shell.saveChatAppearanceSettings({
+      worldId: realityWorldId,
+      chatId: realityChatId,
+      backgroundImageRef: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "",
+      otherBubbleColor: ""
+    });
+    assert.deepEqual(savedReality.product.snapshot.chatState.chats.get(realityChatId)?.appearance, {
+      backgroundImageRef: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "",
+      otherBubbleColor: ""
+    });
+
+    const customAfterRealitySave = shell.switchWorld(customWorldId);
+    assert.deepEqual(customAfterRealitySave.product.snapshot.chatState.chats.get(privateChatId)?.appearance, {
+      backgroundImageRef: "",
+      backgroundColor: "#101010",
+      myBubbleColor: "#202020",
+      otherBubbleColor: "#303030"
+    });
+    assert.deepEqual(customAfterRealitySave.product.snapshot.chatState.chats.get(groupChatId)?.appearance, {
+      backgroundImageRef: "local:background",
+      backgroundColor: "",
+      myBubbleColor: "#abcdef",
+      otherBubbleColor: ""
+    });
+  });
+
   it("keeps non-blank role assignment as an explicit placeholder", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

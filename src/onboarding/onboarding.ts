@@ -119,6 +119,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveChatAppearanceSettings: (patch) => {
+      try {
+        return shell.saveChatAppearanceSettings(patch);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveChatAppearanceSettings", worldId: patch.worldId });
+        return decorate();
+      }
+    },
     deleteFriend: (command) => {
       try {
         return shell.deleteFriend(command);

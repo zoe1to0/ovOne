@@ -1,7 +1,6 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
-  CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE,
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
@@ -678,14 +677,13 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "SAVE_CHAT_SETTINGS":
         if (state.chatSettingsDraft) {
-          state.chatSettingsDraft = Object.freeze({
-            ...state.chatSettingsDraft,
-          noticeMessage: validateChatSettingsPatch(
+          const validation = validateChatSettingsPatch(
             chatSettingsPatchFromDraft(state.chatSettingsDraft, state.currentWorldId),
             createChatSettingsContractInput(state)
-          ).valid
-            ? CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE
-            : "ChatSettings: invalid appearance patch."
+          );
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: validation.valid ? null : "ChatSettings: invalid appearance patch."
           });
         }
         closeOverlay(state);

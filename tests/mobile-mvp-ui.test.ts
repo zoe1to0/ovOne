@@ -156,6 +156,7 @@ describe("Mobile MVP Product Shell", () => {
   it("renders chat settings as a full page with group-only scaffolds and local appearance controls", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
+    const flowExecutor = readFileSync("src/platform/flow-executor.ts", "utf8");
 
     assert.match(registry, /selectedChatIdForSettings: string \| null;/);
     assert.match(registry, /chatSettingsDraft: ChatSettingsDraft \| null;/);
@@ -163,7 +164,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| \{ readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" \| "myBubbleColor" \| "otherBubbleColor"; readonly value: string \}/);
     assert.match(registry, /state\.activeView = "CHAT_SETTINGS"/);
     assert.match(registry, /validateChatSettingsPatch\(/);
-    assert.match(registry, /CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE/);
+    assert.match(flowExecutor, /CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE/);
+    assert.match(flowExecutor, /saveChatAppearanceSettings/);
     assert.match(registry, /CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE/);
     assert.match(registry, /scaffoldNoticeForChatSettingsAction/);
     assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, controller\)\)/);
