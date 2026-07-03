@@ -360,6 +360,7 @@ describe("FlowExecutor", () => {
     state.settingsOpen = true;
     state.chatSettingsDraft = {
       chatId: "chat:studio",
+      groupRulesText: "",
       backgroundImagePlaceholder: "local:background",
       backgroundColor: "#111111",
       myBubbleColor: "#222222",

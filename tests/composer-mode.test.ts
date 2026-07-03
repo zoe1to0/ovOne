@@ -164,6 +164,8 @@ describe("Composer mode state machine", () => {
     assert.equal(state.chatSettingsDraft?.backgroundColor, "#111111");
     assert.equal(state.chatSettingsDraft?.myBubbleColor, "#222222");
     assert.equal(state.chatSettingsDraft?.otherBubbleColor, "#333333");
+    registry.execute({ type: "UPDATE_GROUP_RULES_DRAFT", rulesText: "No spoilers" }, state);
+    assert.equal(state.chatSettingsDraft?.groupRulesText, "No spoilers");
 
     registry.execute({ type: "UPLOAD_CHAT_BACKGROUND_IMAGE" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "背景图片上传暂未开放");
@@ -173,6 +175,8 @@ describe("Composer mode state machine", () => {
     assert.equal(state.chatSettingsDraft?.noticeMessage, "移除群成员暂未开放");
     registry.execute({ type: "OPEN_GROUP_RULES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群规则暂未开放");
+    registry.execute({ type: "SAVE_GROUP_RULES" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "群规保存暂未开放");
     registry.execute({ type: "OPEN_GROUP_FILES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
     registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);

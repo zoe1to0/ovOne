@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-03: Group rules contract scaffold added
+
+Decision: Group Rules now has a pure contract and local Chat Settings scaffold for text-based group rules.
+
+Rules:
+
+- Group rules belong only to one group chat in the current world.
+- `GroupRulesPatch` may only contain `worldId`, `groupChatId`, and `rulesText`.
+- Empty `rulesText` is valid and means no extra group-level rules beyond world/contact settings.
+- Private chats, other group chats, other worlds, Reality/global settings, group members/files/messages/history/memory, contact preferences, world metadata, Global AI data, provider connections, and actual AI prompt behavior are outside this contract.
+- `UPDATE_GROUP_RULES_DRAFT` updates only local Chat Settings draft state.
+- `SAVE_GROUP_RULES` remains scaffold/no-op and shows `群规保存暂未开放`.
+
 ## 2026-07-03: v0.7 chat settings core milestone
 
 Decision: `v0.7-chat-settings-core` marks the Chat Settings core milestone.

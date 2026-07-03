@@ -95,7 +95,8 @@ UI event
 - Group chats, other group members, group history, and the AI's historical group messages must remain unless the user explicitly dissolves the group.
 - Chat Settings saves per-chat appearance fields through `SAVE_CHAT_SETTINGS` and Flow Executor.
 - Chat appearance save is scoped to `worldId + chatId` and persists only `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor` on the selected chat.
-- Background image upload remains scaffold/no-op; group add/remove member, group rules, and group files remain scaffold/no-op.
+- Group rules have a text-based contract and local draft scaffold for group chats only; saving group rules remains scaffold/no-op.
+- Background image upload remains scaffold/no-op; group add/remove member, group rules save, and group files remain scaffold/no-op.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
@@ -310,12 +311,14 @@ UI event
 | Plus button | `OPEN_ADD_MENU` | Opens add menu overlay. |
 | Chat menu button | `OPEN_CHAT_SETTINGS` | Opens `CHAT_SETTINGS` as a full page for the active private or group chat. |
 | Update chat settings draft | `UPDATE_CHAT_SETTINGS_DRAFT` | Updates local chat appearance draft values only. |
+| Update group rules draft | `UPDATE_GROUP_RULES_DRAFT` | Updates local group rules text inside `chatSettingsDraft` only. |
 | Cancel chat settings | `CANCEL_CHAT_SETTINGS` | Clears local chat settings draft and returns to the previous chat. |
 | Save chat settings | `SAVE_CHAT_SETTINGS` | Validates `ChatSettingsPatch`; Flow Executor persists only selected-chat appearance metadata, stays on `CHAT_SETTINGS`, and shows `已保存`. |
 | Upload chat background image | `UPLOAD_CHAT_BACKGROUND_IMAGE` | Scaffold/no-op; shows `背景图片上传暂未开放` and does not upload files. |
 | Open group add member scaffold | `OPEN_GROUP_ADD_MEMBER` | Scaffold/no-op on group chat settings page. |
 | Open group remove member scaffold | `OPEN_GROUP_REMOVE_MEMBER` | Scaffold/no-op on group chat settings page. |
-| Open group rules scaffold | `OPEN_GROUP_RULES` | Scaffold/no-op on group chat settings page. |
+| Open group rules scaffold | `OPEN_GROUP_RULES` | Legacy scaffold/no-op action retained for explicit routing; group settings now render a text draft directly. |
+| Save group rules scaffold | `SAVE_GROUP_RULES` | Scaffold/no-op; shows `群规保存暂未开放` and does not mutate group data or AI behavior. |
 | Open group files scaffold | `OPEN_GROUP_FILES` | Scaffold/no-op on group chat settings page. |
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
 | File button | `OPEN_FILE_PICKER` | Opens file picker overlay. |
@@ -370,6 +373,7 @@ These actions are named and routed but intentionally do not implement product be
 - `OPEN_GROUP_ADD_MEMBER`
 - `OPEN_GROUP_REMOVE_MEMBER`
 - `OPEN_GROUP_RULES`
+- `SAVE_GROUP_RULES`
 - `OPEN_GROUP_FILES`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`

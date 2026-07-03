@@ -205,7 +205,7 @@ UI action
 - Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
 - The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
 - `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local chat appearance draft state.
-- Group chat settings render group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and shared appearance controls.
+- Group chat settings render group members, add/remove member scaffolds, text-based group rules draft scaffold, group files scaffold, and shared appearance controls.
 - Private chat settings render only shared appearance controls.
 - Chat Settings save contract lives in `src/domain/chat-settings-contract.ts`.
 - `ChatSettingsPatch` may only contain `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
@@ -213,7 +213,12 @@ UI action
 - `SAVE_CHAT_SETTINGS` validates `ChatSettingsPatch`, then Flow Executor calls `shell.saveChatAppearanceSettings(...)` to persist only the selected chat's appearance metadata and stay on `CHAT_SETTINGS`.
 - Chat appearance settings are stored on the selected `WorldChatSession.appearance` and scoped by `worldId + chatId`.
 - `SAVE_CHAT_SETTINGS` must not mutate messages/history, group membership, group rules/files, contact preferences, world metadata/role metadata, global/provider data, or weather/time permission.
-- `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `OPEN_GROUP_RULES`, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions.
+- Group Rules contract lives in `src/domain/group-rules-contract.ts`.
+- `GroupRulesPatch` may only contain `worldId`, `groupChatId`, and `rulesText`.
+- `validateGroupRulesPatch(...)` requires the target chat to exist in the selected/current world and be a group chat; private chats are rejected.
+- `UPDATE_GROUP_RULES_DRAFT` updates local `chatSettingsDraft.groupRulesText` only.
+- `SAVE_GROUP_RULES` remains scaffold/no-op, shows `群规保存暂未开放`, and must not mutate group data or AI behavior.
+- `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `SAVE_GROUP_RULES`, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.
@@ -501,6 +506,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONFIRM_REMOVE_WORLD_MEMBER` without matching confirmation state | No runtime effect; remove requires explicit confirmation state. |
 | `SAVE_CHAT_SETTINGS` with a valid appearance patch | Calls `shell.saveChatAppearanceSettings(...)`, updates `state.view`, stays on `CHAT_SETTINGS`, keeps the selected chat id, and shows `已保存`. |
 | `SAVE_CHAT_SETTINGS` with an invalid appearance patch | No chat mutation; local draft keeps an invalid patch notice. |
+| `SAVE_GROUP_RULES` | No runtime effect; updates local chat settings notice with `群规保存暂未开放`. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 

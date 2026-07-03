@@ -45,6 +45,18 @@ export type {
   ChatSettingsValidationInput
 } from "./chat-settings-contract.js";
 export {
+  GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE,
+  canEditGroupRules,
+  getGroupRulesWarnings,
+  validateGroupRulesPatch
+} from "./group-rules-contract.js";
+export type {
+  GroupRulesForbiddenField,
+  GroupRulesPatch,
+  GroupRulesPatchValidation,
+  GroupRulesValidationInput
+} from "./group-rules-contract.js";
+export {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
   canDeleteFriendInCurrentWorld,

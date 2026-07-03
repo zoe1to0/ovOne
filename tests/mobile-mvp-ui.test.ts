@@ -162,6 +162,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /chatSettingsDraft: ChatSettingsDraft \| null;/);
     assert.match(registry, /\| \{ readonly type: "OPEN_CHAT_SETTINGS" \}/);
     assert.match(registry, /\| \{ readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" \| "myBubbleColor" \| "otherBubbleColor"; readonly value: string \}/);
+    assert.match(registry, /\| \{ readonly type: "UPDATE_GROUP_RULES_DRAFT"; readonly rulesText: string \}/);
+    assert.match(registry, /\| \{ readonly type: "SAVE_GROUP_RULES" \}/);
     assert.match(registry, /state\.activeView = "CHAT_SETTINGS"/);
     assert.match(registry, /validateChatSettingsPatch\(/);
     assert.match(flowExecutor, /CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE/);
@@ -171,7 +173,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, controller\)\)/);
     assert.match(adapter, /createMenuButton\("添加群成员", controller, \{ type: "OPEN_GROUP_ADD_MEMBER" \}\)/);
     assert.match(adapter, /createMenuButton\("移除群成员", controller, \{ type: "OPEN_GROUP_REMOVE_MEMBER" \}\)/);
-    assert.match(adapter, /createDraftStage\("群规则", createScaffoldAction\("群规则暂未开放", controller, \{ type: "OPEN_GROUP_RULES" \}\)\)/);
+    assert.match(adapter, /createDraftStage\("群规则", createGroupRulesSettings\(draft, controller\)\)/);
+    assert.match(adapter, /rules\.name = "groupRulesText"/);
+    assert.match(adapter, /createMenuButton\("保存群规", controller, \{ type: "SAVE_GROUP_RULES" \}\)/);
     assert.match(adapter, /createDraftStage\("群文件", createScaffoldAction\("群文件暂未开放", controller, \{ type: "OPEN_GROUP_FILES" \}\)\)/);
     assert.match(adapter, /content\.append\(createDraftStage\("当前聊天设置", createChatAppearanceSettings\(draft, controller\)\)\)/);
     assert.match(adapter, /createMenuButton\("上传聊天背景图片", controller, \{ type: "UPLOAD_CHAT_BACKGROUND_IMAGE" \}\)/);
@@ -490,7 +494,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("MENU_ACTION"), false);
     assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
-    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 11);
+    assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 12);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*shell\./);
   });

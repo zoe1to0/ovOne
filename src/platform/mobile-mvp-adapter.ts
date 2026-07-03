@@ -823,6 +823,7 @@ function createChatSettingsView(
   const group = chat ? snapshot.groups.find((candidate) => candidate.id === chat.id) ?? null : null;
   const draft = state.chatSettingsDraft ?? {
     chatId: chat?.id ?? "",
+    groupRulesText: "",
     backgroundImagePlaceholder: "",
     backgroundColor: "#ffffff",
     myBubbleColor: "#dcecff",
@@ -844,7 +845,7 @@ function createChatSettingsView(
   if (group) {
     content.append(
       createDraftStage("群成员", createGroupMembersSettings(snapshot, group, controller)),
-      createDraftStage("群规则", createScaffoldAction("群规则暂未开放", controller, { type: "OPEN_GROUP_RULES" })),
+      createDraftStage("群规则", createGroupRulesSettings(draft, controller)),
       createDraftStage("群文件", createScaffoldAction("群文件暂未开放", controller, { type: "OPEN_GROUP_FILES" }))
     );
   }
@@ -887,6 +888,25 @@ function createScaffoldAction(label: string, controller: InteractionController, 
   const section = document.createElement("section");
   section.className = "mvp-create-world-section";
   section.append(createMenuButton(label, controller, action));
+  return section;
+}
+
+function createGroupRulesSettings(
+  draft: NonNullable<SemanticMobileState["chatSettingsDraft"]>,
+  controller: InteractionController
+): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-create-world-section";
+  const rules = document.createElement("textarea");
+  rules.name = "groupRulesText";
+  rules.placeholder = "填写群规";
+  rules.value = draft.groupRulesText;
+  bindGroupRulesDraftInput(rules, controller);
+  section.append(
+    rules,
+    createDraftNote("留空表示不添加额外群级规则"),
+    createMenuButton("保存群规", controller, { type: "SAVE_GROUP_RULES" })
+  );
   return section;
 }
 
@@ -1835,6 +1855,15 @@ function bindChatSettingsDraftInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_CHAT_SETTINGS_DRAFT", field, value: input.value });
+  });
+}
+
+function bindGroupRulesDraftInput(
+  input: HTMLTextAreaElement,
+  controller: InteractionController
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_GROUP_RULES_DRAFT", rulesText: input.value });
   });
 }
 

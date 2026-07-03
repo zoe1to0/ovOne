@@ -1,6 +1,7 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE,
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
@@ -136,6 +137,7 @@ export type CreateGroupDraft = Readonly<{
 }>;
 export type ChatSettingsDraft = Readonly<{
   readonly chatId: string;
+  readonly groupRulesText: string;
   readonly backgroundImagePlaceholder: string;
   readonly backgroundColor: string;
   readonly myBubbleColor: string;
@@ -167,8 +169,10 @@ export type InteractionAction =
   | { readonly type: "NAV_BACK" }
   | { readonly type: "OPEN_CHAT_SETTINGS" }
   | { readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" | "myBubbleColor" | "otherBubbleColor"; readonly value: string }
+  | { readonly type: "UPDATE_GROUP_RULES_DRAFT"; readonly rulesText: string }
   | { readonly type: "CANCEL_CHAT_SETTINGS" }
   | { readonly type: "SAVE_CHAT_SETTINGS" }
+  | { readonly type: "SAVE_GROUP_RULES" }
   | { readonly type: "OPEN_GROUP_ADD_MEMBER" }
   | { readonly type: "OPEN_GROUP_REMOVE_MEMBER" }
   | { readonly type: "OPEN_GROUP_RULES" }
@@ -272,8 +276,10 @@ type DisabledInteractionAction = Exclude<
   | "NAV_BACK"
   | "OPEN_CHAT_SETTINGS"
   | "UPDATE_CHAT_SETTINGS_DRAFT"
+  | "UPDATE_GROUP_RULES_DRAFT"
   | "CANCEL_CHAT_SETTINGS"
   | "SAVE_CHAT_SETTINGS"
+  | "SAVE_GROUP_RULES"
   | "OPEN_GROUP_ADD_MEMBER"
   | "OPEN_GROUP_REMOVE_MEMBER"
   | "OPEN_GROUP_RULES"
@@ -499,6 +505,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
   const createEmptyChatSettingsDraft = (chatId: string): ChatSettingsDraft => Object.freeze({
     chatId,
+    groupRulesText: "",
     backgroundImagePlaceholder: "",
     backgroundColor: "#ffffff",
     myBubbleColor: "#dcecff",
@@ -667,6 +674,17 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         });
         return RENDER;
 
+      case "UPDATE_GROUP_RULES_DRAFT":
+        if (!state.chatSettingsDraft) {
+          return RENDER;
+        }
+        state.chatSettingsDraft = Object.freeze({
+          ...state.chatSettingsDraft,
+          groupRulesText: action.rulesText,
+          noticeMessage: null
+        });
+        return RENDER;
+
       case "CANCEL_CHAT_SETTINGS":
         state.activeView = "CHAT_VIEW";
         state.activeChatId = state.selectedChatIdForSettings;
@@ -684,6 +702,16 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
             noticeMessage: validation.valid ? null : "ChatSettings: invalid appearance patch."
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "SAVE_GROUP_RULES":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE
           });
         }
         closeOverlay(state);
