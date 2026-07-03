@@ -308,7 +308,7 @@ UI event
 | Chat menu button | `OPEN_CHAT_SETTINGS` | Opens `CHAT_SETTINGS` as a full page for the active private or group chat. |
 | Update chat settings draft | `UPDATE_CHAT_SETTINGS_DRAFT` | Updates local chat appearance draft values only. |
 | Cancel chat settings | `CANCEL_CHAT_SETTINGS` | Clears local chat settings draft and returns to the previous chat. |
-| Save chat settings | `SAVE_CHAT_SETTINGS` | Scaffold/no-op; shows `保存暂未开放` and does not mutate chat data. |
+| Save chat settings | `SAVE_CHAT_SETTINGS` | Validates `ChatSettingsPatch`, then remains scaffold/no-op; shows `保存暂未开放` for valid appearance patches and does not mutate chat data. |
 | Upload chat background image | `UPLOAD_CHAT_BACKGROUND_IMAGE` | Scaffold/no-op; shows `背景图片上传暂未开放` and does not upload files. |
 | Open group add member scaffold | `OPEN_GROUP_ADD_MEMBER` | Scaffold/no-op on group chat settings page. |
 | Open group remove member scaffold | `OPEN_GROUP_REMOVE_MEMBER` | Scaffold/no-op on group chat settings page. |

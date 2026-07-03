@@ -123,6 +123,32 @@ describe("Composer mode state machine", () => {
   it("opens chat settings as a route and keeps settings actions scaffolded locally", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
+    const originalChat = Object.freeze({
+      id: "chat:friend",
+      worldId: state.currentWorldId,
+      title: "Friend",
+      messages: Object.freeze([
+        Object.freeze({
+          id: "message:one",
+          authorActorId: "ai:friend",
+          text: "hello",
+          createdAt: 1
+        })
+      ])
+    });
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          chatState: {
+            activeChatId: "chat:friend",
+            chats: new Map([["chat:friend", originalChat]])
+          }
+        }
+      }
+    };
     state.activeView = "CHAT_VIEW";
     state.activeChatId = "chat:friend";
 
@@ -151,6 +177,8 @@ describe("Composer mode state machine", () => {
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
     registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "保存暂未开放");
+    assert.equal(state.view.product.snapshot.chatState.chats.get("chat:friend"), originalChat);
+    assert.equal(state.view.product.snapshot.chatState.chats.get("chat:friend")?.messages.length, 1);
 
     registry.execute({ type: "CANCEL_CHAT_SETTINGS" }, state);
     assert.equal(state.activeView, "CHAT_VIEW");

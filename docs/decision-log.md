@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-03: Chat settings save contract added
+
+Decision: Chat Settings now has a pure save contract for future per-chat appearance persistence.
+
+Rules:
+
+- Allowed future patch fields are `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
+- The patch must target a chat that exists in the selected/current world.
+- Empty appearance fields are allowed and mean default appearance.
+- The contract forbids chat messages/history, group membership, group rules, group files, contact/world/global/provider settings, and weather/time permission mutation.
+- `SAVE_CHAT_SETTINGS` validates the contract but remains scaffold/no-op; no runtime mutation is enabled yet.
+
 ## 2026-07-03: Chat settings page scaffold added
 
 Decision: Chat `...` settings now opens a full `CHAT_SETTINGS` route/page for private and group chats.

@@ -31,6 +31,19 @@ export type {
   WorldBootstrapRoleMode
 } from "./world-bootstrap-planner.js";
 export {
+  CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE,
+  canEditChatSettings,
+  getChatSettingsWarnings,
+  validateChatSettingsPatch
+} from "./chat-settings-contract.js";
+export type {
+  ChatSettingsForbiddenField,
+  ChatSettingsPatch,
+  ChatSettingsPatchValidation,
+  ChatSettingsValidationInput
+} from "./chat-settings-contract.js";
+export {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
   canDeleteFriendInCurrentWorld,

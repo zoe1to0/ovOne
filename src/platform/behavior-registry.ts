@@ -1,8 +1,11 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
+  CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE,
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
+  validateChatSettingsPatch,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
   validateLinkedAIDisconnectCommand,
@@ -677,7 +680,12 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         if (state.chatSettingsDraft) {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
-            noticeMessage: "保存暂未开放"
+          noticeMessage: validateChatSettingsPatch(
+            chatSettingsPatchFromDraft(state.chatSettingsDraft, state.currentWorldId),
+            createChatSettingsContractInput(state)
+          ).valid
+            ? CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE
+            : "ChatSettings: invalid appearance patch."
           });
         }
         closeOverlay(state);
@@ -687,8 +695,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         if (state.chatSettingsDraft) {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
-            backgroundImagePlaceholder: "背景图片上传暂未开放",
-            noticeMessage: "背景图片上传暂未开放"
+            backgroundImagePlaceholder: CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+            noticeMessage: CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE
           });
         }
         closeOverlay(state);
@@ -1492,6 +1500,24 @@ export function contactDetailPreferencePatchFromDraft(draft: ContactDetailDraft)
     answerMode: draft.answerMode,
     chatTone: draft.chatTone,
     emojiPermission: draft.emojiPermission
+  };
+}
+
+export function chatSettingsPatchFromDraft(draft: ChatSettingsDraft, worldId: WorldId) {
+  return {
+    worldId,
+    chatId: draft.chatId,
+    backgroundImageRef: draft.backgroundImagePlaceholder,
+    backgroundColor: draft.backgroundColor,
+    myBubbleColor: draft.myBubbleColor,
+    otherBubbleColor: draft.otherBubbleColor
+  };
+}
+
+export function createChatSettingsContractInput(state: SemanticMobileState) {
+  return {
+    worldId: state.currentWorldId,
+    chatIds: [...state.view.product.snapshot.chatState.chats.keys()]
   };
 }
 

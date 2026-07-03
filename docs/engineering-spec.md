@@ -207,6 +207,9 @@ UI action
 - `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local scaffold state only.
 - Group chat settings render group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and shared appearance controls.
 - Private chat settings render only shared appearance controls.
+- Chat Settings save contract lives in `src/domain/chat-settings-contract.ts`.
+- `ChatSettingsPatch` may only contain `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
+- `validateChatSettingsPatch(...)` requires the chat to exist in the selected/current world and rejects fields outside appearance settings.
 - `SAVE_CHAT_SETTINGS`, `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `OPEN_GROUP_RULES`, and `OPEN_GROUP_FILES` are UI scaffold/no-op actions and must not mutate chat data, group membership, messages/history, files, rules, or persisted appearance data.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.

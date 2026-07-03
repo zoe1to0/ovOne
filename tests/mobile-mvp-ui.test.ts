@@ -162,8 +162,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /\| \{ readonly type: "OPEN_CHAT_SETTINGS" \}/);
     assert.match(registry, /\| \{ readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" \| "myBubbleColor" \| "otherBubbleColor"; readonly value: string \}/);
     assert.match(registry, /state\.activeView = "CHAT_SETTINGS"/);
-    assert.match(registry, /noticeMessage: "保存暂未开放"/);
-    assert.match(registry, /noticeMessage: "背景图片上传暂未开放"/);
+    assert.match(registry, /validateChatSettingsPatch\(/);
+    assert.match(registry, /CHAT_SETTINGS_SAVE_UNAVAILABLE_MESSAGE/);
+    assert.match(registry, /CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE/);
     assert.match(registry, /scaffoldNoticeForChatSettingsAction/);
     assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, controller\)\)/);
     assert.match(adapter, /createMenuButton\("添加群成员", controller, \{ type: "OPEN_GROUP_ADD_MEMBER" \}\)/);
