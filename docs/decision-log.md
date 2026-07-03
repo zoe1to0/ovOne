@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-03: Disabled Linked AI disconnect atomic executor added
+
+Decision: Linked AI disconnect now has a disabled atomic executor scaffold for future execution simulation, but real disconnect remains unavailable.
+
+Rules:
+
+- The atomic executor scaffold lives in `src/domain/linked-ai-disconnect-atomic-executor.ts`.
+- Mode `disabled` returns disabled with no operations and no mutation.
+- Mode `simulate` walks preflight operations and records rollback steps without mutating runtime data.
+- Mode `execute` is rejected/unavailable.
+- Simulation preserves group history, keeps group membership removal deferred, keeps provider connection mutation deferred, and must not mutate `GlobalAILink`, provider connections, worlds, contacts, chats, memory, or groups.
+
 ## 2026-07-03: Linked AI disconnect execution preflight added
 
 Decision: Future real Linked AI disconnect now has a deterministic preflight operation order, but real execution remains disabled.

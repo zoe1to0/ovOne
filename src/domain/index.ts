@@ -210,3 +210,15 @@ export type {
   LinkedAIDisconnectPreflightStatus,
   LinkedAIDisconnectPreflightValidation
 } from "./linked-ai-disconnect-preflight.js";
+export {
+  simulateLinkedAIDisconnectExecution,
+  validateAtomicExecutionResult
+} from "./linked-ai-disconnect-atomic-executor.js";
+export type {
+  LinkedAIDisconnectAtomicExecutionMode,
+  LinkedAIDisconnectAtomicExecutionResult,
+  LinkedAIDisconnectAtomicExecutionStatus,
+  LinkedAIDisconnectAtomicExecutionValidation,
+  LinkedAIDisconnectAtomicRollbackStep,
+  LinkedAIDisconnectAtomicSimulatedOperation
+} from "./linked-ai-disconnect-atomic-executor.js";

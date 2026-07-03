@@ -122,6 +122,9 @@ UI event
 - Linked AI disconnect preflight is defined in `src/domain/linked-ai-disconnect-preflight.ts`.
 - Preflight validates the future atomic order: validate command -> create snapshot -> create rollback plan -> mark selected Global AI Link disconnecting -> remove selected-AI world contacts -> remove selected-AI private chats -> remove selected-AI memory scopes -> preserve group history -> defer selected-AI group membership removal -> defer provider connection mutation.
 - Preflight is deterministic, read-only, and does not execute any disconnect mutation.
+- Disabled atomic executor scaffold is defined in `src/domain/linked-ai-disconnect-atomic-executor.ts`.
+- Atomic executor `disabled` mode records no operations, `simulate` mode records ordered preflight operations and rollback steps, and `execute` mode is rejected/unavailable.
+- Atomic simulation is read-only and must preserve group history while keeping group membership and provider connection mutation deferred.
 - Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.

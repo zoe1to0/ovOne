@@ -173,6 +173,9 @@ UI action
 - Linked AI disconnect preflight lives in `src/domain/linked-ai-disconnect-preflight.ts`.
 - `LinkedAIDisconnectPreflightPlan` is deterministic and read-only; it validates future execution order without mutating runtime data.
 - Preflight operation order is: validate command, create snapshot, create rollback plan, mark selected Global AI Link disconnecting, remove selected-AI world contacts, remove selected-AI private chats, remove selected-AI memory scopes, preserve group history, defer selected-AI group membership removal, defer provider connection mutation.
+- Disabled Linked AI disconnect atomic executor scaffold lives in `src/domain/linked-ai-disconnect-atomic-executor.ts`.
+- Atomic executor mode `disabled` returns disabled with no operations; mode `simulate` walks preflight operations and rollback steps without mutating runtime data; mode `execute` is rejected/unavailable.
+- Atomic simulation preserves group history, keeps group membership removal deferred, keeps provider connection mutation deferred, and must not mutate `GlobalAILink`, provider connections, worlds, contacts, chats, memory, or groups.
 - Guarded Linked AI disconnect confirmation validates preflight readiness but still records only dry-run state.
 - `CONFIRM_LINKED_AI_DISCONNECT` routes through the guarded executor scaffold but remains no-runtime-mutation; it does not run through Flow Executor yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
