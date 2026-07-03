@@ -1,5 +1,22 @@
 # ovOne Decision Log
 
+## 2026-07-03: v0.6 create group core milestone
+
+Decision: `v0.6-create-group-core` marks the Create Group core milestone.
+
+Scope:
+
+- Create Group draft route.
+- Current-world-only member selection.
+- At least one AI member required.
+- Blank group names default to `群聊`.
+- Current-world group chat creation.
+- Placeholder group memory metadata.
+- Auto-enter newly created group chat.
+- Chat List group title without member count.
+- Chat View header with member count.
+- No group rules, group files, post-creation member management, or initial AI messages yet.
+
 ## 2026-07-03: Group chat title display aligned
 
 Decision: Group chat display now separates chat-list title from chat-view header title.
