@@ -170,6 +170,10 @@ UI action
 - Execution snapshots explicitly mark worlds, other AI, group chats, group messages, provider connection, weather/time permission, and user profile as non-mutated resources.
 - Group data in the execution snapshot is membership-only: group chats, group messages, and the removed AI's historical group messages must be preserved.
 - `LinkedAIDisconnectRollbackPlan` is generated from the execution snapshot and documents what future real execution would need to restore if it fails; rollback execution is not implemented yet.
+- Linked AI disconnect preflight lives in `src/domain/linked-ai-disconnect-preflight.ts`.
+- `LinkedAIDisconnectPreflightPlan` is deterministic and read-only; it validates future execution order without mutating runtime data.
+- Preflight operation order is: validate command, create snapshot, create rollback plan, mark selected Global AI Link disconnecting, remove selected-AI world contacts, remove selected-AI private chats, remove selected-AI memory scopes, preserve group history, defer selected-AI group membership removal, defer provider connection mutation.
+- Guarded Linked AI disconnect confirmation validates preflight readiness but still records only dry-run state.
 - `CONFIRM_LINKED_AI_DISCONNECT` routes through the guarded executor scaffold but remains no-runtime-mutation; it does not run through Flow Executor yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.

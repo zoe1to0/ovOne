@@ -119,6 +119,9 @@ UI event
 - `LinkedAIDisconnectExecutionSnapshot` captures the target Global AI Link plus selected-AI world contacts, private chats, memory scope ids, and future group-membership removals before any future mutation can run.
 - The snapshot contract is read-only and explicitly preserves worlds, other AI, group chats, group messages, provider connection, weather/time permission, and user profile.
 - `LinkedAIDisconnectRollbackPlan` is generated from the snapshot as a future restoration design only; rollback execution is not implemented.
+- Linked AI disconnect preflight is defined in `src/domain/linked-ai-disconnect-preflight.ts`.
+- Preflight validates the future atomic order: validate command -> create snapshot -> create rollback plan -> mark selected Global AI Link disconnecting -> remove selected-AI world contacts -> remove selected-AI private chats -> remove selected-AI memory scopes -> preserve group history -> defer selected-AI group membership removal -> defer provider connection mutation.
+- Preflight is deterministic, read-only, and does not execute any disconnect mutation.
 - Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.

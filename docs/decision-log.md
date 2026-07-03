@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-03: Linked AI disconnect execution preflight added
+
+Decision: Future real Linked AI disconnect now has a deterministic preflight operation order, but real execution remains disabled.
+
+Rules:
+
+- The preflight contract lives in `src/domain/linked-ai-disconnect-preflight.ts`.
+- Preflight validates command, snapshot, rollback plan, and future operation ordering before any future mutation can run.
+- Future operation order is validate command, create snapshot, create rollback plan, mark selected Global AI Link disconnecting, remove selected-AI world contacts, remove selected-AI private chats, remove selected-AI memory scopes, preserve group history, defer selected-AI group membership removal, and defer provider connection mutation.
+- Preflight is read-only and performs no runtime mutation.
+- Guarded Linked AI disconnect confirmation validates preflight readiness but remains dry-run only.
+
 ## 2026-07-03: Linked AI disconnect execution snapshot contract added
 
 Decision: Real Linked AI disconnect remains disabled, but future execution now has a read-only execution snapshot and rollback contract.

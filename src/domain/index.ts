@@ -198,3 +198,15 @@ export type {
   LinkedAIDisconnectRollbackPlan,
   LinkedAIDisconnectRollbackPlanStatus
 } from "./linked-ai-disconnect-execution-snapshot.js";
+export {
+  createLinkedAIDisconnectPreflightPlan,
+  validateLinkedAIDisconnectPreflightPlan
+} from "./linked-ai-disconnect-preflight.js";
+export type {
+  LinkedAIDisconnectPreflightOperation,
+  LinkedAIDisconnectPreflightOperationStatus,
+  LinkedAIDisconnectPreflightOperationType,
+  LinkedAIDisconnectPreflightPlan,
+  LinkedAIDisconnectPreflightStatus,
+  LinkedAIDisconnectPreflightValidation
+} from "./linked-ai-disconnect-preflight.js";

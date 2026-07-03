@@ -2,6 +2,10 @@ import {
   validateLinkedAIDisconnectExecutionCommand,
   validateLinkedAIDisconnectExecutionPlan
 } from "./linked-ai-disconnect-execution-contract.js";
+import {
+  createLinkedAIDisconnectPreflightPlan,
+  validateLinkedAIDisconnectPreflightPlan
+} from "./linked-ai-disconnect-preflight.js";
 import type { LinkedAIDisconnectPreviewViewModel } from "./linked-ai-disconnect-preview.js";
 import {
   validateLinkedAIDisconnectCommand,
@@ -69,6 +73,14 @@ export function guardLinkedAIDisconnectExecution(
   );
   if (!executionPlanValidation.valid) {
     return guardFailed(executionPlanValidation.error);
+  }
+  const preflightPlan = createLinkedAIDisconnectPreflightPlan(
+    input.confirmation.preview.executionPlan,
+    input.snapshot
+  );
+  const preflightValidation = validateLinkedAIDisconnectPreflightPlan(preflightPlan, input.snapshot);
+  if (!preflightValidation.valid) {
+    return guardFailed(preflightValidation.error);
   }
   return Object.freeze({
     status: "dry-run-confirmed",
