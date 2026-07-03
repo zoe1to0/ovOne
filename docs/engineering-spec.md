@@ -199,6 +199,8 @@ UI action
 - Add-member execution does not switch `currentWorldId`, does not mutate Reality, does not mutate other worlds, does not mutate existing contacts/chats/memory, does not mutate `GlobalAIModel` or `GlobalAILink`, does not create group chats, and does not trigger initial messages.
 - Create Group execution creates only a current-world `WorldGroup`, empty group `WorldChat`, and placeholder group memory metadata from selected current-world AI contacts.
 - Create Group can run in Reality or custom worlds, enters the new group chat, and does not generate initial AI messages.
+- Create Group defaults blank group names to `群聊`.
+- Chat List uses plain group title only; Chat View header uses `chatHeaderTitle(...)` to display `群名称（x）`, where `x = 1 + selected AI member count`.
 - Create Group does not support post-creation member management, group rules, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.

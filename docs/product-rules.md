@@ -34,6 +34,8 @@
 - Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero bootstrap groups. No real text generation or automatic group creation is implemented yet.
 - Create Group creates a current-world group chat from selected current-world AI contacts in Reality or custom worlds.
 - Create Group requires at least one AI member, creates placeholder group memory metadata, opens the new group chat, and does not generate initial AI messages.
+- Empty Create Group names default to `群聊`.
+- Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
 - Create Group does not support post-creation member management, group rules, group files, cross-world members, or real memory engine behavior yet.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.

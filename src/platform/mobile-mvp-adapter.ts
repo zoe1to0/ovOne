@@ -287,7 +287,7 @@ function createChatView(
 ): HTMLElement {
   const isOvoChat = isOvoChatId(state.activeChatId);
   const chat = isOvoChat ? null : chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
-  const title = isOvoChat ? "ovO" : chat ? chatTitle(snapshot, chat) : "聊天";
+  const title = isOvoChat ? "ovO" : chat ? chatHeaderTitle(snapshot, chat) : "聊天";
 
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-view";
@@ -1931,6 +1931,13 @@ function chatTitle(snapshot: WorldSnapshot, chat: WorldChatSession | null): stri
   return assistant ? contactDisplayName(assistant) : chat?.title ?? "聊天";
 }
 
+function chatHeaderTitle(snapshot: WorldSnapshot, chat: WorldChatSession | null): string {
+  if (!isGroupChat(snapshot, chat)) {
+    return chatTitle(snapshot, chat);
+  }
+  return `${chatTitle(snapshot, chat)}（${groupMemberCount(snapshot, chat)}）`;
+}
+
 function chatPreview(chat: WorldChatSession): string {
   return chat.messages.at(-1)?.text ?? "开始聊天";
 }
@@ -1996,6 +2003,11 @@ function contactForChat(snapshot: WorldSnapshot, chat: WorldChatSession | null):
 
 function isGroupChat(snapshot: WorldSnapshot, chat: WorldChatSession | null): boolean {
   return !!chat && snapshot.groups.some((group) => group.id === chat.id);
+}
+
+function groupMemberCount(snapshot: WorldSnapshot, chat: WorldChatSession | null): number {
+  const group = chat ? snapshot.groups.find((candidate) => candidate.id === chat.id) : null;
+  return group ? group.actorIds.length + 1 : 0;
 }
 
 function createChatMeta(snapshot: WorldSnapshot, chat: WorldChatSession): HTMLElement {

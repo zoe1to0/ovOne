@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-07-03: Group chat title display aligned
+
+Decision: Group chat display now separates chat-list title from chat-view header title.
+
+Rules:
+
+- Empty Create Group names default to `群聊`.
+- Chat List shows only the group name and never appends member count.
+- Chat View header shows `群名称（x）`.
+- The member count includes the user plus selected AI members.
+
 ## 2026-07-03: Create Group core scaffold added
 
 Decision: Create Group now creates a current-world group chat from selected current-world AI contacts.

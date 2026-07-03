@@ -120,6 +120,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
+    assert.doesNotMatch(adapter, /createChatListText\(chatHeaderTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
     assert.match(registry, /openOverlay\(state, "ovo-world-menu"\)/);
     assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
@@ -143,6 +144,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /item\.className = mine \? "mvp-message-row is-mine" : "mvp-message-row"/);
     assert.match(adapter, /createAvatarWithStatus\(createUserAvatar\(\), true\)/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
+    assert.match(adapter, /const title = isOvoChat \? "ovO" : chat \? chatHeaderTitle\(snapshot, chat\) : "聊天"/);
+    assert.match(adapter, /function chatHeaderTitle\(snapshot: WorldSnapshot, chat: WorldChatSession \| null\): string \{[\s\S]*return `\$\{chatTitle\(snapshot, chat\)\}（\$\{groupMemberCount\(snapshot, chat\)\}）`;/);
+    assert.match(adapter, /function groupMemberCount\(snapshot: WorldSnapshot, chat: WorldChatSession \| null\): number \{[\s\S]*return group \? group\.actorIds\.length \+ 1 : 0;/);
     assert.match(html, /\.mvp-message-stream \{[\s\S]*grid-auto-flow: row;[\s\S]*overflow-y: auto;[\s\S]*overscroll-behavior: contain;/);
     assert.match(html, /\.mvp-composer \{[\s\S]*position: fixed;[\s\S]*bottom: 64px;/);
     assert.match(html, /\.mvp-avatar-wrap \.mvp-presence-dot \{[\s\S]*position: absolute;/);

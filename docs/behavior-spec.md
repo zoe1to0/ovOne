@@ -382,6 +382,8 @@ These actions are named and routed but intentionally do not implement product be
 - Emoji and file picker panel items remain decorative after the overlay opens.
 - ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, future group member removal, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create Group creates manual current-world group chats from selected current-world AI contacts, creates placeholder group memory metadata, opens the new group chat, and generates no initial AI messages.
+- Create Group defaults an empty group name to `群聊`.
+- Chat List renders group chats with group name only; Chat View header renders group name plus user-inclusive member count, e.g. `群聊（3）`.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.
