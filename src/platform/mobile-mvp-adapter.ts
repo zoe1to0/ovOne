@@ -66,6 +66,7 @@ export function mountChatShell(
     composerMode: resolveDefaultComposerMode("normal"),
     inputDraft: "",
     settingsOpen: false,
+    createGroupDraft: null,
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
@@ -197,6 +198,8 @@ function renderShellPage(
       return createContactDetailView(snapshot, state, controller);
     case "ME":
       return createMeView(snapshot, state, controller);
+    case "CREATE_GROUP_DRAFT":
+      return createCreateGroupDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DRAFT":
       return createCreateWorldDraftView(snapshot, state, controller);
     case "CREATE_WORLD_DETAIL_EDIT":
@@ -738,10 +741,73 @@ function createAddMenu(controller: InteractionController): HTMLElement {
   menu.className = "mvp-overlay-panel mvp-add-menu";
   menu.append(
     createMenuButton("添加 AI 好友", controller, { type: "CREATE_AI_FRIEND" }),
-    createMenuButton("创建群聊", controller, { type: "CREATE_GROUP" }),
+    createMenuButton("创建群聊", controller, { type: "OPEN_CREATE_GROUP_DRAFT" }),
     createMenuButton("创建世界", controller, { type: "OPEN_CREATE_WORLD_DRAFT" })
   );
   return menu;
+}
+
+function createCreateGroupDraftView(
+  snapshot: WorldSnapshot,
+  state: SemanticMobileState,
+  controller: InteractionController
+): HTMLElement {
+  const draft = state.createGroupDraft ?? {
+    groupName: "",
+    selectedWorldContactIds: [],
+    validationError: null,
+    fieldErrors: {
+      selectedMembers: null
+    },
+    noticeMessage: null
+  };
+  const screen = document.createElement("section");
+  screen.className = "mvp-screen mvp-create-group-draft";
+
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "mvp-back-button";
+  back.textContent = "聊天";
+  bindControllerAction(back, controller, { type: "NAV_BACK" });
+
+  const name = document.createElement("input");
+  name.name = "groupName";
+  name.placeholder = "群聊名称";
+  name.value = draft.groupName;
+  bindCreateGroupDraftInput(name, controller);
+
+  const candidates = document.createElement("section");
+  candidates.className = "mvp-create-world-section";
+  for (const contact of contactsFromSnapshot(snapshot, state.currentWorldId)) {
+    candidates.append(createDraftOption(contactDisplayName(contact), draft.selectedWorldContactIds.includes(contact.actorId), controller, {
+      type: "TOGGLE_CREATE_GROUP_MEMBER",
+      worldContactId: contact.actorId
+    }));
+  }
+  if (candidates.childElementCount === 0) {
+    candidates.append(createDraftNote("当前没有可加入群聊的 AI 成员"));
+  }
+  if (draft.fieldErrors.selectedMembers) {
+    candidates.append(createValidationNote(draft.fieldErrors.selectedMembers));
+  }
+  if (draft.noticeMessage) {
+    candidates.append(createDraftNote(draft.noticeMessage));
+  }
+
+  const actions = document.createElement("section");
+  actions.className = "mvp-create-world-actions";
+  actions.append(
+    createMenuButton("取消", controller, { type: "CANCEL_CREATE_GROUP" }),
+    createMenuButton("创建群聊", controller, { type: "CONFIRM_CREATE_GROUP" })
+  );
+
+  screen.append(
+    createScreenHeader("创建群聊", back),
+    createDraftStage("群聊名称", name),
+    createDraftStage("选择 AI 成员", candidates),
+    actions
+  );
+  return screen;
 }
 
 function createCreateWorldDraftView(
@@ -1637,6 +1703,15 @@ function bindCreateWorldDraftInput(
   });
 }
 
+function bindCreateGroupDraftInput(
+  input: HTMLInputElement,
+  controller: InteractionController
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_CREATE_GROUP_DRAFT", field: "groupName", value: input.value });
+  });
+}
+
 function bindCreateWorldDetailInput(
   input: HTMLInputElement | HTMLTextAreaElement,
   controller: InteractionController,
@@ -1849,6 +1924,9 @@ function isOvoChatId(chatId: string | null): boolean {
 }
 
 function chatTitle(snapshot: WorldSnapshot, chat: WorldChatSession | null): string {
+  if (isGroupChat(snapshot, chat)) {
+    return chat?.title ?? "群聊";
+  }
   const assistant = contactForChat(snapshot, chat);
   return assistant ? contactDisplayName(assistant) : chat?.title ?? "聊天";
 }
@@ -1906,11 +1984,18 @@ function modelNameForContact(contact: WorldContact): string {
 }
 
 function contactForChat(snapshot: WorldSnapshot, chat: WorldChatSession | null): WorldContact | null {
+  if (isGroupChat(snapshot, chat)) {
+    return null;
+  }
   const contacts = contactsFromSnapshot(snapshot);
   if (!chat) {
     return contacts[0] ?? null;
   }
   return contacts.find((contact) => chat.title.includes(contact.displayName) || chat.id.includes(contact.actorId)) ?? contacts[0] ?? null;
+}
+
+function isGroupChat(snapshot: WorldSnapshot, chat: WorldChatSession | null): boolean {
+  return !!chat && snapshot.groups.some((group) => group.id === chat.id);
 }
 
 function createChatMeta(snapshot: WorldSnapshot, chat: WorldChatSession): HTMLElement {

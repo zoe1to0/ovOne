@@ -124,6 +124,7 @@ export function createPersistentMinimalUiShell(
     deleteFriend: (command) => withAutosave(shell.deleteFriend(command)),
     addWorldMember: (command) => withAutosave(shell.addWorldMember(command)),
     removeWorldMember: (command) => withAutosave(shell.removeWorldMember(command)),
+    createGroupChat: (input) => withAutosave(shell.createGroupChat(input)),
     sendMessage: (text) => withAutosave(shell.sendMessage(text)),
     snapshot: shell.snapshot,
     view: shell.view

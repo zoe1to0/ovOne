@@ -22,6 +22,7 @@ export type ViewState =
   | "CONTACTS"
   | "CONTACT_DETAIL"
   | "ME"
+  | "CREATE_GROUP_DRAFT"
   | "CREATE_WORLD_DRAFT"
   | "CREATE_WORLD_DETAIL_EDIT"
   | "WORLD_EDITOR";
@@ -121,6 +122,15 @@ export type ContactDetailDraft = Readonly<{
     readonly warning: string;
   }> | null;
 }>;
+export type CreateGroupDraft = Readonly<{
+  readonly groupName: string;
+  readonly selectedWorldContactIds: readonly string[];
+  readonly validationError: string | null;
+  readonly fieldErrors: Readonly<{
+    readonly selectedMembers: string | null;
+  }>;
+  readonly noticeMessage: string | null;
+}>;
 export type LinkedAIDisconnectConfirmation = Readonly<{
   readonly globalAILinkId: string;
   readonly displayName: string;
@@ -179,7 +189,11 @@ export type InteractionAction =
   | { readonly type: "CANCEL_DELETE_FRIEND" }
   | { readonly type: "CONFIRM_DELETE_FRIEND"; readonly worldId: WorldId; readonly worldContactId: string }
   | { readonly type: "CREATE_AI_FRIEND" }
-  | { readonly type: "CREATE_GROUP" }
+  | { readonly type: "OPEN_CREATE_GROUP_DRAFT" }
+  | { readonly type: "UPDATE_CREATE_GROUP_DRAFT"; readonly field: "groupName"; readonly value: string }
+  | { readonly type: "TOGGLE_CREATE_GROUP_MEMBER"; readonly worldContactId: string }
+  | { readonly type: "CONFIRM_CREATE_GROUP" }
+  | { readonly type: "CANCEL_CREATE_GROUP" }
   | { readonly type: "OPEN_CREATE_WORLD_DRAFT" }
   | { readonly type: "OPEN_CREATE_WORLD_DETAIL_EDIT" }
   | { readonly type: "UPDATE_CREATE_WORLD_DRAFT"; readonly field: "worldName" | "worldviewText"; readonly value: string }
@@ -210,6 +224,7 @@ export type SemanticMobileState = {
   composerMode: ComposerMode;
   inputDraft: string;
   settingsOpen: boolean;
+  createGroupDraft: CreateGroupDraft | null;
   createWorldDraft: CreateWorldDraft | null;
   worldEditorDraft: WorldEditorDraft | null;
   contactDetailDraft: ContactDetailDraft | null;
@@ -267,6 +282,11 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_DELETE_FRIEND_CONFIRMATION"
   | "CANCEL_DELETE_FRIEND"
   | "CONFIRM_DELETE_FRIEND"
+  | "OPEN_CREATE_GROUP_DRAFT"
+  | "UPDATE_CREATE_GROUP_DRAFT"
+  | "TOGGLE_CREATE_GROUP_MEMBER"
+  | "CONFIRM_CREATE_GROUP"
+  | "CANCEL_CREATE_GROUP"
   | "OPEN_CREATE_WORLD_DRAFT"
   | "OPEN_CREATE_WORLD_DETAIL_EDIT"
   | "UPDATE_CREATE_WORLD_DRAFT"
@@ -316,6 +336,19 @@ export function validateCreateWorldDraftFields(draft: CreateWorldDraft): CreateW
   return Object.freeze({
     worldName: draft.worldName.trim() ? null : CREATE_WORLD_NAME_REQUIRED_MESSAGE,
     selectedAI: draft.selectedAIModelIds.length > 0 ? null : CREATE_WORLD_AI_REQUIRED_MESSAGE
+  });
+}
+
+export const CREATE_GROUP_AI_REQUIRED_MESSAGE = "请选择至少一个 AI 成员";
+
+export function validateCreateGroupDraft(draft: CreateGroupDraft): CreateGroupDraft {
+  const selectedMembers = draft.selectedWorldContactIds.length > 0 ? null : CREATE_GROUP_AI_REQUIRED_MESSAGE;
+  return Object.freeze({
+    ...draft,
+    validationError: selectedMembers,
+    fieldErrors: Object.freeze({
+      selectedMembers
+    })
   });
 }
 
@@ -410,6 +443,16 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     return state.createWorldDraft;
   };
 
+  const createEmptyGroupDraft = (): CreateGroupDraft => Object.freeze({
+    groupName: "",
+    selectedWorldContactIds: Object.freeze([]),
+    validationError: null,
+    fieldErrors: Object.freeze({
+      selectedMembers: null
+    }),
+    noticeMessage: null
+  });
+
   const disabled = (
     state: SemanticMobileState,
     action: DisabledInteractionAction
@@ -429,6 +472,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = null;
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -441,6 +485,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = null;
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -453,6 +498,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = null;
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -466,6 +512,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeChatId = null;
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -478,6 +525,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_VIEW";
         state.composerMode = resolveDefaultComposerMode("normal");
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -489,6 +537,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_VIEW";
         state.selectedContactActorId = null;
         state.selectedWorldIdForEditing = null;
+        state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
         state.linkedAIDisconnectConfirmation = null;
@@ -504,6 +553,9 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.contactDetailDraft = null;
         } else if (state.activeView === "CREATE_WORLD_DETAIL_EDIT") {
           state.activeView = "CREATE_WORLD_DRAFT";
+        } else if (state.activeView === "CREATE_GROUP_DRAFT") {
+          state.activeView = "CHAT_LIST";
+          state.createGroupDraft = null;
         } else if (state.activeView === "CREATE_WORLD_DRAFT") {
           state.activeView = "CHAT_LIST";
         } else if (state.activeView === "WORLD_EDITOR") {
@@ -889,7 +941,62 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.settingsOpen = false;
         return RENDER;
 
+      case "OPEN_CREATE_GROUP_DRAFT":
+        state.createGroupDraft = createEmptyGroupDraft();
+        state.activeView = "CREATE_GROUP_DRAFT";
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.createWorldDraft = null;
+        state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+
+      case "UPDATE_CREATE_GROUP_DRAFT":
+        state.createGroupDraft = Object.freeze({
+          ...(state.createGroupDraft ?? createEmptyGroupDraft()),
+          groupName: action.value,
+          noticeMessage: null
+        });
+        return RENDER;
+
+      case "TOGGLE_CREATE_GROUP_MEMBER": {
+        const draft = state.createGroupDraft ?? createEmptyGroupDraft();
+        const selectedWorldContactIds = draft.selectedWorldContactIds.includes(action.worldContactId)
+          ? draft.selectedWorldContactIds.filter((id) => id !== action.worldContactId)
+          : [...draft.selectedWorldContactIds, action.worldContactId];
+        state.createGroupDraft = Object.freeze({
+          ...draft,
+          selectedWorldContactIds: Object.freeze(selectedWorldContactIds),
+          validationError: selectedWorldContactIds.length > 0 ? null : draft.validationError,
+          fieldErrors: Object.freeze({
+            selectedMembers: selectedWorldContactIds.length > 0 ? null : draft.fieldErrors.selectedMembers
+          }),
+          noticeMessage: null
+        });
+        return RENDER;
+      }
+
+      case "CONFIRM_CREATE_GROUP":
+        state.createGroupDraft = validateCreateGroupDraft(state.createGroupDraft ?? createEmptyGroupDraft());
+        return RENDER;
+
+      case "CANCEL_CREATE_GROUP":
+        state.createGroupDraft = null;
+        state.activeView = "CHAT_LIST";
+        state.activeChatId = null;
+        state.selectedContactActorId = null;
+        state.selectedWorldIdForEditing = null;
+        state.worldEditorDraft = null;
+        state.contactDetailDraft = null;
+        closeOverlay(state);
+        state.settingsOpen = false;
+        return RENDER;
+
       case "OPEN_CREATE_WORLD_DRAFT":
+        state.createGroupDraft = null;
         state.createWorldDraft = createEmptyWorldDraft();
         state.activeView = "CREATE_WORLD_DRAFT";
         state.activeChatId = null;
@@ -1076,6 +1183,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       case "CANCEL_CREATE_WORLD_DRAFT":
       case "CANCEL_CREATE_WORLD_DETAIL":
         state.createWorldDraft = null;
+        state.createGroupDraft = null;
         state.activeView = "CHAT_LIST";
         state.activeChatId = null;
         state.selectedContactActorId = null;
@@ -1099,7 +1207,6 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         return RENDER;
 
       case "CREATE_AI_FRIEND":
-      case "CREATE_GROUP":
       case "CHAT_OPEN_GROUP_MEMBERS":
       case "CHAT_OPEN_SETTINGS":
       case "CHAT_OPEN_BACKGROUND_SETTINGS":
@@ -1305,6 +1412,7 @@ export function resolveView(activeView: string): ViewRouteResolution {
     activeView === "CONTACTS" ||
     activeView === "CONTACT_DETAIL" ||
     activeView === "ME" ||
+    activeView === "CREATE_GROUP_DRAFT" ||
     activeView === "CREATE_WORLD_DRAFT" ||
     activeView === "CREATE_WORLD_DETAIL_EDIT" ||
     activeView === "WORLD_EDITOR"
@@ -1328,7 +1436,12 @@ export function tabForView(activeView: ViewState): MobileMvpTab {
   if (activeView === "ME") {
     return "me";
   }
-  if (activeView === "CREATE_WORLD_DRAFT" || activeView === "CREATE_WORLD_DETAIL_EDIT" || activeView === "WORLD_EDITOR") {
+  if (
+    activeView === "CREATE_GROUP_DRAFT" ||
+    activeView === "CREATE_WORLD_DRAFT" ||
+    activeView === "CREATE_WORLD_DETAIL_EDIT" ||
+    activeView === "WORLD_EDITOR"
+  ) {
     return "chats";
   }
   return "chats";

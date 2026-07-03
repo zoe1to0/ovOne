@@ -735,6 +735,47 @@ describe("FlowExecutor", () => {
     assert.deepEqual(calls, []);
   });
 
+  it("executes create group only after member validation and enters the new group chat", () => {
+    const nextView = createView("group:world:1");
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (input) => {
+        calls.push(input);
+        return nextView;
+      }
+    );
+    const state = createState(createView(null));
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    registry.execute({ type: "OPEN_CREATE_GROUP_DRAFT" }, state);
+    registry.execute({ type: "CONFIRM_CREATE_GROUP" }, state);
+    let flow = executor.run({ type: "CONFIRM_CREATE_GROUP" }, { shell, state });
+    assert.equal(flow.shouldRender, false);
+    assert.deepEqual(calls, []);
+    assert.equal(state.createGroupDraft?.fieldErrors.selectedMembers, "请选择至少一个 AI 成员");
+
+    registry.execute({ type: "TOGGLE_CREATE_GROUP_MEMBER", worldContactId: "ai:friend" }, state);
+    flow = executor.run({ type: "CONFIRM_CREATE_GROUP" }, { shell, state });
+
+    assert.equal(flow.executedFlow, "CREATE_GROUP");
+    assert.equal(flow.shouldRender, true);
+    assert.deepEqual(calls, [{ groupName: "群聊", selectedWorldContactIds: ["ai:friend"] }]);
+    assert.equal(state.view, nextView);
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.activeChatId, "group:world:1");
+    assert.equal(state.createGroupDraft, null);
+  });
+
   it("executes detailed edit confirm for a valid detail draft", () => {
     const targetWorldId = toWorldId("custom:detail-world");
     const nextView = createView(null, targetWorldId);
@@ -911,6 +952,7 @@ function createState(view: MinimalProductShellView): SemanticMobileState {
     composerMode: "text",
     inputDraft: "draft",
     settingsOpen: false,
+    createGroupDraft: null,
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,
@@ -937,7 +979,8 @@ function createShell(
   removeWorldMember: MinimalProductShellRuntime["removeWorldMember"] = () => createView("initial"),
   saveWorldRoleMetadata: MinimalProductShellRuntime["saveWorldRoleMetadata"] = () => createView("initial"),
   saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial"),
-  deleteFriend: MinimalProductShellRuntime["deleteFriend"] = () => createView("initial")
+  deleteFriend: MinimalProductShellRuntime["deleteFriend"] = () => createView("initial"),
+  createGroupChat: MinimalProductShellRuntime["createGroupChat"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -950,6 +993,7 @@ function createShell(
     deleteFriend,
     addWorldMember,
     removeWorldMember,
+    createGroupChat,
     sendMessage,
     snapshot: () => view.product.snapshot,
     view: () => view

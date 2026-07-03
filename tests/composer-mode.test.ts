@@ -96,6 +96,30 @@ describe("Composer mode state machine", () => {
     assert.equal(state.composerMode, "text");
   });
 
+  it("opens and validates create group draft through explicit actions", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+
+    assert.equal(registry.execute({ type: "OPEN_CREATE_GROUP_DRAFT" }, state).shouldRender, true);
+    assert.equal(state.activeView, "CREATE_GROUP_DRAFT");
+    assert.equal(state.overlay, null);
+    assert.equal(state.createGroupDraft?.groupName, "");
+
+    registry.execute({ type: "UPDATE_CREATE_GROUP_DRAFT", field: "groupName", value: "夜谈小组" }, state);
+    assert.equal(state.createGroupDraft?.groupName, "夜谈小组");
+
+    registry.execute({ type: "CONFIRM_CREATE_GROUP" }, state);
+    assert.equal(state.createGroupDraft?.fieldErrors.selectedMembers, "请选择至少一个 AI 成员");
+
+    registry.execute({ type: "TOGGLE_CREATE_GROUP_MEMBER", worldContactId: "ai:friend" }, state);
+    assert.deepEqual(state.createGroupDraft?.selectedWorldContactIds, ["ai:friend"]);
+    assert.equal(state.createGroupDraft?.fieldErrors.selectedMembers, null);
+
+    registry.execute({ type: "CANCEL_CREATE_GROUP" }, state);
+    assert.equal(state.activeView, "CHAT_LIST");
+    assert.equal(state.createGroupDraft, null);
+  });
+
   it("updates contact detail preference draft locally and scaffolds delete friend confirmation", () => {
     const registry = createBehaviorRegistry();
     const state = createState();
@@ -692,6 +716,7 @@ function createState(): SemanticMobileState {
     composerMode: "text",
     inputDraft: "",
     settingsOpen: false,
+    createGroupDraft: null,
     createWorldDraft: null,
     worldEditorDraft: null,
     contactDetailDraft: null,

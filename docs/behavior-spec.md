@@ -257,7 +257,11 @@ UI event
 ### Creation Actions
 
 - `CREATE_AI_FRIEND`
-- `CREATE_GROUP`
+- `OPEN_CREATE_GROUP_DRAFT`
+- `UPDATE_CREATE_GROUP_DRAFT`
+- `TOGGLE_CREATE_GROUP_MEMBER`
+- `CONFIRM_CREATE_GROUP`
+- `CANCEL_CREATE_GROUP`
 - `OPEN_CREATE_WORLD_DRAFT`
 - `OPEN_CREATE_WORLD_DETAIL_EDIT`
 - `UPDATE_CREATE_WORLD_DRAFT`
@@ -321,7 +325,11 @@ UI event
 | Cancel delete friend | `CANCEL_DELETE_FRIEND` | Clears local delete friend confirmation. |
 | Confirm delete friend | `CONFIRM_DELETE_FRIEND` | Requires matching confirmation state; Flow Executor deletes the current-world contact, private chat, and memory placeholder, then routes to `CONTACTS`. |
 | Add AI friend | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
-| Create group | `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
+| Open create group draft | `OPEN_CREATE_GROUP_DRAFT` | Opens `CREATE_GROUP_DRAFT` for the current world and initializes local draft state. |
+| Update create group draft | `UPDATE_CREATE_GROUP_DRAFT` | Updates local group draft name only. |
+| Toggle create group member | `TOGGLE_CREATE_GROUP_MEMBER` | Updates selected current-world AI member ids in local group draft state. |
+| Confirm create group | `CONFIRM_CREATE_GROUP` | Validates at least one selected AI, then FlowExecutor creates a current-world group chat, placeholder group memory metadata, and enters the new chat. |
+| Cancel create group | `CANCEL_CREATE_GROUP` | Clears local group draft state and returns to `CHAT_LIST`. |
 | Create world | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
 | Open detailed edit | `OPEN_CREATE_WORLD_DETAIL_EDIT` | Opens `CREATE_WORLD_DETAIL_EDIT` scaffold and sets draft next mode to `detailed-edit`. |
 | Update Create World draft text | `UPDATE_CREATE_WORLD_DRAFT` | Updates `worldName` or `worldviewText` in local draft state only. |
@@ -347,7 +355,11 @@ UI event
 These actions are named and routed but intentionally do not implement product behavior yet:
 
 - `CREATE_AI_FRIEND`
-- `CREATE_GROUP`
+- `OPEN_CREATE_GROUP_DRAFT`
+- `UPDATE_CREATE_GROUP_DRAFT`
+- `TOGGLE_CREATE_GROUP_MEMBER`
+- `CONFIRM_CREATE_GROUP`
+- `CANCEL_CREATE_GROUP`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
@@ -369,6 +381,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
 - ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, future group member removal, initial member messages after member add, and real memory engine integration are not implemented yet.
+- Create Group creates manual current-world group chats from selected current-world AI contacts, creates placeholder group memory metadata, opens the new group chat, and generates no initial AI messages.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

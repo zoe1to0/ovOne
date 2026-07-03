@@ -182,6 +182,69 @@ describe("Minimal UI Shell", () => {
     assert.equal(realityAfter.product.snapshot.chatState.chats.size, beforeRealityChatCount);
   });
 
+  it("creates current-world group chats with selected AI members and no initial messages", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const beforeRealityGroups = realityBefore.product.snapshot.groups.length;
+    const beforeRealityChats = realityBefore.product.snapshot.chatState.chats.size;
+
+    const createdRealityGroup = shell.createGroupChat({
+      groupName: "",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const realityGroupId = createdRealityGroup.product.snapshot.chatState.activeChatId!;
+    const realityGroupChat = createdRealityGroup.product.snapshot.chatState.chats.get(realityGroupId)!;
+
+    assert.equal(createdRealityGroup.activeWorldId, realityWorldId);
+    assert.equal(createdRealityGroup.product.snapshot.groups.length, beforeRealityGroups + 1);
+    assert.equal(createdRealityGroup.product.snapshot.chatState.chats.size, beforeRealityChats + 1);
+    assert.equal(createdRealityGroup.product.snapshot.groups.at(-1)?.actorIds.includes("ai:friend"), true);
+    assert.equal(realityGroupChat.title, "群聊");
+    assert.equal(realityGroupChat.messages.length, 0);
+    assert.equal(createdRealityGroup.product.inputPanel.targetChatId, realityGroupId);
+    assert.equal(Boolean((createdRealityGroup.product.snapshot.runtimeState.metadata.settings.groupMemoryScopes as Record<string, unknown> | undefined)?.[realityGroupId]), true);
+    assert.equal((createdRealityGroup.worldScopedSnapshot?.worlds.get(realityWorldId)?.chats.find((chat) => chat.chatId === realityGroupId) as { kind?: string } | undefined)?.kind, "group");
+
+    const custom = shell.createWorldFromDraft({
+      worldName: "Group Test World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    });
+    const customWorldId = custom.activeWorldId;
+    const realityAfterCustomCreate = shell.switchWorld(realityWorldId);
+    const customBeforeGroup = shell.switchWorld(customWorldId);
+
+    const customGroup = shell.createGroupChat({
+      groupName: "世界小队",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const customGroupId = customGroup.product.snapshot.chatState.activeChatId!;
+
+    assert.equal(customGroup.activeWorldId, customWorldId);
+    assert.equal(customGroup.product.snapshot.groups.at(-1)?.title, "世界小队");
+    assert.equal(customGroup.product.snapshot.groups.at(-1)?.actorIds.includes("ai:friend"), true);
+    assert.equal(customGroup.product.snapshot.chatState.chats.get(customGroupId)?.messages.length, 0);
+    assert.equal(customGroup.product.snapshot.groups.length, customBeforeGroup.product.snapshot.groups.length + 1);
+
+    const realityAfterCustomGroup = shell.switchWorld(realityWorldId);
+    assert.equal(realityAfterCustomGroup.product.snapshot.groups.length, realityAfterCustomCreate.product.snapshot.groups.length);
+    assert.equal(realityAfterCustomGroup.product.snapshot.chatState.chats.has(customGroupId), false);
+  });
+
   it("keeps non-blank role assignment as an explicit placeholder", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

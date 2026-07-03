@@ -18,6 +18,7 @@ import {
   validateCreateWorldDraftFields
 } from "./behavior-registry.js";
 import type { InteractionAction, SemanticMobileState } from "./behavior-registry.js";
+import { validateCreateGroupDraft } from "./behavior-registry.js";
 import { createWorldCreationTransition } from "./world-creation-transition.js";
 
 export type FlowExecutorContext = Readonly<{
@@ -27,7 +28,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -83,6 +84,29 @@ export function createFlowExecutor(): FlowExecutor {
         });
         context.state.createWorldDraft = null;
         return Object.freeze({ shouldRender: true, executedFlow: "CREATE_WORLD" });
+      }
+      if (action.type === "CONFIRM_CREATE_GROUP") {
+        const draft = context.state.createGroupDraft;
+        if (!draft) {
+          return NO_FLOW;
+        }
+        const validated = validateCreateGroupDraft(draft);
+        context.state.createGroupDraft = validated;
+        if (validated.validationError) {
+          return NO_FLOW;
+        }
+        context.state.view = context.shell.createGroupChat({
+          groupName: validated.groupName.trim() || "群聊",
+          selectedWorldContactIds: validated.selectedWorldContactIds
+        });
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CHAT_VIEW";
+        context.state.activeChatId = context.state.view.product.snapshot.chatState.activeChatId;
+        context.state.selectedContactActorId = null;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.createGroupDraft = null;
+        return Object.freeze({ shouldRender: true, executedFlow: "CREATE_GROUP" });
       }
       if (action.type === "SAVE_WORLD_EDITOR") {
         const draft = context.state.worldEditorDraft;

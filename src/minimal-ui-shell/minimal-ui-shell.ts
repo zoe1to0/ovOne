@@ -12,6 +12,7 @@ import type {
 } from "./types.js";
 import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
+import { createGroupChat } from "./create-group-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
 import { deleteFriendInCurrentWorld } from "./contact-detail-delete-service.js";
@@ -128,6 +129,18 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const createGroup = (input: { readonly groupName: string; readonly selectedWorldContactIds: readonly string[] }): MinimalProductShellView => {
+    createGroupChat({
+      app,
+      worldId: activeWorldId,
+      groupName: input.groupName,
+      selectedWorldContactIds: input.selectedWorldContactIds
+    });
+    entryWorldId = null;
+    screen = "chat";
+    return view();
+  };
+
   const sendMessage = (text: string): MinimalProductShellView => {
     const trimmed = text.trim();
     if (!trimmed) {
@@ -171,6 +184,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     deleteFriend,
     addWorldMember: addMember,
     removeWorldMember: removeMember,
+    createGroupChat: createGroup,
     sendMessage,
     snapshot,
     view
@@ -220,12 +234,14 @@ function worldScopedSnapshot(app: AppRuntime, worldIds: readonly WorldId[], curr
         }),
         contacts: Object.freeze(contacts),
         chats: Object.freeze([...snapshot.chatState.chats.values()].map((chat) => {
+          const group = snapshot.groups.find((candidate) => candidate.id === chat.id);
           const participantContactId = privateContactIdForChat(chat.id, contactIds);
           return Object.freeze({
             worldId,
             chatId: chat.id,
             title: chat.title,
-            participantContactIds: Object.freeze(participantContactId ? [participantContactId] : []),
+            kind: group ? "group" : "private",
+            participantContactIds: Object.freeze(group ? group.actorIds : participantContactId ? [participantContactId] : []),
             messages: chat.messages
           });
         })),

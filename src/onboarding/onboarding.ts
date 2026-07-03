@@ -143,6 +143,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    createGroupChat: (input) => {
+      try {
+        return shell.createGroupChat(input);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "createGroupChat" });
+        return decorate();
+      }
+    },
     sendMessage: (text) => {
       const trimmed = text.trim();
       if (!trimmed) {

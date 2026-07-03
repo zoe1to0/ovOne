@@ -138,6 +138,10 @@ export type MinimalProductShellRuntime = Readonly<{
   readonly deleteFriend: (command: DeleteFriendCommand) => MinimalProductShellView;
   readonly addWorldMember: (command: WorldAddMemberCommand) => MinimalProductShellView;
   readonly removeWorldMember: (command: WorldRemoveMemberCommand) => MinimalProductShellView;
+  readonly createGroupChat: (input: Readonly<{
+    readonly groupName: string;
+    readonly selectedWorldContactIds: readonly string[];
+  }>) => MinimalProductShellView;
   readonly sendMessage: (text: string) => MinimalProductShellView;
   readonly snapshot: () => WorldSnapshot;
   readonly view: () => MinimalProductShellView;

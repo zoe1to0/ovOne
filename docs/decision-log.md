@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-07-03: Create Group core scaffold added
+
+Decision: Create Group now creates a current-world group chat from selected current-world AI contacts.
+
+Rules:
+
+- `+ -> 创建群聊` opens `CREATE_GROUP_DRAFT`.
+- Candidate members come only from the current world's AI contacts.
+- At least one AI member is required.
+- Valid confirmation creates a current-world `WorldGroup`, empty group `WorldChat`, and placeholder group memory metadata.
+- After creation, the app enters the new group chat with `activeView = CHAT_VIEW` and `activeChatId` set to the new group chat id.
+- Group creation is allowed in Reality and custom worlds and must not affect other worlds.
+- Group creation does not generate initial AI messages, does not support member management after creation, does not add group rules/files, and does not implement a real memory engine.
+
 ## 2026-07-03: v0.5.1 settings disconnect execution safety milestone
 
 Decision: `v0.5.1-settings-disconnect-execution-safety` marks the Settings disconnect execution safety milestone.

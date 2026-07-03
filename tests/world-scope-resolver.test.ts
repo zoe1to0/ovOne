@@ -73,6 +73,7 @@ describe("World scoped data model foundation", () => {
       composerMode: "text",
       inputDraft: "",
       settingsOpen: true,
+      createGroupDraft: null,
       createWorldDraft: null,
       worldEditorDraft: null,
       contactDetailDraft: null,

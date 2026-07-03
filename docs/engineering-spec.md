@@ -197,6 +197,9 @@ UI action
 - `ADD_WORLD_MEMBER` validates through the add-member contract and Flow Executor calls `shell.addWorldMember(...)` for valid custom worlds.
 - Add-member execution creates only a new world-scoped `WorldContact`, private `WorldChat`, and isolated `WorldMemoryScope` placeholder metadata for the selected custom world.
 - Add-member execution does not switch `currentWorldId`, does not mutate Reality, does not mutate other worlds, does not mutate existing contacts/chats/memory, does not mutate `GlobalAIModel` or `GlobalAILink`, does not create group chats, and does not trigger initial messages.
+- Create Group execution creates only a current-world `WorldGroup`, empty group `WorldChat`, and placeholder group memory metadata from selected current-world AI contacts.
+- Create Group can run in Reality or custom worlds, enters the new group chat, and does not generate initial AI messages.
+- Create Group does not support post-creation member management, group rules, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.
@@ -269,6 +272,7 @@ UI action
 - `inputDraft`
 - `settingsOpen`
 - `createWorldDraft`
+- `createGroupDraft`
 - `worldEditorDraft`
   - nested `userRole` and `memberRoles` local role/member scaffold fields
 - `worldCreationTransition`
@@ -357,7 +361,11 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 - `CONFIRM_LINKED_AI_DISCONNECT`
 - `OPEN_CONTACT`
 - `CREATE_AI_FRIEND`
-- `CREATE_GROUP`
+- `OPEN_CREATE_GROUP_DRAFT`
+- `UPDATE_CREATE_GROUP_DRAFT`
+- `TOGGLE_CREATE_GROUP_MEMBER`
+- `CONFIRM_CREATE_GROUP`
+- `CANCEL_CREATE_GROUP`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
@@ -399,7 +407,11 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `CANCEL_DELETE_FRIEND` | Clears local Delete Friend confirmation. |
 | `CONFIRM_DELETE_FRIEND` | Requires matching confirmation state; Flow Executor deletes the current-world contact, private chat, and memory placeholder through `shell.deleteFriend(...)`, then routes to `CONTACTS`. |
 | `CREATE_AI_FRIEND` | Explicit disabled/no-op behavior; closes overlay. |
-| `CREATE_GROUP` | Explicit disabled/no-op behavior; closes overlay. |
+| `OPEN_CREATE_GROUP_DRAFT` | Opens `CREATE_GROUP_DRAFT`, initializes local group draft state, and closes overlay. |
+| `UPDATE_CREATE_GROUP_DRAFT` | Updates local group name draft only. |
+| `TOGGLE_CREATE_GROUP_MEMBER` | Updates selected current-world AI member ids in local draft state. |
+| `CONFIRM_CREATE_GROUP` | Validates selected AI members, then FlowExecutor creates a current-world group chat and placeholder group memory metadata and enters the new chat. |
+| `CANCEL_CREATE_GROUP` | Clears local group draft state and returns to `CHAT_LIST`. |
 | `OPEN_CREATE_WORLD_DRAFT` | Opens `CREATE_WORLD_DRAFT` page and initializes local draft state. |
 | `OPEN_CREATE_WORLD_DETAIL_EDIT` | Sets draft next mode to `detailed-edit` and opens `CREATE_WORLD_DETAIL_EDIT` scaffold page. |
 | `UPDATE_CREATE_WORLD_DRAFT` | Updates local draft `worldName` or `worldviewText`. |
