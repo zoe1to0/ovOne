@@ -108,10 +108,14 @@ UI event
 - Opening disconnect confirmation also builds `LinkedAIDisconnectPreviewViewModel` through `buildLinkedAIDisconnectPreview(...)`.
 - The preview is read-only and lists affected worlds, selected-AI private contacts/chats/memory scopes, future group-membership removal status, group-history preservation, and the difference from deleting a friend in one world.
 - Cancel closes the preview by clearing local confirmation state.
+- Confirming linked-AI disconnect now routes through `guardLinkedAIDisconnectExecution(...)`.
+- The guard requires a valid connected linked AI command, matching confirmation state, generated preview/cleanup plan, and passing execution contract.
+- Guard failure records local scaffold error state only.
+- Guard success records local `dry-run-confirmed` status and `断开流程已确认，实际断开暂未开放`; it still performs no runtime mutation.
 - Linked AI disconnect execution boundaries are defined in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus cleanup plan, records only future allowed mutations, and remains planned.
 - The execution contract rejects plans that include other AI, unrelated worlds, world deletion, immediate group member removal execution, group chat deletion, group message deletion, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
-- Confirming linked-AI disconnect still does not run execution; this milestone adds validation/contract only.
+- Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -299,7 +303,7 @@ UI event
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |
 | Cancel linked AI disconnect | `CANCEL_LINKED_AI_DISCONNECT` | Clears local linked-AI disconnect confirmation. |
-| Confirm linked AI disconnect | `CONFIRM_LINKED_AI_DISCONNECT` | Scaffold/no-op for now; validates matching confirmation but does not mutate Global AI Link, provider connection, worlds, contacts, chats, or memory. |
+| Confirm linked AI disconnect | `CONFIRM_LINKED_AI_DISCONNECT` | Runs guarded execution scaffold, records local dry-run-confirmed or guard error state, and does not mutate Global AI Link, provider connection, worlds, contacts, chats, groups, or memory. |
 | Open contact | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |
 | Update contact detail draft | `UPDATE_CONTACT_DETAIL_DRAFT` | Updates local current-world contact preference draft only. |
 | Save contact detail preferences | `SAVE_CONTACT_DETAIL_PREFERENCES` | Validates current-world preference patch, persists only allowed `WorldContact` preference fields through Flow Executor, stays on `CONTACT_DETAIL`, and shows success notice. |

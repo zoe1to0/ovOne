@@ -473,6 +473,12 @@ function createSettingsView(state: SemanticMobileState, controller: InteractionC
     confirmation.append(
       createDraftNote(state.linkedAIDisconnectConfirmation.warning),
       createLinkedAIDisconnectPreview(state),
+      state.linkedAIDisconnectConfirmation.errorMessage
+        ? createDraftNote(state.linkedAIDisconnectConfirmation.errorMessage)
+        : document.createTextNode(""),
+      state.linkedAIDisconnectConfirmation.noticeMessage
+        ? createDraftNote(state.linkedAIDisconnectConfirmation.noticeMessage)
+        : document.createTextNode(""),
       createMenuButton("取消", controller, { type: "CANCEL_LINKED_AI_DISCONNECT" }),
       createMenuButton("确认断开", controller, {
         type: "CONFIRM_LINKED_AI_DISCONNECT",

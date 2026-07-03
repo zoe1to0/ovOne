@@ -9,6 +9,9 @@ import { createBehaviorRegistry, OVO_CHAT_ID } from "../src/platform/behavior-re
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
+  LINKED_AI_DISCONNECT_CONFIRMATION_MISMATCH_MESSAGE,
+  LINKED_AI_DISCONNECT_DRY_RUN_CONFIRMED_MESSAGE,
+  LINKED_AI_DISCONNECT_PREVIEW_REQUIRED_MESSAGE,
   LINKED_AI_DISCONNECT_WARNING_MESSAGE,
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
@@ -188,16 +191,66 @@ describe("Composer mode state machine", () => {
 
     assert.equal(state.linkedAIDisconnectConfirmation?.globalAILinkId, "link:ai:friend");
     assert.equal(state.linkedAIDisconnectConfirmation?.warning, LINKED_AI_DISCONNECT_WARNING_MESSAGE);
+    assert.equal(state.linkedAIDisconnectConfirmation?.status, "preview");
     assert.equal(state.linkedAIDisconnectConfirmation?.preview?.affectedWorlds[0]?.worldId, "reality");
     assert.deepEqual(state.linkedAIDisconnectConfirmation?.preview?.affectedWorlds[0]?.privateContactIds, ["ai:friend"]);
     assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
 
     registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:friend" }, state);
     assert.equal(state.linkedAIDisconnectConfirmation?.globalAILinkId, "link:ai:friend");
+    assert.equal(state.linkedAIDisconnectConfirmation?.status, "dry-run-confirmed");
+    assert.equal(state.linkedAIDisconnectConfirmation?.noticeMessage, LINKED_AI_DISCONNECT_DRY_RUN_CONFIRMED_MESSAGE);
+    assert.equal(state.linkedAIDisconnectConfirmation?.errorMessage, null);
     assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
 
     registry.execute({ type: "CANCEL_LINKED_AI_DISCONNECT" }, state);
     assert.equal(state.linkedAIDisconnectConfirmation, null);
+    assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
+  });
+
+  it("guards linked AI disconnect confirmation failures without mutating data", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    state.activeView = "ME";
+    state.settingsOpen = true;
+    state.view = {
+      ...state.view,
+      linkedAIModels: [
+        {
+          globalAILinkId: "link:ai:friend",
+          globalAIModelId: "ai:friend",
+          actorId: "ai:friend",
+          displayName: "Friend"
+        }
+      ],
+      worldScopedSnapshot: linkedAIDisconnectPreviewSnapshot()
+    };
+
+    registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:friend" }, state);
+    assert.equal(state.linkedAIDisconnectConfirmation, null);
+    assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
+
+    registry.execute({
+      type: "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION",
+      globalAILinkId: "link:ai:friend",
+      displayName: "Friend"
+    }, state);
+    state.linkedAIDisconnectConfirmation = Object.freeze({
+      ...state.linkedAIDisconnectConfirmation!,
+      preview: null
+    });
+    registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:friend" }, state);
+    assert.equal(state.linkedAIDisconnectConfirmation?.status, "guard-failed");
+    assert.equal(state.linkedAIDisconnectConfirmation?.errorMessage, LINKED_AI_DISCONNECT_PREVIEW_REQUIRED_MESSAGE);
+
+    registry.execute({
+      type: "OPEN_LINKED_AI_DISCONNECT_CONFIRMATION",
+      globalAILinkId: "link:ai:friend",
+      displayName: "Friend"
+    }, state);
+    registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:other" }, state);
+    assert.equal(state.linkedAIDisconnectConfirmation?.status, "guard-failed");
+    assert.equal(state.linkedAIDisconnectConfirmation?.errorMessage, LINKED_AI_DISCONNECT_CONFIRMATION_MISMATCH_MESSAGE);
     assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
   });
 
@@ -761,8 +814,14 @@ function linkedAIDisconnectPreviewSnapshot(): WorldScopedSnapshot {
   const worldId = toWorldId("reality");
   return {
     currentWorldId: worldId,
-    globalAIModels: [{ modelId: "ai:friend", displayName: "Friend" }],
-    globalAILinks: [{ linkId: "link:ai:friend", modelId: "ai:friend", connectedAt: 1, status: "connected" }],
+    globalAIModels: [
+      { modelId: "ai:friend", displayName: "Friend" },
+      { modelId: "ai:other", displayName: "Other" }
+    ],
+    globalAILinks: [
+      { linkId: "link:ai:friend", modelId: "ai:friend", connectedAt: 1, status: "connected" },
+      { linkId: "link:ai:other", modelId: "ai:other", connectedAt: 2, status: "connected" }
+    ],
     worlds: new Map([
       [
         worldId,

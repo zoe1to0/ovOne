@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-03: Guarded Linked AI disconnect execution scaffold added
+
+Decision: `CONFIRM_LINKED_AI_DISCONNECT` now routes through a guarded execution scaffold before any future real disconnect execution can exist.
+
+Rules:
+
+- The guarded executor lives in `src/domain/linked-ai-disconnect-guarded-executor.ts`.
+- It requires a valid connected linked AI command, matching confirmation state, generated preview/cleanup plan, and passing execution contract.
+- Guard failures record local scaffold error state only.
+- Guard success records local `dry-run-confirmed` status and `断开流程已确认，实际断开暂未开放`.
+- Guard success still performs no runtime mutation.
+- `GlobalAILink`, provider connections, worlds, contacts, chats, memory, groups, group memberships, group chats, and group messages remain unchanged.
+
 ## 2026-07-03: v0.5 settings disconnect contract milestone
 
 Decision: `v0.5-settings-disconnect-contract` marks the Settings disconnect contract milestone.

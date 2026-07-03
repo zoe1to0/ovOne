@@ -166,3 +166,16 @@ export type {
   LinkedAIDisconnectPreviewViewModel,
   LinkedAIDisconnectPreviewWorld
 } from "./linked-ai-disconnect-preview.js";
+export {
+  LINKED_AI_DISCONNECT_CONFIRMATION_MISMATCH_MESSAGE,
+  LINKED_AI_DISCONNECT_CONFIRMATION_REQUIRED_MESSAGE,
+  LINKED_AI_DISCONNECT_DRY_RUN_CONFIRMED_MESSAGE,
+  LINKED_AI_DISCONNECT_PREVIEW_REQUIRED_MESSAGE,
+  guardLinkedAIDisconnectExecution
+} from "./linked-ai-disconnect-guarded-executor.js";
+export type {
+  GuardedLinkedAIDisconnectConfirmationInput,
+  GuardedLinkedAIDisconnectInput,
+  GuardedLinkedAIDisconnectResult,
+  GuardedLinkedAIDisconnectStatus
+} from "./linked-ai-disconnect-guarded-executor.js";

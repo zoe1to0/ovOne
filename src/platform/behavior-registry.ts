@@ -2,6 +2,7 @@ import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
+  guardLinkedAIDisconnectExecution,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
   validateLinkedAIDisconnectCommand,
@@ -9,7 +10,7 @@ import {
   validateWorldRemoveMemberCommand,
   validateWorldEditorPatch
 } from "../domain/index.js";
-import type { GlobalAILink, GlobalAIModel, LinkedAIDisconnectPreviewViewModel, WorldContact as DomainWorldContact } from "../domain/index.js";
+import type { GlobalAILink, GlobalAIModel, GuardedLinkedAIDisconnectStatus, LinkedAIDisconnectPreviewViewModel, WorldContact as DomainWorldContact } from "../domain/index.js";
 import type { WorldId } from "../world-domain/index.js";
 import { isComposerModeAllowed, resolveDefaultComposerMode, toggleComposerMode } from "./composer-mode.js";
 import type { ComposerKind, ComposerMode } from "./composer-mode.js";
@@ -125,6 +126,9 @@ export type LinkedAIDisconnectConfirmation = Readonly<{
   readonly displayName: string;
   readonly warning: string;
   readonly preview: LinkedAIDisconnectPreviewViewModel | null;
+  readonly status: "preview" | GuardedLinkedAIDisconnectStatus;
+  readonly noticeMessage: string | null;
+  readonly errorMessage: string | null;
 }>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -636,7 +640,10 @@ export function createBehaviorRegistry(): BehaviorRegistry {
                     { globalAILinkId: action.globalAILinkId },
                     state.view.worldScopedSnapshot
                   )
-                : null
+                : null,
+              status: "preview",
+              noticeMessage: null,
+              errorMessage: null
             })
           : null;
         state.settingsOpen = true;
@@ -651,13 +658,26 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "CONFIRM_LINKED_AI_DISCONNECT": {
         const confirmation = state.linkedAIDisconnectConfirmation;
-        if (confirmation?.globalAILinkId !== action.globalAILinkId) {
+        if (!confirmation) {
           return RENDER;
         }
-        validateLinkedAIDisconnectCommand(
-          { globalAILinkId: action.globalAILinkId },
-          createLinkedAIDisconnectContractInputFromState(state)
-        );
+        const result = state.view.worldScopedSnapshot
+          ? guardLinkedAIDisconnectExecution({
+              command: { globalAILinkId: action.globalAILinkId },
+              confirmation,
+              snapshot: state.view.worldScopedSnapshot
+            })
+          : {
+              status: "guard-failed" as const,
+              error: "断开预览缺失，请重新打开预览",
+              notice: null
+            };
+        state.linkedAIDisconnectConfirmation = Object.freeze({
+          ...confirmation,
+          status: result.status,
+          noticeMessage: result.notice,
+          errorMessage: result.error
+        });
         closeOverlay(state);
         return RENDER;
       }
