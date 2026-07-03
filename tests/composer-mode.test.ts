@@ -303,6 +303,94 @@ describe("Composer mode state machine", () => {
     assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
   });
 
+  it("scaffolds group member add and remove without mutating group membership", () => {
+    const registry = createBehaviorRegistry();
+    const state = createState();
+    const group = Object.freeze({
+      id: "group:one",
+      title: "Group One",
+      actorIds: Object.freeze(["ai:one", "ai:two"])
+    });
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          contacts: [
+            {
+              worldId: state.currentWorldId,
+              actorId: "ai:one",
+              displayName: "One",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            },
+            {
+              worldId: state.currentWorldId,
+              actorId: "ai:two",
+              displayName: "Two",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            },
+            {
+              worldId: state.currentWorldId,
+              actorId: "ai:three",
+              displayName: "Three",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            }
+          ] as never,
+          groups: [group],
+          chatState: {
+            activeChatId: "group:one",
+            chats: new Map([[
+              "group:one",
+              Object.freeze({
+                id: "group:one",
+                worldId: state.currentWorldId,
+                title: "Group One",
+                messages: []
+              })
+            ]])
+          }
+        }
+      }
+    };
+    state.activeView = "CHAT_VIEW";
+    state.activeChatId = "group:one";
+
+    registry.execute({ type: "OPEN_CHAT_SETTINGS" }, state);
+    registry.execute({ type: "OPEN_GROUP_ADD_MEMBER", worldContactId: "ai:three" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "添加群成员暂未开放");
+    assert.deepEqual(state.view.product.snapshot.groups[0]?.actorIds, ["ai:one", "ai:two"]);
+
+    registry.execute({ type: "OPEN_GROUP_REMOVE_MEMBER", worldContactId: "ai:one" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除后，该 AI 只会离开此群，群聊与历史消息仍会保留。");
+    assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation?.worldContactId, "ai:one");
+    registry.execute({ type: "CONFIRM_GROUP_REMOVE_MEMBER", worldContactId: "ai:one" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除群成员暂未开放");
+    assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation, null);
+    assert.deepEqual(state.view.product.snapshot.groups[0]?.actorIds, ["ai:one", "ai:two"]);
+
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          groups: [Object.freeze({
+            id: "group:one",
+            title: "Group One",
+            actorIds: Object.freeze(["ai:one"])
+          })]
+        }
+      }
+    };
+    registry.execute({ type: "OPEN_GROUP_REMOVE_MEMBER", worldContactId: "ai:one" }, state);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除后将解散该群");
+    assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation, null);
+  });
+
   it("guards linked AI disconnect confirmation failures without mutating data", () => {
     const registry = createBehaviorRegistry();
     const state = createState();

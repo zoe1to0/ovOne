@@ -57,6 +57,26 @@ export type {
   GroupRulesValidationInput
 } from "./group-rules-contract.js";
 export {
+  GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE,
+  GROUP_MEMBER_REMOVE_LAST_AI_MESSAGE,
+  GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE,
+  GROUP_MEMBER_REMOVE_WARNING_MESSAGE,
+  canRemoveGroupMember,
+  getForbiddenGroupMemberMutations,
+  getGroupRemoveMemberWarning,
+  resolveGroupAddMemberCandidates,
+  validateGroupAddMemberCommand,
+  validateGroupRemoveMemberCommand
+} from "./group-member-management-contract.js";
+export type {
+  GroupAddMemberCommand,
+  GroupMemberCandidate,
+  GroupMemberCommandValidation,
+  GroupMemberManagementForbiddenMutation,
+  GroupMemberManagementInput,
+  GroupRemoveMemberCommand
+} from "./group-member-management-contract.js";
+export {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
   canDeleteFriendInCurrentWorld,

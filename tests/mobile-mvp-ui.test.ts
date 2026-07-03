@@ -1,4 +1,4 @@
-import { describe, it } from "node:test";
+﻿import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolveView } from "../src/platform/behavior-registry.js";
@@ -170,9 +170,11 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(flowExecutor, /saveChatAppearanceSettings/);
     assert.match(registry, /CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE/);
     assert.match(registry, /scaffoldNoticeForChatSettingsAction/);
-    assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, controller\)\)/);
-    assert.match(adapter, /createMenuButton\("添加群成员", controller, \{ type: "OPEN_GROUP_ADD_MEMBER" \}\)/);
-    assert.match(adapter, /createMenuButton\("移除群成员", controller, \{ type: "OPEN_GROUP_REMOVE_MEMBER" \}\)/);
+    assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, draft, controller\)\)/);
+    assert.match(adapter, /resolveGroupAddMemberCandidates\(group\.id/);
+    assert.match(adapter, /\{ type: "OPEN_GROUP_ADD_MEMBER", worldContactId: candidate\.worldContactId \}/);
+    assert.match(adapter, /\{ type: "OPEN_GROUP_REMOVE_MEMBER", worldContactId: actorId \}/);
+    assert.match(adapter, /type: "CONFIRM_GROUP_REMOVE_MEMBER"/);
     assert.match(adapter, /createDraftStage\("群规则", createGroupRulesSettings\(draft, controller\)\)/);
     assert.match(adapter, /rules\.name = "groupRulesText"/);
     assert.match(adapter, /createMenuButton\("保存群规", controller, \{ type: "SAVE_GROUP_RULES" \}\)/);

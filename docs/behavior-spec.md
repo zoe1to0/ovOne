@@ -96,6 +96,10 @@ UI event
 - Chat Settings saves per-chat appearance fields through `SAVE_CHAT_SETTINGS` and Flow Executor.
 - Chat appearance save is scoped to `worldId + chatId` and persists only `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor` on the selected chat.
 - Group rules have a text-based contract and save execution for group chats only; saving group rules persists only selected group chat metadata and does not affect AI behavior or prompts yet.
+- Group member management has a contract scaffold for selected group chats only.
+- Add Group Member candidates are current-world AI contacts not already in the selected group.
+- Remove Group Member opens a local confirmation scaffold and must preserve group chat/history/messages, world contacts, private chats, memory, and global/provider data.
+- Removing the last AI member is blocked with `移除后将解散该群`; group dissolution is a separate future action.
 - Background image upload remains scaffold/no-op; group add/remove member and group files remain scaffold/no-op.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
@@ -315,8 +319,11 @@ UI event
 | Cancel chat settings | `CANCEL_CHAT_SETTINGS` | Clears local chat settings draft and returns to the previous chat. |
 | Save chat settings | `SAVE_CHAT_SETTINGS` | Validates `ChatSettingsPatch`; Flow Executor persists only selected-chat appearance metadata, stays on `CHAT_SETTINGS`, and shows `已保存`. |
 | Upload chat background image | `UPLOAD_CHAT_BACKGROUND_IMAGE` | Scaffold/no-op; shows `背景图片上传暂未开放` and does not upload files. |
-| Open group add member scaffold | `OPEN_GROUP_ADD_MEMBER` | Scaffold/no-op on group chat settings page. |
-| Open group remove member scaffold | `OPEN_GROUP_REMOVE_MEMBER` | Scaffold/no-op on group chat settings page. |
+| Open group add member scaffold | `OPEN_GROUP_ADD_MEMBER` | Validates current-world candidate when provided, shows scaffold notice, and does not mutate group membership. |
+| Open group remove member scaffold | `OPEN_GROUP_REMOVE_MEMBER` | Validates current group member, opens local confirmation with group-history preservation warning, or blocks last-member removal. |
+| Confirm group add member scaffold | `CONFIRM_GROUP_ADD_MEMBER` | Scaffold/no-op; does not mutate group membership. |
+| Confirm group remove member scaffold | `CONFIRM_GROUP_REMOVE_MEMBER` | Scaffold/no-op; clears local confirmation and does not mutate group membership/history. |
+| Cancel group member management | `CANCEL_GROUP_MEMBER_MANAGEMENT` | Clears local group member confirmation/notice state. |
 | Open group rules scaffold | `OPEN_GROUP_RULES` | Legacy scaffold/no-op action retained for explicit routing; group settings now render a text draft directly. |
 | Save group rules | `SAVE_GROUP_RULES` | Validates `GroupRulesPatch`; Flow Executor persists only selected group chat `rulesText`, stays on `CHAT_SETTINGS`, and shows `已保存`. |
 | Open group files scaffold | `OPEN_GROUP_FILES` | Scaffold/no-op on group chat settings page. |
@@ -370,8 +377,6 @@ These actions are named and routed but intentionally do not implement product be
 
 - `CREATE_AI_FRIEND`
 - `UPLOAD_CHAT_BACKGROUND_IMAGE`
-- `OPEN_GROUP_ADD_MEMBER`
-- `OPEN_GROUP_REMOVE_MEMBER`
 - `OPEN_GROUP_RULES`
 - `OPEN_GROUP_FILES`
 - `CHAT_OPEN_GROUP_MEMBERS`

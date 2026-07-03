@@ -365,6 +365,7 @@ describe("FlowExecutor", () => {
       backgroundColor: "#111111",
       myBubbleColor: "#222222",
       otherBubbleColor: "#333333",
+      groupMemberRemoveConfirmation: null,
       noticeMessage: null
     };
     const registry = createBehaviorRegistry();
@@ -456,6 +457,7 @@ describe("FlowExecutor", () => {
       backgroundColor: "#ffffff",
       myBubbleColor: "#dcecff",
       otherBubbleColor: "#f2f2f2",
+      groupMemberRemoveConfirmation: null,
       noticeMessage: null
     };
     const registry = createBehaviorRegistry();

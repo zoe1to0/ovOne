@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-07-03: Group member management contract scaffold added
+
+Decision: Group member management now has a pure contract and local Chat Settings scaffold.
+
+Rules:
+
+- Group member management applies only to the selected group chat in the current world.
+- Add Group Member candidates come only from current-world AI contacts not already in the group.
+- Remove Group Member may later remove only AI group membership; it must not delete world contacts, private chats, memory scopes, group chats, group history, or historical messages.
+- Removing the last AI member is blocked with `移除后将解散该群`.
+- Group dissolution is a separate future action and out of scope.
+- Confirm add/remove remains scaffold/no-op and does not mutate runtime data yet.
+- Forbidden mutation targets include group messages/history, group rules/files, other groups, other worlds, `GlobalAIModel`, `GlobalAILink`, and `ProviderConnection`.
+
 ## 2026-07-03: Group rules save implemented
 
 Decision: Group rules can now be saved as selected group chat metadata.

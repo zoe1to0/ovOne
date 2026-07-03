@@ -1,9 +1,15 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE,
+  GROUP_MEMBER_REMOVE_LAST_AI_MESSAGE,
+  GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE,
+  GROUP_MEMBER_REMOVE_WARNING_MESSAGE,
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
+  validateGroupAddMemberCommand,
+  validateGroupRemoveMemberCommand,
   validateChatSettingsPatch,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
@@ -142,6 +148,12 @@ export type ChatSettingsDraft = Readonly<{
   readonly backgroundColor: string;
   readonly myBubbleColor: string;
   readonly otherBubbleColor: string;
+  readonly groupMemberRemoveConfirmation: Readonly<{
+    readonly worldId: WorldId;
+    readonly groupChatId: string;
+    readonly worldContactId: string;
+    readonly warning: string;
+  }> | null;
   readonly noticeMessage: string | null;
 }>;
 export type LinkedAIDisconnectConfirmation = Readonly<{
@@ -173,8 +185,11 @@ export type InteractionAction =
   | { readonly type: "CANCEL_CHAT_SETTINGS" }
   | { readonly type: "SAVE_CHAT_SETTINGS" }
   | { readonly type: "SAVE_GROUP_RULES" }
-  | { readonly type: "OPEN_GROUP_ADD_MEMBER" }
-  | { readonly type: "OPEN_GROUP_REMOVE_MEMBER" }
+  | { readonly type: "OPEN_GROUP_ADD_MEMBER"; readonly worldContactId?: string }
+  | { readonly type: "OPEN_GROUP_REMOVE_MEMBER"; readonly worldContactId?: string }
+  | { readonly type: "CONFIRM_GROUP_ADD_MEMBER"; readonly worldContactId: string }
+  | { readonly type: "CONFIRM_GROUP_REMOVE_MEMBER"; readonly worldContactId: string }
+  | { readonly type: "CANCEL_GROUP_MEMBER_MANAGEMENT" }
   | { readonly type: "OPEN_GROUP_RULES" }
   | { readonly type: "OPEN_GROUP_FILES" }
   | { readonly type: "UPLOAD_CHAT_BACKGROUND_IMAGE" }
@@ -282,6 +297,9 @@ type DisabledInteractionAction = Exclude<
   | "SAVE_GROUP_RULES"
   | "OPEN_GROUP_ADD_MEMBER"
   | "OPEN_GROUP_REMOVE_MEMBER"
+  | "CONFIRM_GROUP_ADD_MEMBER"
+  | "CONFIRM_GROUP_REMOVE_MEMBER"
+  | "CANCEL_GROUP_MEMBER_MANAGEMENT"
   | "OPEN_GROUP_RULES"
   | "OPEN_GROUP_FILES"
   | "UPLOAD_CHAT_BACKGROUND_IMAGE"
@@ -392,9 +410,9 @@ export function validateCreateGroupDraft(draft: CreateGroupDraft): CreateGroupDr
 function scaffoldNoticeForChatSettingsAction(action: "OPEN_GROUP_ADD_MEMBER" | "OPEN_GROUP_REMOVE_MEMBER" | "OPEN_GROUP_RULES" | "OPEN_GROUP_FILES"): string {
   switch (action) {
     case "OPEN_GROUP_ADD_MEMBER":
-      return "添加群成员暂未开放";
+      return GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE;
     case "OPEN_GROUP_REMOVE_MEMBER":
-      return "移除群成员暂未开放";
+      return GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE;
     case "OPEN_GROUP_RULES":
       return "群规则暂未开放";
     case "OPEN_GROUP_FILES":
@@ -512,6 +530,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
       backgroundColor: chat?.appearance?.backgroundColor ?? "#ffffff",
       myBubbleColor: chat?.appearance?.myBubbleColor ?? "#dcecff",
       otherBubbleColor: chat?.appearance?.otherBubbleColor ?? "#f2f2f2",
+      groupMemberRemoveConfirmation: null,
       noticeMessage: null
     });
   };
@@ -735,14 +754,119 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         closeOverlay(state);
         return RENDER;
 
-      case "OPEN_GROUP_ADD_MEMBER":
-      case "OPEN_GROUP_REMOVE_MEMBER":
       case "OPEN_GROUP_RULES":
       case "OPEN_GROUP_FILES":
         if (state.chatSettingsDraft) {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
             noticeMessage: scaffoldNoticeForChatSettingsAction(action.type)
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "OPEN_GROUP_ADD_MEMBER": {
+        if (!state.chatSettingsDraft) {
+          return RENDER;
+        }
+        const worldContactId = action.worldContactId;
+        if (!worldContactId) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            groupMemberRemoveConfirmation: null,
+            noticeMessage: GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE
+          });
+          return RENDER;
+        }
+        const validation = validateGroupAddMemberCommand(
+          {
+            worldId: state.currentWorldId,
+            groupChatId: state.chatSettingsDraft.chatId,
+            worldContactId
+          },
+          createGroupMemberManagementInput(state)
+        );
+        state.chatSettingsDraft = Object.freeze({
+          ...state.chatSettingsDraft,
+          groupMemberRemoveConfirmation: null,
+          noticeMessage: validation.valid ? GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE : validation.error
+        });
+        closeOverlay(state);
+        return RENDER;
+      }
+
+      case "OPEN_GROUP_REMOVE_MEMBER": {
+        if (!state.chatSettingsDraft) {
+          return RENDER;
+        }
+        const worldContactId = action.worldContactId;
+        if (!worldContactId) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            groupMemberRemoveConfirmation: null,
+            noticeMessage: GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE
+          });
+          return RENDER;
+        }
+        const command = {
+          worldId: state.currentWorldId,
+          groupChatId: state.chatSettingsDraft.chatId,
+          worldContactId
+        };
+        const validation = validateGroupRemoveMemberCommand(command, createGroupMemberManagementInput(state));
+        state.chatSettingsDraft = Object.freeze({
+          ...state.chatSettingsDraft,
+          groupMemberRemoveConfirmation: validation.valid
+            ? Object.freeze({
+              ...command,
+              warning: GROUP_MEMBER_REMOVE_WARNING_MESSAGE
+            })
+            : null,
+          noticeMessage: validation.valid ? GROUP_MEMBER_REMOVE_WARNING_MESSAGE : validation.error
+        });
+        closeOverlay(state);
+        return RENDER;
+      }
+
+      case "CONFIRM_GROUP_ADD_MEMBER":
+        if (state.chatSettingsDraft) {
+          const validation = validateGroupAddMemberCommand(
+            {
+              worldId: state.currentWorldId,
+              groupChatId: state.chatSettingsDraft.chatId,
+              worldContactId: action.worldContactId
+            },
+            createGroupMemberManagementInput(state)
+          );
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            groupMemberRemoveConfirmation: null,
+            noticeMessage: validation.valid ? GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE : validation.error
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "CONFIRM_GROUP_REMOVE_MEMBER":
+        if (state.chatSettingsDraft) {
+          const confirmation = state.chatSettingsDraft.groupMemberRemoveConfirmation;
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            groupMemberRemoveConfirmation: null,
+            noticeMessage: confirmation?.worldContactId === action.worldContactId
+              ? GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE
+              : "GroupMemberManagement: missing remove member confirmation."
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "CANCEL_GROUP_MEMBER_MANAGEMENT":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            groupMemberRemoveConfirmation: null,
+            noticeMessage: null
           });
         }
         closeOverlay(state);
@@ -1567,6 +1691,14 @@ export function createGroupRulesContractInput(state: SemanticMobileState) {
     worldId: state.currentWorldId,
     chatIds: [...state.view.product.snapshot.chatState.chats.keys()],
     groupChatIds: state.view.product.snapshot.groups.map((group) => group.id)
+  };
+}
+
+export function createGroupMemberManagementInput(state: SemanticMobileState) {
+  return {
+    worldId: state.currentWorldId,
+    contacts: state.view.product.snapshot.contacts,
+    groups: state.view.product.snapshot.groups
   };
 }
 

@@ -5,6 +5,7 @@ import {
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
   WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE,
+  resolveGroupAddMemberCandidates,
   resolveWorldChats,
   resolveWorldContacts
 } from "../domain/index.js";
@@ -828,6 +829,7 @@ function createChatSettingsView(
     backgroundColor: "#ffffff",
     myBubbleColor: "#dcecff",
     otherBubbleColor: "#f2f2f2",
+    groupMemberRemoveConfirmation: null,
     noticeMessage: null
   };
   const screen = document.createElement("section");
@@ -844,7 +846,7 @@ function createChatSettingsView(
 
   if (group) {
     content.append(
-      createDraftStage("群成员", createGroupMembersSettings(snapshot, group, controller)),
+      createDraftStage("群成员", createGroupMembersSettings(snapshot, group, draft, controller)),
       createDraftStage("群规则", createGroupRulesSettings(draft, controller)),
       createDraftStage("群文件", createScaffoldAction("群文件暂未开放", controller, { type: "OPEN_GROUP_FILES" }))
     );
@@ -869,13 +871,51 @@ function createChatSettingsView(
 function createGroupMembersSettings(
   snapshot: WorldSnapshot,
   group: WorldSnapshot["groups"][number],
+  draft: NonNullable<SemanticMobileState["chatSettingsDraft"]>,
   controller: InteractionController
 ): HTMLElement {
   const section = document.createElement("section");
   section.className = "mvp-create-world-section";
+  const membersTitle = document.createElement("p");
+  membersTitle.className = "mvp-create-world-note";
+  membersTitle.textContent = "当前成员";
+  section.append(membersTitle);
   for (const actorId of group.actorIds) {
     const contact = contactByActorId(snapshot, actorId);
-    section.append(createDraftNote(contact ? contactDisplayName(contact) : actorId));
+    const row = document.createElement("div");
+    row.className = "mvp-create-world-ai-row";
+    row.append(createDraftNote(contact ? contactDisplayName(contact) : actorId));
+    row.append(createMenuButton("移除", controller, { type: "OPEN_GROUP_REMOVE_MEMBER", worldContactId: actorId }));
+    section.append(row);
+  }
+  const candidates = resolveGroupAddMemberCandidates(group.id, {
+    worldId: snapshot.worldMeta.id,
+    contacts: snapshot.contacts,
+    groups: snapshot.groups
+  });
+  section.append(createDraftNote("可添加成员"));
+  if (candidates.length === 0) {
+    section.append(createDraftNote("暂无可添加的 AI 成员"));
+  }
+  for (const candidate of candidates) {
+    const row = document.createElement("div");
+    row.className = "mvp-create-world-ai-row";
+    row.append(createDraftNote(candidate.displayName));
+    row.append(createMenuButton("添加", controller, { type: "OPEN_GROUP_ADD_MEMBER", worldContactId: candidate.worldContactId }));
+    section.append(row);
+  }
+  if (draft.groupMemberRemoveConfirmation) {
+    const confirmation = document.createElement("section");
+    confirmation.className = "mvp-create-world-section";
+    confirmation.append(
+      createDraftNote(draft.groupMemberRemoveConfirmation.warning),
+      createMenuButton("确认移除", controller, {
+        type: "CONFIRM_GROUP_REMOVE_MEMBER",
+        worldContactId: draft.groupMemberRemoveConfirmation.worldContactId
+      }),
+      createMenuButton("取消", controller, { type: "CANCEL_GROUP_MEMBER_MANAGEMENT" })
+    );
+    section.append(confirmation);
   }
   section.append(
     createMenuButton("添加群成员", controller, { type: "OPEN_GROUP_ADD_MEMBER" }),
