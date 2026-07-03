@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-03: Linked AI disconnect execution snapshot contract added
+
+Decision: Real Linked AI disconnect remains disabled, but future execution now has a read-only execution snapshot and rollback contract.
+
+Rules:
+
+- The snapshot contract lives in `src/domain/linked-ai-disconnect-execution-snapshot.ts`.
+- `LinkedAIDisconnectExecutionSnapshot` captures only the selected linked AI's target `GlobalAILink`, affected worlds, world contacts, private chats, memory scope ids, and future group-membership removal records.
+- Snapshots explicitly preserve worlds, other AI, group chats, group messages, provider connection, weather/time permission, and user profile.
+- Group records are membership-only and must preserve group chats, group messages, and removed AI historical group messages.
+- `LinkedAIDisconnectRollbackPlan` documents future restoration requirements but does not execute rollback.
+- Guarded Linked AI disconnect confirmation remains dry-run only and performs no runtime mutation.
+
 ## 2026-07-03: Guarded Linked AI disconnect execution scaffold added
 
 Decision: `CONFIRM_LINKED_AI_DISCONNECT` now routes through a guarded execution scaffold before any future real disconnect execution can exist.

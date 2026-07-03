@@ -115,6 +115,10 @@ UI event
 - Linked AI disconnect execution boundaries are defined in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus cleanup plan, records only future allowed mutations, and remains planned.
 - The execution contract rejects plans that include other AI, unrelated worlds, world deletion, immediate group member removal execution, group chat deletion, group message deletion, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
+- Linked AI disconnect execution snapshot boundaries are defined in `src/domain/linked-ai-disconnect-execution-snapshot.ts`.
+- `LinkedAIDisconnectExecutionSnapshot` captures the target Global AI Link plus selected-AI world contacts, private chats, memory scope ids, and future group-membership removals before any future mutation can run.
+- The snapshot contract is read-only and explicitly preserves worlds, other AI, group chats, group messages, provider connection, weather/time permission, and user profile.
+- `LinkedAIDisconnectRollbackPlan` is generated from the snapshot as a future restoration design only; rollback execution is not implemented.
 - Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.

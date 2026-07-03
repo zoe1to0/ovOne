@@ -179,3 +179,22 @@ export type {
   GuardedLinkedAIDisconnectResult,
   GuardedLinkedAIDisconnectStatus
 } from "./linked-ai-disconnect-guarded-executor.js";
+export {
+  createLinkedAIDisconnectRollbackPlan,
+  createLinkedAIDisconnectSnapshot,
+  getExplicitNonMutatedResources,
+  validateLinkedAIDisconnectSnapshot
+} from "./linked-ai-disconnect-execution-snapshot.js";
+export type {
+  LinkedAIDisconnectAffectedWorldSnapshot,
+  LinkedAIDisconnectExecutionSnapshot,
+  LinkedAIDisconnectExecutionSnapshotStatus,
+  LinkedAIDisconnectExecutionSnapshotValidation,
+  LinkedAIDisconnectExplicitNonMutatedResource,
+  LinkedAIDisconnectGroupMembershipAction,
+  LinkedAIDisconnectGroupMembershipSnapshot,
+  LinkedAIDisconnectPreservationRule,
+  LinkedAIDisconnectProviderConnectionSnapshotStatus,
+  LinkedAIDisconnectRollbackPlan,
+  LinkedAIDisconnectRollbackPlanStatus
+} from "./linked-ai-disconnect-execution-snapshot.js";

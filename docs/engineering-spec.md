@@ -165,6 +165,11 @@ UI action
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing command plus cleanup plan and remains `status = "planned"`.
 - The execution contract allows only future selected Global AI Link status/removal flag changes, selected AI world-contact cleanup, selected AI private-chat cleanup, selected AI memory-scope cleanup, selected AI group-membership removal later, and future provider connection status handling.
 - The execution contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat deletion, group-message deletion, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
+- Linked AI disconnect execution snapshot contract lives in `src/domain/linked-ai-disconnect-execution-snapshot.ts`.
+- `LinkedAIDisconnectExecutionSnapshot` is a read-only pre-execution capture of the target `GlobalAILink`, affected worlds, affected world contacts, private chats, memory scope ids, and future group-membership removals.
+- Execution snapshots explicitly mark worlds, other AI, group chats, group messages, provider connection, weather/time permission, and user profile as non-mutated resources.
+- Group data in the execution snapshot is membership-only: group chats, group messages, and the removed AI's historical group messages must be preserved.
+- `LinkedAIDisconnectRollbackPlan` is generated from the execution snapshot and documents what future real execution would need to restore if it fails; rollback execution is not implemented yet.
 - `CONFIRM_LINKED_AI_DISCONNECT` routes through the guarded executor scaffold but remains no-runtime-mutation; it does not run through Flow Executor yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
