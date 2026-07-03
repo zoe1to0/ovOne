@@ -142,6 +142,8 @@ UI action
 - `DeleteFriendCommand` permits only `worldId` and `worldContactId`; confirmed Delete Friend requires matching confirmation state and runs through `shell.deleteFriend(...)`.
 - Confirmed Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder, then routes to `CONTACTS` and clears active contact/chat selection.
 - Confirmed Delete Friend preserves `currentWorldId` and must not mutate other worlds, group chats, world metadata, world role/background metadata, `GlobalAIModel`, `GlobalAILink`, provider connections, weather/time permission, or Me Settings disconnect state.
+- AI removal through World Editor Remove Member, Contacts Detail Delete Friend, or future Linked AI disconnect may later remove only that AI's group membership.
+- Group chats, other group members, group history, and the AI's historical group messages must remain unless the user explicitly dissolves the group.
 - Contact Detail preference save must not mutate world name, worldview, world roles, weather/time permission, `GlobalAIModel`, `GlobalAILink`, `ProviderConnection`, chats, memory, or other worlds.
 - Me Settings Linked AI disconnect contract lives in `src/domain/linked-ai-disconnect-contract.ts`.
 - Linked AI disconnect is global and separate from Contacts Detail Delete Friend.
@@ -149,13 +151,13 @@ UI action
 - `CONFIRM_LINKED_AI_DISCONNECT` is scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, Reality/custom worlds, contacts, chats, or memory.
 - Linked AI disconnect cleanup planning lives in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
 - `createLinkedAIDisconnectCleanupPlan(...)` produces a deterministic read-only plan for every world containing the linked AI model.
-- Cleanup plan items include `worldId`, `worldTitle`, `worldContactIds`, `privateChatIds`, `memoryScopeIds`, and `groupCleanupStatus`.
+- Cleanup plan items include `worldId`, `worldTitle`, `worldContactIds`, `privateChatIds`, `memoryScopeIds`, and `groupMemberRemovalStatus`.
 - Cleanup plans keep `providerConnectionAction = "not-executed-yet"`, `globalLinkAction = "not-executed-yet"`, and `status = "planned"`.
 - Cleanup planning does not mutate Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
 - Linked AI disconnect execution contract lives in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing command plus cleanup plan and remains `status = "planned"`.
-- The execution contract allows only future selected Global AI Link status/removal flag changes, selected AI world-contact cleanup, selected AI private-chat cleanup, selected AI memory-scope cleanup, and future provider connection status handling.
-- The execution contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat execution, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
+- The execution contract allows only future selected Global AI Link status/removal flag changes, selected AI world-contact cleanup, selected AI private-chat cleanup, selected AI memory-scope cleanup, selected AI group-membership removal later, and future provider connection status handling.
+- The execution contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat deletion, group-message deletion, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
 - `CONFIRM_LINKED_AI_DISCONNECT` remains scaffold/no-op; the execution contract validates boundaries only and does not run through Flow Executor yet.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.

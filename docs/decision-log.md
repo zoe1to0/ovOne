@@ -1,5 +1,20 @@
 # ovOne Decision Log
 
+## 2026-07-03: Group history preservation clarified for AI removal
+
+Decision: AI removal paths preserve group chats and group history; future group handling may remove only the affected AI's group membership.
+
+Rules:
+
+- Applies to World Editor Remove Member, Contacts Detail Delete Friend, and Me Settings Linked AI Disconnect cleanup planning.
+- Private chat cleanup is allowed for the removed AI in the affected scope.
+- Private memory scope cleanup is allowed for the removed AI in the affected scope.
+- Future group handling may remove only the affected AI's group membership.
+- Group chats must remain, other group members must remain, group history must remain, and the removed AI's historical group messages must remain visible.
+- Group content may be deleted only when the user explicitly dissolves the group.
+- Linked AI disconnect cleanup plan terminology uses `groupMemberRemovalStatus`.
+- Group member removal remains future work and must not execute in the current scaffold.
+
 ## 2026-07-01: Linked AI disconnect execution contract scaffold added
 
 Decision: Global linked-AI disconnect now has an execution contract that defines the future mutation boundary without executing disconnect.
@@ -9,9 +24,9 @@ Rules:
 - The execution contract lives in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus `LinkedAIDisconnectCleanupPlan`.
 - Execution plans remain `planned`; `CONFIRM_LINKED_AI_DISCONNECT` still performs no runtime cleanup.
-- Future allowed mutations are limited to the selected Global AI Link status/removal flag, selected AI world contacts, selected AI private chats, selected AI world memory scopes, and future provider connection status if explicitly supported.
-- The contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat execution, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
-- Unsupported group cleanup must surface as a warning and must not be silently executed.
+- Future allowed mutations are limited to the selected Global AI Link status/removal flag, selected AI world contacts, selected AI private chats, selected AI world memory scopes, selected AI group membership later, and future provider connection status if explicitly supported.
+- The contract forbids world deletion, other-AI mutation, unrelated contact/chat/memory mutation, World Editor metadata mutation, unrelated Contacts Detail preference mutation, group-chat deletion, group-message deletion, weather/time permission mutation, user profile mutation, `GlobalAIModel` mutation, and immediate provider mutation.
+- Unsupported group-member removal must surface as a warning and must not be silently executed.
 - Reconnect is a separate future lifecycle and remains out of scope.
 
 ## 2026-06-30: Linked AI disconnect cleanup plan scaffold added
@@ -22,11 +37,11 @@ Rules:
 
 - The cleanup planner lives in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
 - `LinkedAIDisconnectCleanupPlan` targets one Global AI Link/model and records affected worlds.
-- Each affected world item records world contact ids, private chat ids, memory scope ids, and group cleanup status.
+- Each affected world item records world contact ids, private chat ids, memory scope ids, and group member removal status.
 - Provider connection and Global AI Link actions remain `not-executed-yet`; plan status remains `planned`.
 - Cleanup planning must not mutate runtime state, Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
 - Worlds without the linked AI are excluded, and other AI are excluded.
-- Group cleanup is recorded as `not-supported-yet` when needed; real group mutation remains future work.
+- Future group member removal is recorded as `not-supported-yet` when needed; real group membership mutation remains future work.
 
 ## 2026-06-30: Me Settings Linked AI disconnect contract scaffold added
 
@@ -175,7 +190,7 @@ Rules:
 - Confirmed removal deletes only the selected world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder metadata for that member.
 - Remove Member does not mutate Reality, other worlds, group chats, `GlobalAIModel`, `GlobalAILink`, or provider connections.
 - Re-adding the same AI later must create a brand-new world-scoped contact/chat/memory instance; old world memory is not recoverable.
-- Group cleanup, initial messages after member add/remove, and real memory engine cleanup remain out of scope.
+- Group-member removal, initial messages after member add/remove, and real memory engine cleanup remain out of scope.
 
 ## 2026-06-29: World Editor Remove Member contract scaffold added
 

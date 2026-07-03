@@ -7,7 +7,7 @@ import {
 
 export type LinkedAIDisconnectCleanupPlanStatus = "planned";
 export type LinkedAIDisconnectDeferredAction = "not-executed-yet";
-export type LinkedAIDisconnectGroupCleanupStatus = "not-supported-yet" | "none-needed";
+export type LinkedAIDisconnectGroupMemberRemovalStatus = "not-supported-yet" | "none-needed";
 
 export type WorldCleanupPlanItem = Readonly<{
   readonly worldId: WorldId;
@@ -15,7 +15,7 @@ export type WorldCleanupPlanItem = Readonly<{
   readonly worldContactIds: readonly string[];
   readonly privateChatIds: readonly string[];
   readonly memoryScopeIds: readonly string[];
-  readonly groupCleanupStatus: LinkedAIDisconnectGroupCleanupStatus;
+  readonly groupMemberRemovalStatus: LinkedAIDisconnectGroupMemberRemovalStatus;
 }>;
 
 export type LinkedAIDisconnectCleanupPlan = Readonly<{
@@ -50,7 +50,7 @@ export function createLinkedAIDisconnectCleanupPlan(
           worldContactIds: Object.freeze(contacts.map((contact) => contact.contactId)),
           privateChatIds: Object.freeze(privateChats.map((chat) => chat.chatId)),
           memoryScopeIds: Object.freeze(memoryScopeIdsForCleanup(scope.memory, contacts, privateChats)),
-          groupCleanupStatus: groupCleanupStatusForContacts(scope.groups, contacts)
+          groupMemberRemovalStatus: groupMemberRemovalStatusForContacts(scope.groups, contacts)
         })];
       })
     : [];
@@ -117,10 +117,10 @@ function memoryScopeIdsForCleanup(
   ];
 }
 
-function groupCleanupStatusForContacts(
+function groupMemberRemovalStatusForContacts(
   groups: readonly WorldGroup[],
   contacts: readonly WorldContact[]
-): LinkedAIDisconnectGroupCleanupStatus {
+): LinkedAIDisconnectGroupMemberRemovalStatus {
   const contactIds = new Set(contacts.flatMap((contact) => [contact.contactId, contact.actorId]));
   return groups.some((group) => group.actorIds.some((actorId) => contactIds.has(actorId)))
     ? "not-supported-yet"

@@ -22,7 +22,8 @@ export type WorldRemoveMemberValidation = Readonly<{
 export type WorldMemberRemoveAllowedFutureMutation =
   | "DeleteWorldContact"
   | "DeletePrivateWorldChat"
-  | "DeleteWorldMemoryScope";
+  | "DeleteWorldMemoryScope"
+  | "RemoveGroupMembershipLater";
 
 export type WorldMemberRemoveForbiddenMutation =
   | "Reality"
@@ -30,7 +31,9 @@ export type WorldMemberRemoveForbiddenMutation =
   | "GlobalAIModel"
   | "GlobalAILink"
   | "ProviderConnection"
-  | "GroupChat";
+  | "GroupChatDeletion"
+  | "GroupMessageDeletion"
+  | "OtherGroupMember";
 
 export type ValidateWorldRemoveMemberInput = Readonly<{
   readonly world: Pick<WorldScope["world"], "type">;
@@ -67,7 +70,8 @@ export function validateWorldRemoveMemberCommand(
     allowedFutureMutations: Object.freeze([
       "DeleteWorldContact",
       "DeletePrivateWorldChat",
-      "DeleteWorldMemoryScope"
+      "DeleteWorldMemoryScope",
+      "RemoveGroupMembershipLater"
     ] satisfies WorldMemberRemoveAllowedFutureMutation[]),
     forbiddenMutations: getForbiddenWorldMemberRemoveMutations(input.world)
   });
@@ -81,7 +85,9 @@ export function getForbiddenWorldMemberRemoveMutations(
     "GlobalAIModel",
     "GlobalAILink",
     "ProviderConnection",
-    "GroupChat"
+    "GroupChatDeletion",
+    "GroupMessageDeletion",
+    "OtherGroupMember"
   ];
   if (world.type === "reality") {
     forbidden.unshift("Reality");

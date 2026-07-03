@@ -133,7 +133,7 @@ export type {
   LinkedAIDisconnectCleanupPlanStatus,
   LinkedAIDisconnectCleanupPlanValidation,
   LinkedAIDisconnectDeferredAction,
-  LinkedAIDisconnectGroupCleanupStatus,
+  LinkedAIDisconnectGroupMemberRemovalStatus,
   WorldCleanupPlanItem
 } from "./linked-ai-disconnect-cleanup-plan.js";
 export {

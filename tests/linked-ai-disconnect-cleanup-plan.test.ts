@@ -31,11 +31,11 @@ describe("Me Settings linked AI disconnect cleanup plan", () => {
     assert.equal(JSON.stringify(toPlain(snapshot)), before);
   });
 
-  it("marks group cleanup as unsupported only when affected AI is in groups", () => {
+  it("marks future group member removal as unsupported only when affected AI is in groups", () => {
     const plan = createLinkedAIDisconnectCleanupPlan({ globalAILinkId: "link:target" }, createSnapshot());
 
-    assert.equal(plan.affectedWorlds.find((world) => world.worldId === realityWorldId)?.groupCleanupStatus, "not-supported-yet");
-    assert.equal(plan.affectedWorlds.find((world) => world.worldId === customWorldId)?.groupCleanupStatus, "none-needed");
+    assert.equal(plan.affectedWorlds.find((world) => world.worldId === realityWorldId)?.groupMemberRemovalStatus, "not-supported-yet");
+    assert.equal(plan.affectedWorlds.find((world) => world.worldId === customWorldId)?.groupMemberRemovalStatus, "none-needed");
   });
 
   it("validates planned cleanup and still rejects unlinked or disconnected AI", () => {

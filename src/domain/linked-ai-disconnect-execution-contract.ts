@@ -18,6 +18,7 @@ export type LinkedAIDisconnectAllowedFutureMutation =
   | "SelectedAIWorldContact"
   | "SelectedAIPrivateWorldChat"
   | "SelectedAIWorldMemoryScope"
+  | "SelectedAIGroupMembershipLater"
   | "ProviderConnectionStatusLater";
 
 export type LinkedAIDisconnectForbiddenFutureMutation =
@@ -28,7 +29,8 @@ export type LinkedAIDisconnectForbiddenFutureMutation =
   | "UnrelatedWorldMemory"
   | "WorldEditorMetadata"
   | "UnrelatedContactDetailPreferences"
-  | "GroupChat"
+  | "GroupChatDeletion"
+  | "GroupMessageDeletion"
   | "WeatherTimePermission"
   | "UserProfile"
   | "GlobalAIModel"
@@ -61,7 +63,7 @@ export type LinkedAIDisconnectExecutionValidation = Readonly<{
 }>;
 
 export const LINKED_AI_DISCONNECT_GROUP_CLEANUP_UNSUPPORTED_WARNING =
-  "Group cleanup remains unsupported for linked AI disconnect execution.";
+  "Group member removal remains future work; group chats and historical group messages must be preserved.";
 
 const CLEANUP_PLAN_KEYS = Object.freeze([
   "globalAILinkId",
@@ -78,7 +80,7 @@ const WORLD_CLEANUP_PLAN_ITEM_KEYS = Object.freeze([
   "worldContactIds",
   "privateChatIds",
   "memoryScopeIds",
-  "groupCleanupStatus"
+  "groupMemberRemovalStatus"
 ]);
 
 const EXECUTION_PLAN_KEYS = Object.freeze([
@@ -178,7 +180,7 @@ export function getLinkedAIDisconnectExecutionWarnings(
   cleanupPlan: LinkedAIDisconnectCleanupPlan
 ): readonly string[] {
   return Object.freeze(
-    cleanupPlan.affectedWorlds.some((world) => world.groupCleanupStatus === "not-supported-yet")
+    cleanupPlan.affectedWorlds.some((world) => world.groupMemberRemovalStatus === "not-supported-yet")
       ? [LINKED_AI_DISCONNECT_GROUP_CLEANUP_UNSUPPORTED_WARNING]
       : []
   );
@@ -190,6 +192,7 @@ export function getLinkedAIDisconnectAllowedFutureMutations(): readonly LinkedAI
     "SelectedAIWorldContact",
     "SelectedAIPrivateWorldChat",
     "SelectedAIWorldMemoryScope",
+    "SelectedAIGroupMembershipLater",
     "ProviderConnectionStatusLater"
   ]);
 }
@@ -203,7 +206,8 @@ export function getLinkedAIDisconnectForbiddenFutureMutations(): readonly Linked
     "UnrelatedWorldMemory",
     "WorldEditorMetadata",
     "UnrelatedContactDetailPreferences",
-    "GroupChat",
+    "GroupChatDeletion",
+    "GroupMessageDeletion",
     "WeatherTimePermission",
     "UserProfile",
     "GlobalAIModel",
@@ -237,8 +241,8 @@ function validateCleanupPlanKeys(plan: LinkedAIDisconnectCleanupPlan): string | 
     if (itemKeyError) {
       return itemKeyError;
     }
-    if (item.groupCleanupStatus !== "not-supported-yet" && item.groupCleanupStatus !== "none-needed") {
-      return "group cleanup must remain unsupported or unnecessary";
+    if (item.groupMemberRemovalStatus !== "not-supported-yet" && item.groupMemberRemovalStatus !== "none-needed") {
+      return "group member removal must remain unsupported or unnecessary";
     }
   }
   return null;
@@ -260,7 +264,7 @@ function serializePlan(plan: LinkedAIDisconnectCleanupPlan): string {
       worldContactIds: [...world.worldContactIds],
       privateChatIds: [...world.privateChatIds],
       memoryScopeIds: [...world.memoryScopeIds],
-      groupCleanupStatus: world.groupCleanupStatus
+      groupMemberRemovalStatus: world.groupMemberRemovalStatus
     })),
     providerConnectionAction: plan.providerConnectionAction,
     globalLinkAction: plan.globalLinkAction,

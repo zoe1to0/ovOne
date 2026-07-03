@@ -31,11 +31,16 @@ describe("Me Settings linked AI disconnect execution contract", () => {
       "SelectedAIWorldContact",
       "SelectedAIPrivateWorldChat",
       "SelectedAIWorldMemoryScope",
+      "SelectedAIGroupMembershipLater",
       "ProviderConnectionStatusLater"
     ]);
     assert.equal(executionPlan.forbiddenFutureMutations.includes("World"), true);
-    assert.equal(executionPlan.forbiddenFutureMutations.includes("GroupChat"), true);
-    assert.equal(executionPlan.warnings.includes("Group cleanup remains unsupported for linked AI disconnect execution."), true);
+    assert.equal(executionPlan.forbiddenFutureMutations.includes("GroupChatDeletion"), true);
+    assert.equal(executionPlan.forbiddenFutureMutations.includes("GroupMessageDeletion"), true);
+    assert.equal(
+      executionPlan.warnings.includes("Group member removal remains future work; group chats and historical group messages must be preserved."),
+      true
+    );
   });
 
   it("rejects unlinked or disconnected AI", () => {
@@ -82,7 +87,7 @@ describe("Me Settings linked AI disconnect execution contract", () => {
           worldContactIds: ["absent-other-contact"],
           privateChatIds: ["absent-other-chat"],
           memoryScopeIds: ["absent-other-contact", "absent-other-chat"],
-          groupCleanupStatus: "none-needed"
+          groupMemberRemovalStatus: "none-needed"
         }
       ]
     } as LinkedAIDisconnectCleanupPlan;
@@ -97,7 +102,7 @@ describe("Me Settings linked AI disconnect execution contract", () => {
     );
   });
 
-  it("rejects plans attempting world deletion, group cleanup execution, or global setting mutation", () => {
+  it("rejects plans attempting world deletion, group mutation execution, or global setting mutation", () => {
     const snapshot = createSnapshot();
     const cleanupPlan = createLinkedAIDisconnectCleanupPlan({ globalAILinkId: "link:target" }, snapshot);
     const worldDeletionPlan = {
@@ -109,7 +114,8 @@ describe("Me Settings linked AI disconnect execution contract", () => {
       affectedWorlds: [
         {
           ...cleanupPlan.affectedWorlds[0]!,
-          groupCleanupAction: "delete-group-chats"
+          groupMemberRemovalAction: "remove-member-from-groups-now",
+          groupMessageDeletionAction: "delete-member-history"
         },
         cleanupPlan.affectedWorlds[1]!
       ]

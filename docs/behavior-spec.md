@@ -91,6 +91,8 @@ UI event
 - Contacts Detail preference draft is current-world local state until save; `SAVE_CONTACT_DETAIL_PREFERENCES` validates and persists only the allowed current-world `WorldContact` preference fields.
 - Contacts Detail Delete Friend opens confirmation with `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`; confirmed delete removes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder, then routes safely to `CONTACTS`.
 - Contacts Detail Delete Friend does not mutate other worlds, group chats, `GlobalAIModel`, `GlobalAILink`, provider connections, or Me Settings disconnect state.
+- When an AI is removed from a world, deleted as a friend, or globally disconnected, future group handling may remove only that AI's group membership.
+- Group chats, other group members, group history, and the AI's historical group messages must remain unless the user explicitly dissolves the group.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
@@ -100,12 +102,12 @@ UI event
 - Opening disconnect confirmation validates an existing connected Global AI Link and shows `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`.
 - Confirming linked-AI disconnect remains scaffold/no-op in this milestone and must not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, worlds, contacts, chats, or memory.
 - Future linked-AI disconnect cleanup planning is defined in `src/domain/linked-ai-disconnect-cleanup-plan.ts`.
-- `LinkedAIDisconnectCleanupPlan` records the target Global AI Link/model, affected worlds, world contact ids, private chat ids, memory scope ids, deferred provider/global-link actions, and group cleanup status.
+- `LinkedAIDisconnectCleanupPlan` records the target Global AI Link/model, affected worlds, world contact ids, private chat ids, memory scope ids, deferred provider/global-link actions, and `groupMemberRemovalStatus`.
 - Cleanup planning is deterministic and read-only; it does not execute disconnect, delete Global AI Links, delete provider connections, or mutate world contacts/chats/memory.
-- Group cleanup is recorded as `not-supported-yet` when affected AI appears in groups; group mutation remains future work.
+- Future group member removal is recorded as `not-supported-yet` when affected AI appears in groups; group membership mutation remains future work.
 - Linked AI disconnect execution boundaries are defined in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus cleanup plan, records only future allowed mutations, and remains planned.
-- The execution contract rejects plans that include other AI, unrelated worlds, world deletion, group cleanup execution, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
+- The execution contract rejects plans that include other AI, unrelated worlds, world deletion, immediate group member removal execution, group chat deletion, group message deletion, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
 - Confirming linked-AI disconnect still does not run execution; this milestone adds validation/contract only.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
@@ -349,7 +351,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, group cleanup, initial member messages after member add, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, future group member removal, initial member messages after member add, and real memory engine integration are not implemented yet.
 - Create World confirmation creates worlds for Random Role draft and valid Detailed Edit scaffold submissions, but real random role generation, document parsing, AI initial messages, and auto group creation are not implemented yet.
 - Detailed Edit currently exposes scaffold fields only; Random Role role slots are collected as metadata and no real random assignment or detailed validation is implemented.
 - Create World loading/welcome transition is immediate scaffold state with an explicit completion action; no real animation timing or generated identity exists yet.

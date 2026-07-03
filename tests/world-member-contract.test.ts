@@ -73,7 +73,8 @@ describe("World Editor add-member contract", () => {
       "ExistingWorldMemory",
       "GlobalAIModel",
       "GlobalAILink",
-      "GroupChat",
+      "GroupChatDeletion",
+      "GroupMessageDeletion",
       "ProviderConnection"
     ]);
   });

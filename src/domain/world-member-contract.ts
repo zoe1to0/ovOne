@@ -34,7 +34,8 @@ export type WorldMemberForbiddenMutation =
   | "ExistingWorldMemory"
   | "GlobalAIModel"
   | "GlobalAILink"
-  | "GroupChat"
+  | "GroupChatDeletion"
+  | "GroupMessageDeletion"
   | "ProviderConnection";
 
 export type ResolveAddMemberCandidatesInput = Readonly<{
@@ -100,7 +101,8 @@ export function getForbiddenWorldMemberMutations(
     "ExistingWorldMemory",
     "GlobalAIModel",
     "GlobalAILink",
-    "GroupChat",
+    "GroupChatDeletion",
+    "GroupMessageDeletion",
     "ProviderConnection"
   ];
   if (world.type === "reality") {

@@ -59,14 +59,17 @@ describe("World Editor remove-member contract", () => {
     assert.deepEqual(result.allowedFutureMutations, [
       "DeleteWorldContact",
       "DeletePrivateWorldChat",
-      "DeleteWorldMemoryScope"
+      "DeleteWorldMemoryScope",
+      "RemoveGroupMembershipLater"
     ]);
     assert.deepEqual(result.forbiddenMutations, [
       "OtherWorld",
       "GlobalAIModel",
       "GlobalAILink",
       "ProviderConnection",
-      "GroupChat"
+      "GroupChatDeletion",
+      "GroupMessageDeletion",
+      "OtherGroupMember"
     ]);
   });
 });

@@ -55,6 +55,9 @@
 - Contacts Detail Delete Friend applies only to the current world and must not disconnect the Global AI Link or provider connection.
 - Contacts Detail Delete Friend deletes only the current world's `WorldContact`, private `WorldChat`, and `WorldMemoryScope` placeholder after confirmation.
 - Contacts Detail Delete Friend does not delete group chats yet and does not disconnect `GlobalAILink`, `GlobalAIModel`, or provider connections.
+- When an AI is removed from a world, deleted as a friend, or globally disconnected, future group handling may remove only that AI's group membership.
+- Group chats must remain, other group members must remain, group chat history must remain, and the AI's historical group messages must remain visible.
+- Group content may be deleted only when the user explicitly dissolves the group.
 - Delete Friend confirmation must say: `删除后，该 AI 在当前世界的聊天与记忆将被清除，但不会断开全局接入。`
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not configured per contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
@@ -65,10 +68,10 @@
 - Current Linked AI disconnect is scaffold-only; confirming disconnect must not delete `GlobalAIModel`, `GlobalAILink`, provider connection, world contacts, chats, memory, Reality, or custom worlds yet.
 - Future Linked AI disconnect cleanup planning must target only that linked AI across worlds where it appears.
 - Future cleanup may plan Global AI Link removal/disable and per-world contact/private chat/memory cleanup, but must not delete worlds, affect other AI, or mutate unrelated contacts/chats/memory.
-- Group cleanup for global disconnect remains unsupported and may only be recorded as future work in the cleanup plan.
+- Group member removal for global disconnect remains unsupported and may only be recorded as future work in the cleanup plan.
 - Future Linked AI disconnect execution is governed by a contract in `src/domain/linked-ai-disconnect-execution-contract.ts`.
-- The future execution boundary may only affect the selected Global AI Link, selected AI world contacts, selected AI private chats, selected AI world memory scopes, and later provider connection status if explicitly supported.
-- The future execution boundary must not delete worlds, affect other AI, mutate unrelated contacts/chats/memory, mutate world metadata, mutate unrelated Contacts Detail preferences, execute group cleanup, change weather/time permission, or change user profile.
+- The future execution boundary may only affect the selected Global AI Link, selected AI world contacts, selected AI private chats, selected AI world memory scopes, selected AI group membership later, and provider connection status later if explicitly supported.
+- The future execution boundary must not delete worlds, affect other AI, mutate unrelated contacts/chats/memory, mutate world metadata, mutate unrelated Contacts Detail preferences, delete group chats, delete group messages, change weather/time permission, or change user profile.
 - Custom world name cannot be empty; custom worldview can be cleared with warning.
 - Reality cannot be renamed and Reality worldview cannot be modified.
 
