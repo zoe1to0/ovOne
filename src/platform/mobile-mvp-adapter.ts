@@ -472,6 +472,7 @@ function createSettingsView(state: SemanticMobileState, controller: InteractionC
     confirmation.className = "mvp-danger-section";
     confirmation.append(
       createDraftNote(state.linkedAIDisconnectConfirmation.warning),
+      createLinkedAIDisconnectPreview(state),
       createMenuButton("取消", controller, { type: "CANCEL_LINKED_AI_DISCONNECT" }),
       createMenuButton("确认断开", controller, {
         type: "CONFIRM_LINKED_AI_DISCONNECT",
@@ -494,6 +495,40 @@ function createSettingsView(state: SemanticMobileState, controller: InteractionC
   language.append(languageTitle, languageValue);
   panel.append(back, heading, disconnectNote, list, language);
   return panel;
+}
+
+function createLinkedAIDisconnectPreview(state: SemanticMobileState): HTMLElement {
+  const preview = document.createElement("section");
+  preview.className = "mvp-disconnect-preview";
+  const model = state.linkedAIDisconnectConfirmation?.preview ?? null;
+  if (!model) {
+    preview.append(createDraftNote("断开影响范围预览暂不可用"));
+    return preview;
+  }
+
+  const title = document.createElement("h3");
+  title.textContent = "断开影响预览";
+  preview.append(title);
+
+  const worlds = document.createElement("ol");
+  worlds.className = "mvp-disconnect-world-list";
+  for (const world of model.affectedWorlds) {
+    const item = document.createElement("li");
+    item.append(
+      createDraftNote(world.worldTitle),
+      createDraftNote(`联系人：${world.privateContactIds.join("、") || "无"}`),
+      createDraftNote(`私聊：${world.privateChatIds.join("、") || "无"}`),
+      createDraftNote(`记忆：${world.memoryScopeIds.join("、") || "无"}`),
+      createDraftNote(`群成员：${world.groupMembershipLabel}`)
+    );
+    worlds.append(item);
+  }
+  preview.append(worlds);
+
+  for (const note of model.notes) {
+    preview.append(createDraftNote(note));
+  }
+  return preview;
 }
 
 function createProfileHeader(): HTMLElement {

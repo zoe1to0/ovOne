@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-03: Linked AI disconnect preview dry-run added
+
+Decision: Me Settings Linked AI disconnect now opens a deterministic read-only preview before any future global disconnect execution.
+
+Rules:
+
+- The preview is derived from `LinkedAIDisconnectCleanupPlan` and `LinkedAIDisconnectExecutionPlan`.
+- It lists affected worlds and the selected AI's private contacts, private chats, and memory scopes that would be removed later.
+- It surfaces future group-membership removal as non-destructive planned behavior.
+- Group chats, group history, group messages, and removed AI historical group messages must remain.
+- The preview states that global disconnect is different from deleting one friend in the current world.
+- Confirm remains scaffold/no-op and must not mutate Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
+
 ## 2026-07-03: Group history preservation clarified for AI removal
 
 Decision: AI removal paths preserve group chats and group history; future group handling may remove only the affected AI's group membership.

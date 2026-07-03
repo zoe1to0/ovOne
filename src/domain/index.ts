@@ -156,3 +156,13 @@ export type {
   LinkedAIDisconnectGlobalLinkAction,
   LinkedAIDisconnectProviderConnectionAction
 } from "./linked-ai-disconnect-execution-contract.js";
+export {
+  LINKED_AI_DISCONNECT_GROUP_HISTORY_NOTE,
+  LINKED_AI_DISCONNECT_GROUP_MEMBERSHIP_NOTE,
+  LINKED_AI_DISCONNECT_SCOPE_NOTE,
+  buildLinkedAIDisconnectPreview
+} from "./linked-ai-disconnect-preview.js";
+export type {
+  LinkedAIDisconnectPreviewViewModel,
+  LinkedAIDisconnectPreviewWorld
+} from "./linked-ai-disconnect-preview.js";

@@ -105,6 +105,9 @@ UI event
 - `LinkedAIDisconnectCleanupPlan` records the target Global AI Link/model, affected worlds, world contact ids, private chat ids, memory scope ids, deferred provider/global-link actions, and `groupMemberRemovalStatus`.
 - Cleanup planning is deterministic and read-only; it does not execute disconnect, delete Global AI Links, delete provider connections, or mutate world contacts/chats/memory.
 - Future group member removal is recorded as `not-supported-yet` when affected AI appears in groups; group membership mutation remains future work.
+- Opening disconnect confirmation also builds `LinkedAIDisconnectPreviewViewModel` through `buildLinkedAIDisconnectPreview(...)`.
+- The preview is read-only and lists affected worlds, selected-AI private contacts/chats/memory scopes, future group-membership removal status, group-history preservation, and the difference from deleting a friend in one world.
+- Cancel closes the preview by clearing local confirmation state.
 - Linked AI disconnect execution boundaries are defined in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing disconnect command plus cleanup plan, records only future allowed mutations, and remains planned.
 - The execution contract rejects plans that include other AI, unrelated worlds, world deletion, immediate group member removal execution, group chat deletion, group message deletion, weather/time permission mutation, user profile mutation, unrelated Contacts Detail preference mutation, or World Editor metadata mutation.
@@ -294,7 +297,7 @@ UI event
 | Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the send-message runtime effect. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
-| Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning. |
+| Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |
 | Cancel linked AI disconnect | `CANCEL_LINKED_AI_DISCONNECT` | Clears local linked-AI disconnect confirmation. |
 | Confirm linked AI disconnect | `CONFIRM_LINKED_AI_DISCONNECT` | Scaffold/no-op for now; validates matching confirmation but does not mutate Global AI Link, provider connection, worlds, contacts, chats, or memory. |
 | Open contact | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |

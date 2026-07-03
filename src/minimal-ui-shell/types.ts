@@ -1,5 +1,5 @@
 import type { ChatId } from "../chat-kernel/index.js";
-import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
+import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 
 export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
@@ -104,6 +104,7 @@ export type MinimalProductShellView = Readonly<{
     readonly actorId: string;
     readonly displayName: string;
   }>[];
+  readonly worldScopedSnapshot?: WorldScopedSnapshot;
   readonly product: MinimalProductView;
 }>;
 

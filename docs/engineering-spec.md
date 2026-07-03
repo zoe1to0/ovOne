@@ -154,6 +154,10 @@ UI action
 - Cleanup plan items include `worldId`, `worldTitle`, `worldContactIds`, `privateChatIds`, `memoryScopeIds`, and `groupMemberRemovalStatus`.
 - Cleanup plans keep `providerConnectionAction = "not-executed-yet"`, `globalLinkAction = "not-executed-yet"`, and `status = "planned"`.
 - Cleanup planning does not mutate Global AI Links, provider connections, worlds, contacts, chats, memory, or groups.
+- Linked AI disconnect preview lives in `src/domain/linked-ai-disconnect-preview.ts`.
+- `buildLinkedAIDisconnectPreview(...)` derives a deterministic read-only preview from `LinkedAIDisconnectCleanupPlan` and `LinkedAIDisconnectExecutionPlan`.
+- Opening disconnect confirmation stores the preview in local `linkedAIDisconnectConfirmation.preview` only; this is UI state and does not execute disconnect.
+- The preview displays affected worlds, selected-AI private contacts/chats/memory scopes, future group-membership removal status, group-history preservation notes, and the distinction from current-world Delete Friend.
 - Linked AI disconnect execution contract lives in `src/domain/linked-ai-disconnect-execution-contract.ts`.
 - `LinkedAIDisconnectExecutionPlan` is derived from the existing command plus cleanup plan and remains `status = "planned"`.
 - The execution contract allows only future selected Global AI Link status/removal flag changes, selected AI world-contact cleanup, selected AI private-chat cleanup, selected AI memory-scope cleanup, selected AI group-membership removal later, and future provider connection status handling.
@@ -370,7 +374,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `SUBMIT_MESSAGE` | Behavior Registry trims text, clears draft/overlay, and Flow Executor calls `shell.sendMessage(text)`. |
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
-| `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning. |
+| `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |
 | `CANCEL_LINKED_AI_DISCONNECT` | Clears local linked-AI disconnect confirmation state. |
 | `CONFIRM_LINKED_AI_DISCONNECT` | Scaffold/no-op for now; validates matching confirmation but does not mutate `GlobalAIModel`, `GlobalAILink`, provider connections, worlds, contacts, chats, or memory. |
 | `OPEN_CONTACT` | Sets `CONTACT_DETAIL`, stores `selectedContactActorId`, closes overlay. |

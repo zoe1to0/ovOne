@@ -66,6 +66,10 @@
 - Linked AI disconnect is global and is separate from Contacts Detail Delete Friend.
 - Linked AI disconnect requires strong confirmation: `断开后，该 AI 将从 ovOne 的已接入 AI 中移除。各世界中的相关联系人、聊天与记忆处理将在断开流程中统一执行。`
 - Current Linked AI disconnect is scaffold-only; confirming disconnect must not delete `GlobalAIModel`, `GlobalAILink`, provider connection, world contacts, chats, memory, Reality, or custom worlds yet.
+- Current Linked AI disconnect opens a read-only dry-run preview before confirmation.
+- The preview lists affected worlds and the selected AI's private contacts, private chats, memory scopes, and future group-membership removal status.
+- The preview must clearly say group chats, group history, and the removed AI's historical group messages remain visible.
+- The preview must clearly say global disconnect is different from deleting one friend in the current world.
 - Future Linked AI disconnect cleanup planning must target only that linked AI across worlds where it appears.
 - Future cleanup may plan Global AI Link removal/disable and per-world contact/private chat/memory cleanup, but must not delete worlds, affect other AI, or mutate unrelated contacts/chats/memory.
 - Group member removal for global disconnect remains unsupported and may only be recorded as future work in the cleanup plan.

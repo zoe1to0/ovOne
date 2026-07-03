@@ -10,7 +10,7 @@ import type {
   MinimalProductShellRuntime,
   MinimalProductShellView
 } from "./types.js";
-import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch } from "../domain/index.js";
+import type { ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import { createWorldFromDraft } from "./create-world-service.js";
 import { addWorldMember } from "./world-member-service.js";
 import { removeWorldMember } from "./world-member-remove-service.js";
@@ -58,6 +58,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
         });
       }),
       linkedAIModels: linkedAIModels(app.worldDomain.generateSnapshot(toWorldId("reality"))),
+      worldScopedSnapshot: worldScopedSnapshot(app, worldIds, activeWorldId),
       product: renderMinimalProductView(activeSnapshot, {
         showEntryMoment: entryWorldId === activeWorldId
       })
@@ -174,6 +175,79 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     snapshot,
     view
   });
+}
+
+function worldScopedSnapshot(app: AppRuntime, worldIds: readonly WorldId[], currentWorldId: WorldId): WorldScopedSnapshot {
+  const realitySnapshot = app.worldDomain.generateSnapshot(toWorldId("reality"));
+  const links = linkedAIModels(realitySnapshot);
+  return Object.freeze({
+    currentWorldId,
+    globalAIModels: Object.freeze(links.map((link) => Object.freeze({
+      modelId: link.globalAIModelId,
+      displayName: link.displayName
+    }))),
+    globalAILinks: Object.freeze(links.map((link, index) => Object.freeze({
+      linkId: link.globalAILinkId,
+      modelId: link.globalAIModelId,
+      connectedAt: index + 1,
+      status: "connected" as const
+    }))),
+    worlds: new Map(worldIds.map((worldId) => {
+      const snapshot = app.worldDomain.generateSnapshot(worldId);
+      const contacts = snapshot.contacts
+        .filter((contact) => contact.kind === "assistant" && contact.actorId !== snapshot.worldMeta.assistantActorId)
+        .map((contact) => Object.freeze({
+          worldId,
+          contactId: contact.actorId,
+          actorId: contact.actorId,
+          baseModelId: contact.actorId,
+          displayName: contact.displayName,
+          kind: contact.kind,
+          outputMode: contact.outputMode,
+          persona: Object.freeze({})
+        }));
+      const contactIds = new Set(contacts.map((contact) => contact.contactId));
+      return [worldId, Object.freeze({
+        world: Object.freeze({
+          worldId,
+          title: snapshot.worldMeta.title,
+          type: snapshot.worldMeta.type,
+          lifecycle: snapshot.worldMeta.lifecycle,
+          ownerActorId: snapshot.worldMeta.ownerActorId,
+          assistantActorId: snapshot.worldMeta.assistantActorId,
+          worldView: snapshot.runtimeState.metadata.worldView,
+          settings: snapshot.runtimeState.metadata.settings
+        }),
+        contacts: Object.freeze(contacts),
+        chats: Object.freeze([...snapshot.chatState.chats.values()].map((chat) => {
+          const participantContactId = privateContactIdForChat(chat.id, contactIds);
+          return Object.freeze({
+            worldId,
+            chatId: chat.id,
+            title: chat.title,
+            participantContactIds: Object.freeze(participantContactId ? [participantContactId] : []),
+            messages: chat.messages
+          });
+        })),
+        groups: snapshot.groups,
+        memory: Object.freeze({
+          worldId,
+          namespace: snapshot.memorySummary.namespace,
+          contactMemoryKeys: Object.freeze([...contactIds]),
+          chatMemoryKeys: Object.freeze([...snapshot.chatState.chats.keys()])
+        })
+      })];
+    }))
+  }) satisfies WorldScopedSnapshot;
+}
+
+function privateContactIdForChat(chatId: string, contactIds: ReadonlySet<string>): string | null {
+  for (const contactId of contactIds) {
+    if (chatId.endsWith(`:${contactId}`)) {
+      return contactId;
+    }
+  }
+  return null;
 }
 
 function linkedAIModels(realitySnapshot: WorldSnapshot): readonly Readonly<{

@@ -17,6 +17,7 @@ import {
   WORLD_MEMBER_REMOVE_WARNING_MESSAGE
 } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
+import type { WorldScopedSnapshot } from "../src/domain/index.js";
 
 describe("Composer mode state machine", () => {
   it("supports normal text and voice-button modes", () => {
@@ -175,7 +176,8 @@ describe("Composer mode state machine", () => {
           actorId: "ai:friend",
           displayName: "Friend"
         }
-      ]
+      ],
+      worldScopedSnapshot: linkedAIDisconnectPreviewSnapshot()
     };
 
     registry.execute({
@@ -186,6 +188,8 @@ describe("Composer mode state machine", () => {
 
     assert.equal(state.linkedAIDisconnectConfirmation?.globalAILinkId, "link:ai:friend");
     assert.equal(state.linkedAIDisconnectConfirmation?.warning, LINKED_AI_DISCONNECT_WARNING_MESSAGE);
+    assert.equal(state.linkedAIDisconnectConfirmation?.preview?.affectedWorlds[0]?.worldId, "reality");
+    assert.deepEqual(state.linkedAIDisconnectConfirmation?.preview?.affectedWorlds[0]?.privateContactIds, ["ai:friend"]);
     assert.deepEqual(state.view.linkedAIModels?.map((model) => model.globalAILinkId), ["link:ai:friend"]);
 
     registry.execute({ type: "CONFIRM_LINKED_AI_DISCONNECT", globalAILinkId: "link:ai:friend" }, state);
@@ -750,5 +754,59 @@ function createState(): SemanticMobileState {
         }
       }
     }
+  };
+}
+
+function linkedAIDisconnectPreviewSnapshot(): WorldScopedSnapshot {
+  const worldId = toWorldId("reality");
+  return {
+    currentWorldId: worldId,
+    globalAIModels: [{ modelId: "ai:friend", displayName: "Friend" }],
+    globalAILinks: [{ linkId: "link:ai:friend", modelId: "ai:friend", connectedAt: 1, status: "connected" }],
+    worlds: new Map([
+      [
+        worldId,
+        {
+          world: {
+            worldId,
+            title: "Reality",
+            type: "reality",
+            lifecycle: "active",
+            ownerActorId: "owner",
+            assistantActorId: "assistant",
+            worldView: {},
+            settings: {}
+          },
+          contacts: [
+            {
+              worldId,
+              contactId: "ai:friend",
+              actorId: "ai:friend",
+              baseModelId: "ai:friend",
+              displayName: "Friend",
+              kind: "assistant",
+              outputMode: "Dialogue",
+              persona: {}
+            }
+          ],
+          chats: [
+            {
+              worldId,
+              chatId: "chat:reality:ai:friend",
+              title: "Friend",
+              participantContactIds: ["ai:friend"],
+              messages: []
+            }
+          ],
+          groups: [],
+          memory: {
+            worldId,
+            namespace: "world:reality",
+            contactMemoryKeys: ["ai:friend"],
+            chatMemoryKeys: ["chat:reality:ai:friend"]
+          }
+        }
+      ]
+    ])
   };
 }

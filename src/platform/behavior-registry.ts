@@ -1,6 +1,7 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   getWorldEditorWarnings,
+  buildLinkedAIDisconnectPreview,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
   validateLinkedAIDisconnectCommand,
@@ -8,7 +9,7 @@ import {
   validateWorldRemoveMemberCommand,
   validateWorldEditorPatch
 } from "../domain/index.js";
-import type { GlobalAILink, GlobalAIModel, WorldContact as DomainWorldContact } from "../domain/index.js";
+import type { GlobalAILink, GlobalAIModel, LinkedAIDisconnectPreviewViewModel, WorldContact as DomainWorldContact } from "../domain/index.js";
 import type { WorldId } from "../world-domain/index.js";
 import { isComposerModeAllowed, resolveDefaultComposerMode, toggleComposerMode } from "./composer-mode.js";
 import type { ComposerKind, ComposerMode } from "./composer-mode.js";
@@ -123,6 +124,7 @@ export type LinkedAIDisconnectConfirmation = Readonly<{
   readonly globalAILinkId: string;
   readonly displayName: string;
   readonly warning: string;
+  readonly preview: LinkedAIDisconnectPreviewViewModel | null;
 }>;
 export type ViewRouteResolution = Readonly<{
   readonly route: ViewState;
@@ -628,7 +630,13 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           ? Object.freeze({
               globalAILinkId: action.globalAILinkId,
               displayName: action.displayName,
-              warning: validation.warning
+              warning: validation.warning,
+              preview: state.view.worldScopedSnapshot
+                ? buildLinkedAIDisconnectPreview(
+                    { globalAILinkId: action.globalAILinkId },
+                    state.view.worldScopedSnapshot
+                  )
+                : null
             })
           : null;
         state.settingsOpen = true;
