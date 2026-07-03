@@ -1,5 +1,19 @@
 # ovOne Decision Log
 
+## 2026-07-03: v0.5 settings disconnect contract milestone
+
+Decision: `v0.5-settings-disconnect-contract` marks the Settings disconnect contract milestone.
+
+Scope:
+
+- Me Settings Linked AI disconnect contract.
+- Deterministic cleanup plan.
+- Execution contract with future mutation boundaries.
+- Read-only disconnect preview / dry-run.
+- Group history preservation rules.
+- Confirm remains scaffold/no-op.
+- No runtime disconnect mutation is implemented yet.
+
 ## 2026-07-03: Linked AI disconnect preview dry-run added
 
 Decision: Me Settings Linked AI disconnect now opens a deterministic read-only preview before any future global disconnect execution.
