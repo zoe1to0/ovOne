@@ -176,7 +176,7 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "OPEN_GROUP_RULES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群规则暂未开放");
     registry.execute({ type: "SAVE_GROUP_RULES" }, state);
-    assert.equal(state.chatSettingsDraft?.noticeMessage, "群规保存暂未开放");
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "GroupRules: invalid group rules patch.");
     registry.execute({ type: "OPEN_GROUP_FILES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
     registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);

@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
-import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
+import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, GROUP_RULES_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
@@ -392,6 +392,94 @@ describe("FlowExecutor", () => {
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
     assert.equal(state.chatSettingsDraft.noticeMessage, CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE);
+  });
+
+  it("executes SAVE_GROUP_RULES through the runtime group rules save boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView("group:studio:1", targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (patch) => {
+        calls.push(patch);
+        return nextView;
+      }
+    );
+    const state = createState(createView("group:studio:1", targetWorldId));
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          groups: [
+            {
+              id: "group:studio:1",
+              title: "Studio Group",
+              actorIds: ["ai:friend"]
+            }
+          ],
+          chatState: {
+            activeChatId: "group:studio:1",
+            chats: new Map([[
+              "group:studio:1",
+              {
+                id: "group:studio:1",
+                worldId: targetWorldId,
+                title: "Studio Group",
+                messages: []
+              }
+            ]])
+          }
+        }
+      }
+    };
+    state.activeView = "CHAT_SETTINGS";
+    state.activeChatId = "group:studio:1";
+    state.selectedChatIdForSettings = "group:studio:1";
+    state.overlay = "chat-menu";
+    state.settingsOpen = true;
+    state.chatSettingsDraft = {
+      chatId: "group:studio:1",
+      groupRulesText: "Stay in character.",
+      backgroundImagePlaceholder: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "#dcecff",
+      otherBubbleColor: "#f2f2f2",
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "SAVE_GROUP_RULES" }, state);
+    const flow = executor.run({ type: "SAVE_GROUP_RULES" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{
+      worldId: targetWorldId,
+      groupChatId: "group:studio:1",
+      rulesText: "Stay in character."
+    }]);
+    assert.equal(flow.executedFlow, "SAVE_GROUP_RULES");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_SETTINGS");
+    assert.equal(state.activeChatId, "group:studio:1");
+    assert.equal(state.selectedChatIdForSettings, "group:studio:1");
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_RULES_SAVE_SUCCESS_MESSAGE);
   });
 
   it("executes CONFIRM_DELETE_FRIEND only with matching contact detail confirmation", () => {
@@ -1066,7 +1154,8 @@ function createShell(
   saveContactDetailPreferences: MinimalProductShellRuntime["saveContactDetailPreferences"] = () => createView("initial"),
   deleteFriend: MinimalProductShellRuntime["deleteFriend"] = () => createView("initial"),
   createGroupChat: MinimalProductShellRuntime["createGroupChat"] = () => createView("initial"),
-  saveChatAppearanceSettings: MinimalProductShellRuntime["saveChatAppearanceSettings"] = () => createView("initial")
+  saveChatAppearanceSettings: MinimalProductShellRuntime["saveChatAppearanceSettings"] = () => createView("initial"),
+  saveGroupRules: MinimalProductShellRuntime["saveGroupRules"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -1077,6 +1166,7 @@ function createShell(
     saveWorldRoleMetadata,
     saveContactDetailPreferences,
     saveChatAppearanceSettings,
+    saveGroupRules,
     deleteFriend,
     addWorldMember,
     removeWorldMember,

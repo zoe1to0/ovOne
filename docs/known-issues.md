@@ -17,9 +17,9 @@ Last audited: 2026-06-29.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
-- Create Group can create a current-world group chat with selected current-world AI contacts, but group member management, group rules, group files, initial AI messages, and real group memory behavior are not implemented.
-- Chat Settings / Group Detail still has scaffold-only background upload, group add/remove member, group rules save, and group files. Appearance color/background reference save is implemented for selected-chat metadata only.
-- Group rules have a text draft and validation contract, but `SAVE_GROUP_RULES` does not persist rules or affect AI behavior yet.
+- Create Group can create a current-world group chat with selected current-world AI contacts, but group member management, group files, initial AI messages, and real group memory behavior are not implemented.
+- Chat Settings / Group Detail still has scaffold-only background upload, group add/remove member, and group files. Appearance color/background reference save is implemented for selected-chat metadata only.
+- Group rules save persists text to selected group chat metadata, but rules do not affect AI behavior, prompts, memory, or runtime enforcement yet.
 - Chat Settings image upload remains unimplemented; `backgroundImageRef` can be saved only as an existing draft/reference value, not through real upload.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.

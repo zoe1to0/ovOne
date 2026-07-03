@@ -1,5 +1,5 @@
 import type { ChatId } from "../chat-kernel/index.js";
-import type { ChatSettingsPatch, ContactDetailPreferencePatch, DeleteFriendCommand, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
+import type { ChatSettingsPatch, ContactDetailPreferencePatch, DeleteFriendCommand, GroupRulesPatch, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 
 export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
@@ -136,6 +136,7 @@ export type MinimalProductShellRuntime = Readonly<{
   readonly saveWorldRoleMetadata: (patch: WorldRoleEditorPatch) => MinimalProductShellView;
   readonly saveContactDetailPreferences: (patch: ContactDetailPreferencePatch) => MinimalProductShellView;
   readonly saveChatAppearanceSettings: (patch: ChatSettingsPatch) => MinimalProductShellView;
+  readonly saveGroupRules: (patch: GroupRulesPatch) => MinimalProductShellView;
   readonly deleteFriend: (command: DeleteFriendCommand) => MinimalProductShellView;
   readonly addWorldMember: (command: WorldAddMemberCommand) => MinimalProductShellView;
   readonly removeWorldMember: (command: WorldRemoveMemberCommand) => MinimalProductShellView;

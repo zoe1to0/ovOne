@@ -45,7 +45,7 @@ export type {
   ChatSettingsValidationInput
 } from "./chat-settings-contract.js";
 export {
-  GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE,
+  GROUP_RULES_SAVE_SUCCESS_MESSAGE,
   canEditGroupRules,
   getGroupRulesWarnings,
   validateGroupRulesPatch

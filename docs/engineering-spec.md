@@ -73,7 +73,7 @@ UI action
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState update
   -> FlowExecutor.run(action, { shell, state })
-  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional shell operation for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / SAVE_GROUP_RULES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> runtime / kernel / world domain / snapshot system
   -> state.view.product.snapshot
   -> renderShellPage(...)
@@ -201,7 +201,7 @@ UI action
 - Create Group can run in Reality or custom worlds, enters the new group chat, and does not generate initial AI messages.
 - Create Group defaults blank group names to `群聊`.
 - Chat List uses plain group title only; Chat View header uses `chatHeaderTitle(...)` to display `群名称（x）`, where `x = 1 + selected AI member count`.
-- Create Group does not support post-creation member management, group rules, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
+- Create Group does not support post-creation member management, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
 - Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
 - The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
 - `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local chat appearance draft state.
@@ -217,8 +217,9 @@ UI action
 - `GroupRulesPatch` may only contain `worldId`, `groupChatId`, and `rulesText`.
 - `validateGroupRulesPatch(...)` requires the target chat to exist in the selected/current world and be a group chat; private chats are rejected.
 - `UPDATE_GROUP_RULES_DRAFT` updates local `chatSettingsDraft.groupRulesText` only.
-- `SAVE_GROUP_RULES` remains scaffold/no-op, shows `群规保存暂未开放`, and must not mutate group data or AI behavior.
-- `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, `SAVE_GROUP_RULES`, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions.
+- `SAVE_GROUP_RULES` validates `GroupRulesPatch`, then Flow Executor calls `shell.saveGroupRules(...)` to persist only the selected group chat's `groupRules.rulesText` metadata and stay on `CHAT_SETTINGS`.
+- `SAVE_GROUP_RULES` must not mutate AI prompt/runtime behavior, messages/history, group membership, group files, group memory, private chats, other group chats, other worlds, contact preferences, world metadata/role metadata, global/provider data, or weather/time permission.
+- `UPLOAD_CHAT_BACKGROUND_IMAGE`, `OPEN_GROUP_ADD_MEMBER`, `OPEN_GROUP_REMOVE_MEMBER`, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.
@@ -506,7 +507,8 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `CONFIRM_REMOVE_WORLD_MEMBER` without matching confirmation state | No runtime effect; remove requires explicit confirmation state. |
 | `SAVE_CHAT_SETTINGS` with a valid appearance patch | Calls `shell.saveChatAppearanceSettings(...)`, updates `state.view`, stays on `CHAT_SETTINGS`, keeps the selected chat id, and shows `已保存`. |
 | `SAVE_CHAT_SETTINGS` with an invalid appearance patch | No chat mutation; local draft keeps an invalid patch notice. |
-| `SAVE_GROUP_RULES` | No runtime effect; updates local chat settings notice with `群规保存暂未开放`. |
+| `SAVE_GROUP_RULES` with a valid group rules patch | Calls `shell.saveGroupRules(...)`, updates `state.view`, stays on `CHAT_SETTINGS`, keeps the selected group chat id, and shows `已保存`. |
+| `SAVE_GROUP_RULES` with an invalid group rules patch | No group rules mutation; local draft keeps an invalid patch notice. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
@@ -535,7 +537,7 @@ UI event
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState mutation
   -> FlowExecutor.run(action, { shell, state })
-  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
+  -> optional runtime effect handling for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / SAVE_GROUP_RULES / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> commitStateTransition(state, render)
   -> ViewRouter.resolve(activeView)
   -> resolved route object
@@ -588,7 +590,7 @@ Current package version: `0.1.0`.
 - `settingsOpen` is hidden sub-navigation inside Me.
 - ovO panel has read-only world switching but no world edit control flow yet.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `CONFIRM_CREATE_GROUP`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `SAVE_CHAT_SETTINGS`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `CONFIRM_CREATE_WORLD_DRAFT`, `CONFIRM_CREATE_WORLD_DETAIL`, `CONFIRM_CREATE_GROUP`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `SAVE_CHAT_SETTINGS`, `SAVE_GROUP_RULES`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions with Flow Executor runtime effects.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## v0.1 Tag Criteria

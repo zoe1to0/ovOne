@@ -2,8 +2,10 @@ import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE,
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
+  GROUP_RULES_SAVE_SUCCESS_MESSAGE,
   validateDeleteFriendCommand,
   validateChatSettingsPatch,
+  validateGroupRulesPatch,
   WORLD_EDITOR_SAVE_SUCCESS_MESSAGE,
   validateContactDetailPreferencePatch,
   validateWorldEditorPatch,
@@ -16,7 +18,9 @@ import {
   contactDetailPreferencePatchFromDraft,
   chatSettingsPatchFromDraft,
   createChatSettingsContractInput,
+  createGroupRulesContractInput,
   createContactDetailContractInput,
+  groupRulesPatchFromDraft,
   sanitizeCreateWorldDraft,
   validateCreateWorldDraft,
   validateCreateWorldDraftFields
@@ -32,7 +36,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "SAVE_GROUP_RULES" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -222,6 +226,35 @@ export function createFlowExecutor(): FlowExecutor {
           noticeMessage: CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE
         });
         return Object.freeze({ shouldRender: true, executedFlow: "SAVE_CHAT_SETTINGS" });
+      }
+      if (action.type === "SAVE_GROUP_RULES") {
+        const draft = context.state.chatSettingsDraft;
+        if (!draft) {
+          return NO_FLOW;
+        }
+        const validation = validateGroupRulesPatch(
+          groupRulesPatchFromDraft(draft, context.state.currentWorldId),
+          createGroupRulesContractInput(context.state)
+        );
+        if (!validation.valid || !validation.patch) {
+          context.state.chatSettingsDraft = Object.freeze({
+            ...draft,
+            noticeMessage: validation.error ?? "GroupRules: invalid group rules patch."
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        context.state.view = context.shell.saveGroupRules(validation.patch);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CHAT_SETTINGS";
+        context.state.activeChatId = validation.patch.groupChatId;
+        context.state.selectedChatIdForSettings = validation.patch.groupChatId;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.chatSettingsDraft = Object.freeze({
+          ...draft,
+          noticeMessage: GROUP_RULES_SAVE_SUCCESS_MESSAGE
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "SAVE_GROUP_RULES" });
       }
       if (action.type === "CONFIRM_DELETE_FRIEND") {
         const draft = context.state.contactDetailDraft;

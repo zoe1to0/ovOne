@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-03: Group rules save implemented
+
+Decision: Group rules can now be saved as selected group chat metadata.
+
+Rules:
+
+- `SAVE_GROUP_RULES` validates `GroupRulesPatch` and runs through Flow Executor.
+- The runtime shell writes only `WorldChatSession.groupRules.rulesText` for the selected group chat.
+- Empty rules are allowed and mean no extra group-level rules.
+- Saving group rules stays on `CHAT_SETTINGS` and shows `已保存`.
+- Saving group rules must not mutate private chats, other group chats, other worlds, messages/history, group membership, group files, group memory, contact preferences, world metadata/role metadata, Global AI data, provider connections, weather/time permission, AI prompts, or AI behavior.
+- Group rules are stored only; runtime enforcement and prompt injection remain future work.
+
 ## 2026-07-03: Group rules contract scaffold added
 
 Decision: Group Rules now has a pure contract and local Chat Settings scaffold for text-based group rules.
@@ -11,7 +24,7 @@ Rules:
 - Empty `rulesText` is valid and means no extra group-level rules beyond world/contact settings.
 - Private chats, other group chats, other worlds, Reality/global settings, group members/files/messages/history/memory, contact preferences, world metadata, Global AI data, provider connections, and actual AI prompt behavior are outside this contract.
 - `UPDATE_GROUP_RULES_DRAFT` updates only local Chat Settings draft state.
-- `SAVE_GROUP_RULES` remains scaffold/no-op and shows `群规保存暂未开放`.
+- At this decision point, `SAVE_GROUP_RULES` remained scaffold/no-op; this is superseded by the later Group rules save implementation above.
 
 ## 2026-07-03: v0.7 chat settings core milestone
 

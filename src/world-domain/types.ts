@@ -90,12 +90,17 @@ export type ChatAppearanceSettings = Readonly<{
   readonly otherBubbleColor: string;
 }>;
 
+export type GroupRulesSettings = Readonly<{
+  readonly rulesText: string;
+}>;
+
 export type WorldChatSession = Readonly<{
   readonly id: string;
   readonly worldId: WorldId;
   readonly title: string;
   readonly messages: readonly WorldChatMessage[];
   readonly appearance?: ChatAppearanceSettings;
+  readonly groupRules?: GroupRulesSettings;
 }>;
 
 export type WorldChatState = Readonly<{

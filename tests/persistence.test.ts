@@ -135,6 +135,40 @@ describe("Persistence Layer", () => {
     });
   });
 
+  it("persists and restores group rules settings", () => {
+    const storage = createMemoryWorldStorage();
+    const first = createPersistentProductRuntime({ storage });
+    const worldId = first.shell.view().activeWorldId;
+    first.app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId,
+      timestamp: 9300,
+      contact: {
+        actorId: "ai:group-rules",
+        displayName: "Rules Friend",
+        kind: "assistant"
+      }
+    });
+    const group = first.shell.createGroupChat({
+      groupName: "Rules Group",
+      selectedWorldContactIds: ["ai:group-rules"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+
+    first.shell.saveGroupRules({
+      worldId,
+      groupChatId,
+      rulesText: "Keep the room calm."
+    });
+
+    const second = createPersistentProductRuntime({ storage });
+    const restored = second.shell.view().product.snapshot.chatState.chats.get(groupChatId);
+
+    assert.deepEqual(restored?.groupRules, {
+      rulesText: "Keep the room calm."
+    });
+  });
+
   it("restores structural and persona snapshot state without changing core layers", () => {
     const app = App.init();
     const worldId = app.snapshot().worldMeta.id;

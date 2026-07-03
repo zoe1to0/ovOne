@@ -365,6 +365,108 @@ describe("Minimal UI Shell", () => {
     });
   });
 
+  it("saves group rules only on the selected group chat", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9200,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9201,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other Friend",
+        kind: "assistant"
+      }
+    });
+
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Group Rules World",
+      worldviewSourceType: "text",
+      worldviewText: "A rules test place.",
+      selectedAIModelIds: ["ai:friend", "ai:other"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const firstGroup = shell.createGroupChat({
+      groupName: "Rules A",
+      selectedWorldContactIds: ["ai:friend", "ai:other"]
+    });
+    const firstGroupId = firstGroup.product.snapshot.chatState.activeChatId!;
+    const secondGroup = shell.createGroupChat({
+      groupName: "Rules B",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const secondGroupId = secondGroup.product.snapshot.chatState.activeChatId!;
+    const messagesBefore = secondGroup.product.snapshot.chatState.chats.get(firstGroupId)?.messages;
+    const membersBefore = secondGroup.product.snapshot.groups.find((group) => group.id === firstGroupId)?.actorIds;
+    const memoryBefore = secondGroup.product.snapshot.memorySummary;
+    const contactsBefore = secondGroup.product.snapshot.contacts;
+    const settingsBefore = secondGroup.product.snapshot.runtimeState.metadata.settings;
+
+    const saved = shell.saveGroupRules({
+      worldId: customWorldId,
+      groupChatId: firstGroupId,
+      rulesText: "Stay in the scene."
+    });
+
+    assert.deepEqual(saved.product.snapshot.chatState.chats.get(firstGroupId)?.groupRules, {
+      rulesText: "Stay in the scene."
+    });
+    assert.equal(saved.product.snapshot.chatState.chats.get(secondGroupId)?.groupRules, undefined);
+    assert.deepEqual(saved.product.snapshot.chatState.chats.get(firstGroupId)?.messages, messagesBefore);
+    assert.deepEqual(saved.product.snapshot.groups.find((group) => group.id === firstGroupId)?.actorIds, membersBefore);
+    assert.deepEqual(saved.product.snapshot.memorySummary, memoryBefore);
+    assert.deepEqual(saved.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual(saved.product.snapshot.runtimeState.metadata.settings, settingsBefore);
+
+    const cleared = shell.saveGroupRules({
+      worldId: customWorldId,
+      groupChatId: firstGroupId,
+      rulesText: ""
+    });
+    assert.deepEqual(cleared.product.snapshot.chatState.chats.get(firstGroupId)?.groupRules, {
+      rulesText: ""
+    });
+
+    const realityBefore = shell.switchWorld(realityWorldId);
+    const realityGroup = shell.createGroupChat({
+      groupName: "Reality Rules",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const realityGroupId = realityGroup.product.snapshot.chatState.activeChatId!;
+    const savedReality = shell.saveGroupRules({
+      worldId: realityWorldId,
+      groupChatId: realityGroupId,
+      rulesText: "Reality only."
+    });
+    assert.deepEqual(savedReality.product.snapshot.chatState.chats.get(realityGroupId)?.groupRules, {
+      rulesText: "Reality only."
+    });
+    assert.equal(realityBefore.product.snapshot.chatState.chats.has(firstGroupId), false);
+
+    const customAfterRealitySave = shell.switchWorld(customWorldId);
+    assert.deepEqual(customAfterRealitySave.product.snapshot.chatState.chats.get(firstGroupId)?.groupRules, {
+      rulesText: ""
+    });
+    assert.throws(() => shell.saveGroupRules({
+      worldId: customWorldId,
+      groupChatId: `chat:${customWorldId}:ai:friend`,
+      rulesText: "Private chats cannot save group rules."
+    }), /invalid group rules patch/);
+  });
+
   it("keeps non-blank role assignment as an explicit placeholder", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

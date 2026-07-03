@@ -1,6 +1,6 @@
 import type { WorldId } from "../world-domain/index.js";
 
-export const GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE = "群规保存暂未开放";
+export const GROUP_RULES_SAVE_SUCCESS_MESSAGE = "已保存";
 
 export type GroupRulesPatch = Readonly<{
   readonly worldId: WorldId;

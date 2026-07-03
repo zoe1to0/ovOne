@@ -127,6 +127,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveGroupRules: (patch) => {
+      try {
+        return shell.saveGroupRules(patch);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveGroupRules", worldId: patch.worldId });
+        return decorate();
+      }
+    },
     deleteFriend: (command) => {
       try {
         return shell.deleteFriend(command);

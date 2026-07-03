@@ -1,13 +1,13 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
-  GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE,
   getWorldEditorWarnings,
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
   validateChatSettingsPatch,
   validateContactDetailPreferencePatch,
   validateDeleteFriendCommand,
+  validateGroupRulesPatch,
   validateLinkedAIDisconnectCommand,
   validateWorldAddMemberCommand,
   validateWorldRemoveMemberCommand,
@@ -503,15 +503,18 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     noticeMessage: null
   });
 
-  const createEmptyChatSettingsDraft = (chatId: string): ChatSettingsDraft => Object.freeze({
-    chatId,
-    groupRulesText: "",
-    backgroundImagePlaceholder: "",
-    backgroundColor: "#ffffff",
-    myBubbleColor: "#dcecff",
-    otherBubbleColor: "#f2f2f2",
-    noticeMessage: null
-  });
+  const createChatSettingsDraft = (state: SemanticMobileState, chatId: string): ChatSettingsDraft => {
+    const chat = state.view.product.snapshot.chatState.chats.get(chatId);
+    return Object.freeze({
+      chatId,
+      groupRulesText: chat?.groupRules?.rulesText ?? "",
+      backgroundImagePlaceholder: chat?.appearance?.backgroundImageRef ?? "",
+      backgroundColor: chat?.appearance?.backgroundColor ?? "#ffffff",
+      myBubbleColor: chat?.appearance?.myBubbleColor ?? "#dcecff",
+      otherBubbleColor: chat?.appearance?.otherBubbleColor ?? "#f2f2f2",
+      noticeMessage: null
+    });
+  };
 
   const disabled = (
     state: SemanticMobileState,
@@ -654,7 +657,7 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         state.activeView = "CHAT_SETTINGS";
         state.activeChatId = chatId;
         state.selectedChatIdForSettings = chatId;
-        state.chatSettingsDraft = createEmptyChatSettingsDraft(chatId);
+        state.chatSettingsDraft = createChatSettingsDraft(state, chatId);
         state.createGroupDraft = null;
         state.worldEditorDraft = null;
         state.contactDetailDraft = null;
@@ -709,9 +712,13 @@ export function createBehaviorRegistry(): BehaviorRegistry {
 
       case "SAVE_GROUP_RULES":
         if (state.chatSettingsDraft) {
+          const validation = validateGroupRulesPatch(
+            groupRulesPatchFromDraft(state.chatSettingsDraft, state.currentWorldId),
+            createGroupRulesContractInput(state)
+          );
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
-            noticeMessage: GROUP_RULES_SAVE_UNAVAILABLE_MESSAGE
+            noticeMessage: validation.valid ? null : validation.error
           });
         }
         closeOverlay(state);
@@ -1540,10 +1547,26 @@ export function chatSettingsPatchFromDraft(draft: ChatSettingsDraft, worldId: Wo
   };
 }
 
+export function groupRulesPatchFromDraft(draft: ChatSettingsDraft, worldId: WorldId) {
+  return {
+    worldId,
+    groupChatId: draft.chatId,
+    rulesText: draft.groupRulesText
+  };
+}
+
 export function createChatSettingsContractInput(state: SemanticMobileState) {
   return {
     worldId: state.currentWorldId,
     chatIds: [...state.view.product.snapshot.chatState.chats.keys()]
+  };
+}
+
+export function createGroupRulesContractInput(state: SemanticMobileState) {
+  return {
+    worldId: state.currentWorldId,
+    chatIds: [...state.view.product.snapshot.chatState.chats.keys()],
+    groupChatIds: state.view.product.snapshot.groups.map((group) => group.id)
   };
 }
 
