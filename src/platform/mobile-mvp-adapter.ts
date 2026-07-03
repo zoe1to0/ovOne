@@ -890,6 +890,7 @@ function createGroupMembersSettings(
   }
   const candidates = resolveGroupAddMemberCandidates(group.id, {
     worldId: snapshot.worldMeta.id,
+    assistantActorId: snapshot.worldMeta.assistantActorId,
     contacts: snapshot.contacts,
     groups: snapshot.groups
   });
@@ -901,7 +902,7 @@ function createGroupMembersSettings(
     const row = document.createElement("div");
     row.className = "mvp-create-world-ai-row";
     row.append(createDraftNote(candidate.displayName));
-    row.append(createMenuButton("添加", controller, { type: "OPEN_GROUP_ADD_MEMBER", worldContactId: candidate.worldContactId }));
+    row.append(createMenuButton("添加", controller, { type: "CONFIRM_GROUP_ADD_MEMBER", worldContactId: candidate.worldContactId }));
     section.append(row);
   }
   if (draft.groupMemberRemoveConfirmation) {

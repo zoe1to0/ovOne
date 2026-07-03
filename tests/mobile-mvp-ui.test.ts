@@ -172,7 +172,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(registry, /scaffoldNoticeForChatSettingsAction/);
     assert.match(adapter, /createDraftStage\("群成员", createGroupMembersSettings\(snapshot, group, draft, controller\)\)/);
     assert.match(adapter, /resolveGroupAddMemberCandidates\(group\.id/);
-    assert.match(adapter, /\{ type: "OPEN_GROUP_ADD_MEMBER", worldContactId: candidate\.worldContactId \}/);
+    assert.match(adapter, /\{ type: "CONFIRM_GROUP_ADD_MEMBER", worldContactId: candidate\.worldContactId \}/);
     assert.match(adapter, /\{ type: "OPEN_GROUP_REMOVE_MEMBER", worldContactId: actorId \}/);
     assert.match(adapter, /type: "CONFIRM_GROUP_REMOVE_MEMBER"/);
     assert.match(adapter, /createDraftStage\("群规则", createGroupRulesSettings\(draft, controller\)\)/);

@@ -12,6 +12,7 @@ import {
 } from "../src/minimal-ui-shell/index.js";
 import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.js";
 import { App } from "../src/app/index.js";
+import { resolveGroupAddMemberCandidates } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 import { toChatEventId, toChatId, transition } from "../src/chat-kernel/index.js";
 import type { ChatId } from "../src/chat-kernel/index.js";
@@ -243,6 +244,89 @@ describe("Minimal UI Shell", () => {
     const realityAfterCustomGroup = shell.switchWorld(realityWorldId);
     assert.equal(realityAfterCustomGroup.product.snapshot.groups.length, realityAfterCustomCreate.product.snapshot.groups.length);
     assert.equal(realityAfterCustomGroup.product.snapshot.chatState.chats.has(customGroupId), false);
+  });
+
+  it("adds a group member only to the selected current-world group", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other",
+        kind: "assistant"
+      }
+    });
+
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Group Member World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:friend", "ai:other"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const group = shell.createGroupChat({
+      groupName: "Member Group",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+    const otherGroup = shell.createGroupChat({
+      groupName: "Other Group",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const otherGroupChatId = otherGroup.product.snapshot.chatState.activeChatId!;
+    const targetChatBefore = otherGroup.product.snapshot.chatState.chats.get(groupChatId)!;
+    const otherChatBefore = otherGroup.product.snapshot.chatState.chats.get(otherGroupChatId)!;
+    const friendPrivateChatBefore = otherGroup.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:friend`);
+    const otherPrivateChatBefore = otherGroup.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:other`);
+    const contactsBefore = otherGroup.product.snapshot.contacts;
+    const metadataBefore = otherGroup.product.snapshot.runtimeState.metadata;
+    const realityBefore = shell.switchWorld(realityWorldId);
+    shell.switchWorld(customWorldId);
+
+    const added = shell.addGroupMember({
+      worldId: customWorldId,
+      groupChatId,
+      worldContactId: "ai:other"
+    });
+
+    assert.deepEqual(added.product.snapshot.groups.find((candidate) => candidate.id === groupChatId)?.actorIds, ["ai:friend", "ai:other"]);
+    assert.deepEqual(resolveGroupAddMemberCandidates(groupChatId, {
+      worldId: customWorldId,
+      assistantActorId: added.product.snapshot.worldMeta.assistantActorId,
+      contacts: added.product.snapshot.contacts,
+      groups: added.product.snapshot.groups
+    }), []);
+    assert.deepEqual(added.product.snapshot.groups.find((candidate) => candidate.id === otherGroupChatId)?.actorIds, ["ai:friend"]);
+    assert.deepEqual(added.product.snapshot.chatState.chats.get(groupChatId)?.messages, targetChatBefore.messages);
+    assert.deepEqual(added.product.snapshot.chatState.chats.get(otherGroupChatId), otherChatBefore);
+    assert.deepEqual(added.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:friend`), friendPrivateChatBefore);
+    assert.deepEqual(added.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:other`), otherPrivateChatBefore);
+    assert.deepEqual(added.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual(added.product.snapshot.runtimeState.metadata, metadataBefore);
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.deepEqual(realityAfter.product.snapshot.groups, realityBefore.product.snapshot.groups);
+    assert.deepEqual(realityAfter.product.snapshot.contacts, realityBefore.product.snapshot.contacts);
+    assert.deepEqual(
+      [...realityAfter.product.snapshot.chatState.chats.entries()],
+      [...realityBefore.product.snapshot.chatState.chats.entries()]
+    );
   });
 
   it("saves chat appearance settings only on the selected world chat", () => {

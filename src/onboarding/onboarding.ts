@@ -135,6 +135,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    addGroupMember: (command) => {
+      try {
+        return shell.addGroupMember(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "addGroupMember", worldId: command.worldId });
+        return decorate();
+      }
+    },
     deleteFriend: (command) => {
       try {
         return shell.deleteFriend(command);

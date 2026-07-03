@@ -36,18 +36,20 @@
 - Create Group requires at least one AI member, creates placeholder group memory metadata, opens the new group chat, and does not generate initial AI messages.
 - Empty Create Group names default to `群聊`.
 - Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
-- Create Group does not support post-creation member management execution, group files, cross-world members, or real memory engine behavior yet.
+- Create Group does not support post-creation remove-member execution, group files, cross-world members, or real memory engine behavior yet; post-creation add-member execution is supported for current-world AI contacts only.
 - Chat `...` settings opens a full page, not an overlay.
-- Group chat settings show group members, add/remove member scaffolds, text-based group rules draft scaffold, group files scaffold, and current chat appearance controls.
+- Group chat settings show group members, add member execution, remove member scaffold, text-based group rules draft scaffold, group files scaffold, and current chat appearance controls.
 - Group member management applies only inside the selected group chat in the current world.
 - Add Group Member candidates come only from current-world AI contacts not already in the selected group; cross-world members are forbidden.
+- ovO / the world's system assistant is not an addable group member candidate.
+- Add Group Member mutates only the selected group chat membership; it must not create/delete world contacts, private chats, memory scopes, messages, group history, other groups/worlds, or global/provider data.
 - Remove Group Member may later remove only that AI from group membership; it must not delete the AI's world contact, private chat, world memory scope, group chat, group history, or historical messages.
 - A group must keep at least one AI member; trying to remove the last AI member is blocked with `移除后将解散该群`.
 - Group dissolution is a separate future action and out of scope.
 - Private chat settings show only current chat appearance scaffolds.
 - Chat settings appearance scaffolds include upload chat background image, chat background color, my bubble color, and opposite-side bubble color.
 - Chat Settings save contract may only target current-chat appearance fields: `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
-- Chat settings save persists only the selected chat's appearance metadata. Group rules save persists only the selected group chat's `rulesText` metadata. Background image upload, group add/remove member confirmation, and group files remain no-op scaffolds.
+- Chat settings save persists only the selected chat's appearance metadata. Group rules save persists only the selected group chat's `rulesText` metadata. Group Add Member persists only the selected group chat's member list. Background image upload, group remove member confirmation, and group files remain no-op scaffolds.
 - Chat settings save must not mutate group membership, messages/history, chat identity, contact preferences, world metadata, world role metadata, global/provider data, or weather/time permission.
 - Group rules belong only to one group chat in the current world and are edited from that group chat's Chat Settings / Group Detail page.
 - Group rules are text-based; empty rules mean no extra group-level rules beyond world/contact settings.

@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-04: Group add member execution implemented
+
+Decision: Add Group Member now has controlled execution for selected current-world group chats.
+
+Rules:
+
+- `CONFIRM_GROUP_ADD_MEMBER` validates `GroupAddMemberCommand` and runs through Flow Executor.
+- The runtime shell mutates only the selected group's member `actorIds`.
+- Candidates must be current-world AI contacts not already in the selected group.
+- Adding a group member does not create/delete `WorldContact`, private `WorldChat`, memory scopes, messages, group history, other groups, other worlds, `GlobalAIModel`, `GlobalAILink`, or `ProviderConnection`.
+- Confirmed Remove Group Member remains scaffold/no-op; group dissolution remains future work.
+
 ## 2026-07-03: Group member management contract scaffold added
 
 Decision: Group member management now has a pure contract and local Chat Settings scaffold.
@@ -11,7 +23,7 @@ Rules:
 - Remove Group Member may later remove only AI group membership; it must not delete world contacts, private chats, memory scopes, group chats, group history, or historical messages.
 - Removing the last AI member is blocked with `移除后将解散该群`.
 - Group dissolution is a separate future action and out of scope.
-- Confirm add/remove remains scaffold/no-op and does not mutate runtime data yet.
+- Confirm remove remains scaffold/no-op; add member execution is handled by the later controlled execution decision.
 - Forbidden mutation targets include group messages/history, group rules/files, other groups, other worlds, `GlobalAIModel`, `GlobalAILink`, and `ProviderConnection`.
 
 ## 2026-07-03: Group rules save implemented
@@ -93,6 +105,7 @@ Rules:
 - Private chat settings show only current chat appearance scaffolds.
 - Group chat settings show group members, add/remove member scaffolds, group rules scaffold, group files scaffold, and current chat appearance scaffolds.
 - Background image upload, group add/remove member, group rules, and group files remain scaffold/no-op behavior only.
+- The add-member part of this scaffold decision is superseded by the later Group add member execution decision above.
 - At this scaffold stage, color settings save did not persist; this is superseded by the later Chat settings appearance save implementation above.
 - Chat settings must not mutate group membership, chat messages/history, group rules/files, or chat identity.
 

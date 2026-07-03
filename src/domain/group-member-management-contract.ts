@@ -40,6 +40,7 @@ export type GroupMemberCandidate = Readonly<{
 
 export type GroupMemberManagementInput = Readonly<{
   readonly worldId: WorldId;
+  readonly assistantActorId?: string;
   readonly contacts: readonly WorldContact[];
   readonly groups: readonly WorldGroup[];
 }>;
@@ -90,6 +91,7 @@ export function resolveGroupAddMemberCandidates(
   return Object.freeze(input.contacts
     .filter((contact) => contact.worldId === input.worldId)
     .filter((contact) => contact.kind === "assistant")
+    .filter((contact) => contact.actorId !== input.assistantActorId)
     .filter((contact) => !existing.has(contact.actorId))
     .map((contact) => Object.freeze({
       worldId: contact.worldId,
@@ -113,6 +115,7 @@ export function validateGroupAddMemberCommand(
       contact &&
       contact.worldId === input.worldId &&
       contact.kind === "assistant" &&
+      contact.actorId !== input.assistantActorId &&
       !group.actorIds.includes(contact.actorId) &&
       forbiddenMutations.length === 0
   );
@@ -140,6 +143,7 @@ export function validateGroupRemoveMemberCommand(
       contact &&
       contact.worldId === input.worldId &&
       contact.kind === "assistant" &&
+      contact.actorId !== input.assistantActorId &&
       group.actorIds.includes(contact.actorId) &&
       !lastMember &&
       forbiddenMutations.length === 0

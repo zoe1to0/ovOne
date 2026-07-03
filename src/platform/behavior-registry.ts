@@ -1697,6 +1697,7 @@ export function createGroupRulesContractInput(state: SemanticMobileState) {
 export function createGroupMemberManagementInput(state: SemanticMobileState) {
   return {
     worldId: state.currentWorldId,
+    assistantActorId: state.view.product.snapshot.worldMeta.assistantActorId,
     contacts: state.view.product.snapshot.contacts,
     groups: state.view.product.snapshot.groups
   };

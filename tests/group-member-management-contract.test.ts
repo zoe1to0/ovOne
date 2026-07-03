@@ -39,13 +39,20 @@ const groups: readonly WorldGroup[] = Object.freeze([
 
 const input = Object.freeze({
   worldId,
+  assistantActorId: "ovone",
   contacts,
   groups
 });
 
 describe("Group Member Management contract scaffold", () => {
   it("resolves add candidates from current-world AI contacts that are not already in the group", () => {
-    const candidates = resolveGroupAddMemberCandidates("group:one", input);
+    const candidates = resolveGroupAddMemberCandidates("group:one", {
+      ...input,
+      contacts: Object.freeze([
+        ...contacts,
+        contact("ovone", "ovO", worldId)
+      ])
+    });
 
     assert.deepEqual(candidates.map((candidate) => candidate.worldContactId), ["ai:three"]);
     assert.equal(candidates.every((candidate) => candidate.worldId === worldId), true);
@@ -66,6 +73,11 @@ describe("Group Member Management contract scaffold", () => {
       worldId,
       groupChatId: "group:one",
       worldContactId: "ai:other-world"
+    }, input).valid, false);
+    assert.equal(validateGroupAddMemberCommand({
+      worldId,
+      groupChatId: "chat:private:ai:three",
+      worldContactId: "ai:three"
     }, input).valid, false);
   });
 
