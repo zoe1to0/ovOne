@@ -124,6 +124,7 @@ export function createPersistentMinimalUiShell(
     saveChatAppearanceSettings: (patch) => withAutosave(shell.saveChatAppearanceSettings(patch)),
     saveGroupRules: (patch) => withAutosave(shell.saveGroupRules(patch)),
     addGroupMember: (command) => withAutosave(shell.addGroupMember(command)),
+    removeGroupMember: (command) => withAutosave(shell.removeGroupMember(command)),
     deleteFriend: (command) => withAutosave(shell.deleteFriend(command)),
     addWorldMember: (command) => withAutosave(shell.addWorldMember(command)),
     removeWorldMember: (command) => withAutosave(shell.removeWorldMember(command)),

@@ -852,9 +852,8 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           const confirmation = state.chatSettingsDraft.groupMemberRemoveConfirmation;
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
-            groupMemberRemoveConfirmation: null,
             noticeMessage: confirmation?.worldContactId === action.worldContactId
-              ? GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE
+              ? GROUP_MEMBER_REMOVE_WARNING_MESSAGE
               : "GroupMemberManagement: missing remove member confirmation."
           });
         }

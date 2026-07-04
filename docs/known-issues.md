@@ -17,9 +17,9 @@ Last audited: 2026-06-29.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
-- Create Group can create a current-world group chat with selected current-world AI contacts, and group add-member execution can add current-world AI contacts to a selected group. Group remove-member execution, group files, initial AI messages, and real group memory behavior are not implemented.
-- Chat Settings / Group Detail still has scaffold-only background upload, group remove member confirmation, and group files. Group add member execution and appearance color/background reference save are implemented for selected current-world targets only.
-- Group member management has a contract and Add Group Member execution. Confirmed Remove Group Member remains scaffold/no-op and does not mutate group membership yet.
+- Create Group can create a current-world group chat with selected current-world AI contacts, and group add/remove-member execution can update selected group membership. Group files, initial AI messages, group dissolution, and real group memory behavior are not implemented.
+- Chat Settings / Group Detail still has scaffold-only background upload and group files. Group add/remove member execution and appearance color/background reference save are implemented for selected current-world targets only.
+- Group member management has a contract and Add/Remove Group Member execution. Removing the last AI member remains blocked because group dissolution is not implemented.
 - Group rules save persists text to selected group chat metadata, but rules do not affect AI behavior, prompts, memory, or runtime enforcement yet.
 - Chat Settings image upload remains unimplemented; `backgroundImageRef` can be saved only as an existing draft/reference value, not through real upload.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.

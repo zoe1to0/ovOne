@@ -6,6 +6,7 @@ import {
   validateDeleteFriendCommand,
   validateChatSettingsPatch,
   validateGroupAddMemberCommand,
+  validateGroupRemoveMemberCommand,
   validateGroupRulesPatch,
   WORLD_EDITOR_SAVE_SUCCESS_MESSAGE,
   validateContactDetailPreferencePatch,
@@ -13,7 +14,7 @@ import {
   validateWorldRoleEditorPatch
 } from "../domain/index.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-service.js";
-import { GROUP_MEMBER_ADD_SUCCESS_MESSAGE } from "../minimal-ui-shell/group-member-service.js";
+import { GROUP_MEMBER_ADD_SUCCESS_MESSAGE, GROUP_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/group-member-service.js";
 import { privateChatIdForFriend } from "../minimal-ui-shell/contact-detail-delete-service.js";
 import { privateChatIdForMember, WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../minimal-ui-shell/world-member-remove-service.js";
 import {
@@ -39,7 +40,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "SAVE_GROUP_RULES" | "ADD_GROUP_MEMBER" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "SAVE_GROUP_RULES" | "ADD_GROUP_MEMBER" | "REMOVE_GROUP_MEMBER" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -300,6 +301,50 @@ export function createFlowExecutor(): FlowExecutor {
           groupMemberRemoveConfirmation: null
         });
         return Object.freeze({ shouldRender: true, executedFlow: "ADD_GROUP_MEMBER" });
+      }
+      if (action.type === "CONFIRM_GROUP_REMOVE_MEMBER") {
+        const draft = context.state.chatSettingsDraft;
+        const confirmation = draft?.groupMemberRemoveConfirmation ?? null;
+        if (!draft || confirmation?.worldContactId !== action.worldContactId) {
+          return NO_FLOW;
+        }
+        const validation = validateGroupRemoveMemberCommand(
+          {
+            worldId: context.state.currentWorldId,
+            groupChatId: draft.chatId,
+            worldContactId: action.worldContactId
+          },
+          createGroupMemberManagementInput(context.state)
+        );
+        if (!validation.valid || !validation.command) {
+          context.state.chatSettingsDraft = Object.freeze({
+            ...draft,
+            noticeMessage: validation.error ?? "GroupMemberManagement: invalid remove member command.",
+            groupMemberRemoveConfirmation: null
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        try {
+          context.state.view = context.shell.removeGroupMember(validation.command);
+        } catch (error) {
+          context.state.chatSettingsDraft = Object.freeze({
+            ...draft,
+            noticeMessage: error instanceof Error ? error.message : "移除失败"
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CHAT_SETTINGS";
+        context.state.activeChatId = validation.command.groupChatId;
+        context.state.selectedChatIdForSettings = validation.command.groupChatId;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.chatSettingsDraft = Object.freeze({
+          ...draft,
+          noticeMessage: GROUP_MEMBER_REMOVE_SUCCESS_MESSAGE,
+          groupMemberRemoveConfirmation: null
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "REMOVE_GROUP_MEMBER" });
       }
       if (action.type === "CONFIRM_DELETE_FRIEND") {
         const draft = context.state.contactDetailDraft;

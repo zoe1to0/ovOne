@@ -368,8 +368,8 @@ describe("Composer mode state machine", () => {
     assert.equal(state.chatSettingsDraft?.noticeMessage, "移除后，该 AI 只会离开此群，群聊与历史消息仍会保留。");
     assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation?.worldContactId, "ai:one");
     registry.execute({ type: "CONFIRM_GROUP_REMOVE_MEMBER", worldContactId: "ai:one" }, state);
-    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除群成员暂未开放");
-    assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation, null);
+    assert.equal(state.chatSettingsDraft?.noticeMessage, "移除后，该 AI 只会离开此群，群聊与历史消息仍会保留。");
+    assert.equal(state.chatSettingsDraft?.groupMemberRemoveConfirmation?.worldContactId, "ai:one");
     assert.deepEqual(state.view.product.snapshot.groups[0]?.actorIds, ["ai:one", "ai:two"]);
 
     state.view = {

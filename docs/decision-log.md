@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-07-04: Group remove member execution implemented
+
+Decision: Remove Group Member now has controlled execution for selected current-world group chats.
+
+Rules:
+
+- `CONFIRM_GROUP_REMOVE_MEMBER` requires matching local confirmation, validates `GroupRemoveMemberCommand`, and runs through Flow Executor.
+- The runtime shell mutates only the selected group's member `actorIds`.
+- Removing a group member does not delete `WorldContact`, private `WorldChat`, memory scopes, group chats, group messages/history, historical messages from the removed AI, group rules/files, other groups/worlds, `GlobalAIModel`, `GlobalAILink`, or `ProviderConnection`.
+- Removing the last AI member remains blocked with `移除后将解散该群`; group dissolution remains future work.
+
 ## 2026-07-04: Group add member execution implemented
 
 Decision: Add Group Member now has controlled execution for selected current-world group chats.
@@ -10,7 +21,7 @@ Rules:
 - The runtime shell mutates only the selected group's member `actorIds`.
 - Candidates must be current-world AI contacts not already in the selected group.
 - Adding a group member does not create/delete `WorldContact`, private `WorldChat`, memory scopes, messages, group history, other groups, other worlds, `GlobalAIModel`, `GlobalAILink`, or `ProviderConnection`.
-- Confirmed Remove Group Member remains scaffold/no-op; group dissolution remains future work.
+- Confirmed Remove Group Member is handled by the later controlled remove execution decision above; group dissolution remains future work.
 
 ## 2026-07-03: Group member management contract scaffold added
 

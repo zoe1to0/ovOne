@@ -143,6 +143,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    removeGroupMember: (command) => {
+      try {
+        return shell.removeGroupMember(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "removeGroupMember", worldId: command.worldId });
+        return decorate();
+      }
+    },
     deleteFriend: (command) => {
       try {
         return shell.deleteFriend(command);

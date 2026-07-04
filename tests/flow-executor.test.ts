@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
 import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, GROUP_RULES_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
-import { GROUP_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/group-member-service.js";
+import { GROUP_MEMBER_ADD_SUCCESS_MESSAGE, GROUP_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/group-member-service.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
 import type { MinimalProductShellRuntime, MinimalProductShellView } from "../src/minimal-ui-shell/index.js";
@@ -589,6 +589,119 @@ describe("FlowExecutor", () => {
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
     assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_MEMBER_ADD_SUCCESS_MESSAGE);
+  });
+
+  it("executes CONFIRM_GROUP_REMOVE_MEMBER through the runtime group member boundary", () => {
+    const targetWorldId = toWorldId("custom:studio");
+    const nextView = createView("group:studio:1", targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (command) => {
+        calls.push(command);
+        return nextView;
+      }
+    );
+    const state = createState(createView("group:studio:1", targetWorldId));
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          contacts: [
+            {
+              worldId: targetWorldId,
+              actorId: "ai:one",
+              displayName: "One",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            },
+            {
+              worldId: targetWorldId,
+              actorId: "ai:two",
+              displayName: "Two",
+              kind: "assistant",
+              outputMode: "Dialogue"
+            }
+          ] as never,
+          groups: [
+            {
+              id: "group:studio:1",
+              title: "Studio Group",
+              actorIds: ["ai:one", "ai:two"]
+            }
+          ],
+          chatState: {
+            activeChatId: "group:studio:1",
+            chats: new Map([[
+              "group:studio:1",
+              {
+                id: "group:studio:1",
+                worldId: targetWorldId,
+                title: "Studio Group",
+                messages: []
+              }
+            ]])
+          }
+        }
+      }
+    };
+    state.activeView = "CHAT_SETTINGS";
+    state.activeChatId = "group:studio:1";
+    state.selectedChatIdForSettings = "group:studio:1";
+    state.overlay = "chat-menu";
+    state.settingsOpen = true;
+    state.chatSettingsDraft = {
+      chatId: "group:studio:1",
+      groupRulesText: "",
+      backgroundImagePlaceholder: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "#dcecff",
+      otherBubbleColor: "#f2f2f2",
+      groupMemberRemoveConfirmation: {
+        worldId: targetWorldId,
+        groupChatId: "group:studio:1",
+        worldContactId: "ai:two",
+        warning: "remove warning"
+      },
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "CONFIRM_GROUP_REMOVE_MEMBER", worldContactId: "ai:two" }, state);
+    const flow = executor.run({ type: "CONFIRM_GROUP_REMOVE_MEMBER", worldContactId: "ai:two" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{
+      worldId: targetWorldId,
+      groupChatId: "group:studio:1",
+      worldContactId: "ai:two"
+    }]);
+    assert.equal(flow.executedFlow, "REMOVE_GROUP_MEMBER");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.currentWorldId, targetWorldId);
+    assert.equal(state.activeView, "CHAT_SETTINGS");
+    assert.equal(state.activeChatId, "group:studio:1");
+    assert.equal(state.selectedChatIdForSettings, "group:studio:1");
+    assert.equal(state.overlay, null);
+    assert.equal(state.settingsOpen, false);
+    assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_MEMBER_REMOVE_SUCCESS_MESSAGE);
+    assert.equal(state.chatSettingsDraft.groupMemberRemoveConfirmation, null);
   });
 
   it("executes CONFIRM_DELETE_FRIEND only with matching contact detail confirmation", () => {
@@ -1265,7 +1378,8 @@ function createShell(
   createGroupChat: MinimalProductShellRuntime["createGroupChat"] = () => createView("initial"),
   saveChatAppearanceSettings: MinimalProductShellRuntime["saveChatAppearanceSettings"] = () => createView("initial"),
   saveGroupRules: MinimalProductShellRuntime["saveGroupRules"] = () => createView("initial"),
-  addGroupMember: MinimalProductShellRuntime["addGroupMember"] = () => createView("initial")
+  addGroupMember: MinimalProductShellRuntime["addGroupMember"] = () => createView("initial"),
+  removeGroupMember: MinimalProductShellRuntime["removeGroupMember"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -1278,6 +1392,7 @@ function createShell(
     saveChatAppearanceSettings,
     saveGroupRules,
     addGroupMember,
+    removeGroupMember,
     deleteFriend,
     addWorldMember,
     removeWorldMember,

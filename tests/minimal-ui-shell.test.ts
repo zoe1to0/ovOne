@@ -14,7 +14,7 @@ import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.j
 import { App } from "../src/app/index.js";
 import { resolveGroupAddMemberCandidates } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
-import { toChatEventId, toChatId, transition } from "../src/chat-kernel/index.js";
+import { toChatEventId, toChatId, toMessageId, transition } from "../src/chat-kernel/index.js";
 import type { ChatId } from "../src/chat-kernel/index.js";
 
 describe("Minimal UI Shell", () => {
@@ -319,6 +319,111 @@ describe("Minimal UI Shell", () => {
     assert.deepEqual(added.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:other`), otherPrivateChatBefore);
     assert.deepEqual(added.product.snapshot.contacts, contactsBefore);
     assert.deepEqual(added.product.snapshot.runtimeState.metadata, metadataBefore);
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.deepEqual(realityAfter.product.snapshot.groups, realityBefore.product.snapshot.groups);
+    assert.deepEqual(realityAfter.product.snapshot.contacts, realityBefore.product.snapshot.contacts);
+    assert.deepEqual(
+      [...realityAfter.product.snapshot.chatState.chats.entries()],
+      [...realityBefore.product.snapshot.chatState.chats.entries()]
+    );
+  });
+
+  it("removes a group member only from the selected current-world group", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other",
+        kind: "assistant"
+      }
+    });
+
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Group Remove World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:friend", "ai:other"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const group = shell.createGroupChat({
+      groupName: "Member Group",
+      selectedWorldContactIds: ["ai:friend", "ai:other"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+    const otherGroup = shell.createGroupChat({
+      groupName: "Other Group",
+      selectedWorldContactIds: ["ai:friend", "ai:other"]
+    });
+    const otherGroupChatId = otherGroup.product.snapshot.chatState.activeChatId!;
+    const stateBeforeMessage = app.worldDomain.getWorldState(customWorldId);
+    app.worldDomain.commitState(transition(stateBeforeMessage, {
+      id: toChatEventId("event:group-remove-history"),
+      type: "message.submitted",
+      worldId: customWorldId,
+      timestamp: 9900,
+      payload: {
+        chatId: toChatId(groupChatId),
+        messageId: toMessageId("message:group-remove-history"),
+        authorActorId: "ai:other",
+        text: "Historical group line",
+        createdAt: 9900
+      }
+    }));
+    const before = shell.switchWorld(customWorldId);
+    const targetChatBefore = before.product.snapshot.chatState.chats.get(groupChatId)!;
+    const otherChatBefore = before.product.snapshot.chatState.chats.get(otherGroupChatId)!;
+    const friendPrivateChatBefore = before.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:friend`);
+    const otherPrivateChatBefore = before.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:other`);
+    const contactsBefore = before.product.snapshot.contacts;
+    const metadataBefore = before.product.snapshot.runtimeState.metadata;
+    const realityBefore = shell.switchWorld(realityWorldId);
+    shell.switchWorld(customWorldId);
+
+    const removed = shell.removeGroupMember({
+      worldId: customWorldId,
+      groupChatId,
+      worldContactId: "ai:other"
+    });
+
+    assert.deepEqual(removed.product.snapshot.groups.find((candidate) => candidate.id === groupChatId)?.actorIds, ["ai:friend"]);
+    assert.deepEqual(resolveGroupAddMemberCandidates(groupChatId, {
+      worldId: customWorldId,
+      assistantActorId: removed.product.snapshot.worldMeta.assistantActorId,
+      contacts: removed.product.snapshot.contacts,
+      groups: removed.product.snapshot.groups
+    }).map((candidate) => candidate.worldContactId), ["ai:other"]);
+    assert.deepEqual(removed.product.snapshot.groups.find((candidate) => candidate.id === otherGroupChatId)?.actorIds, ["ai:friend", "ai:other"]);
+    assert.equal(removed.product.snapshot.chatState.chats.has(groupChatId), true);
+    assert.deepEqual(removed.product.snapshot.chatState.chats.get(groupChatId)?.messages, targetChatBefore.messages);
+    assert.deepEqual(removed.product.snapshot.chatState.chats.get(groupChatId)?.messages.at(-1), {
+      id: "message:group-remove-history",
+      authorActorId: "ai:other",
+      text: "Historical group line",
+      createdAt: 9900
+    });
+    assert.deepEqual(removed.product.snapshot.chatState.chats.get(otherGroupChatId), otherChatBefore);
+    assert.deepEqual(removed.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:friend`), friendPrivateChatBefore);
+    assert.deepEqual(removed.product.snapshot.chatState.chats.get(`chat:${customWorldId}:ai:other`), otherPrivateChatBefore);
+    assert.deepEqual(removed.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual(removed.product.snapshot.runtimeState.metadata, metadataBefore);
 
     const realityAfter = shell.switchWorld(realityWorldId);
     assert.deepEqual(realityAfter.product.snapshot.groups, realityBefore.product.snapshot.groups);

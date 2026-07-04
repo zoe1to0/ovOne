@@ -205,7 +205,7 @@ UI action
 - Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
 - The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
 - `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local chat appearance draft state.
-- Group chat settings render group members, add member execution, remove member scaffold, text-based group rules draft scaffold, group files scaffold, and shared appearance controls.
+- Group chat settings render group members, add/remove member execution, text-based group rules draft scaffold, group files scaffold, and shared appearance controls.
 - Private chat settings render only shared appearance controls.
 - Group Member Management contract lives in `src/domain/group-member-management-contract.ts`.
 - `GroupAddMemberCommand` and `GroupRemoveMemberCommand` may only contain `worldId`, `groupChatId`, and `worldContactId`.
@@ -214,7 +214,7 @@ UI action
 - `validateGroupRemoveMemberCommand(...)` accepts existing group AI members, rejects non-members, and rejects removing the last AI member with `移除后将解散该群`.
 - Group member management must preserve group chat, group messages/history, historical messages from removed AI, world contacts, private chats, world memory scopes, group rules/files, other groups, other worlds, `GlobalAIModel`, `GlobalAILink`, and `ProviderConnection`.
 - `OPEN_GROUP_ADD_MEMBER` remains a local scaffold entry. `CONFIRM_GROUP_ADD_MEMBER` validates `GroupAddMemberCommand`, then Flow Executor calls `shell.addGroupMember(...)` to persist only the selected group chat member list and stay on `CHAT_SETTINGS`.
-- `OPEN_GROUP_REMOVE_MEMBER` and `CONFIRM_GROUP_REMOVE_MEMBER` update only local `chatSettingsDraft` notice/confirmation state and remain no-runtime-mutation scaffolds.
+- `OPEN_GROUP_REMOVE_MEMBER` opens local confirmation state. `CONFIRM_GROUP_REMOVE_MEMBER` requires that confirmation, validates `GroupRemoveMemberCommand`, then Flow Executor calls `shell.removeGroupMember(...)` to persist only the selected group chat member list and stay on `CHAT_SETTINGS`.
 - Chat Settings save contract lives in `src/domain/chat-settings-contract.ts`.
 - `ChatSettingsPatch` may only contain `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
 - `validateChatSettingsPatch(...)` requires the chat to exist in the selected/current world and rejects fields outside appearance settings.
@@ -227,7 +227,7 @@ UI action
 - `UPDATE_GROUP_RULES_DRAFT` updates local `chatSettingsDraft.groupRulesText` only.
 - `SAVE_GROUP_RULES` validates `GroupRulesPatch`, then Flow Executor calls `shell.saveGroupRules(...)` to persist only the selected group chat's `groupRules.rulesText` metadata and stay on `CHAT_SETTINGS`.
 - `SAVE_GROUP_RULES` must not mutate AI prompt/runtime behavior, messages/history, group membership, group files, group memory, private chats, other group chats, other worlds, contact preferences, world metadata/role metadata, global/provider data, or weather/time permission.
-- `UPLOAD_CHAT_BACKGROUND_IMAGE`, group member remove confirmation, and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add confirmation now executes through the guarded group member service.
+- `UPLOAD_CHAT_BACKGROUND_IMAGE` and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add/remove confirmation now executes through the guarded group member service.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
 - `canRemoveMemberFromWorld(...)` rejects Reality.
@@ -519,9 +519,9 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 | `SAVE_GROUP_RULES` with an invalid group rules patch | No group rules mutation; local draft keeps an invalid patch notice. |
 | `OPEN_GROUP_ADD_MEMBER` | Opens/shows the Add Group Member scaffold entry without mutating membership. |
 | `CONFIRM_GROUP_ADD_MEMBER` with a valid candidate | Validates `GroupAddMemberCommand`; Flow Executor persists only the selected group chat membership, stays on `CHAT_SETTINGS`, and shows `已添加`. |
-| `OPEN_GROUP_REMOVE_MEMBER` with a removable member | Validates `GroupRemoveMemberCommand`, opens local remove confirmation with group-history preservation warning; no group membership mutation. |
+| `OPEN_GROUP_REMOVE_MEMBER` with a removable member | Validates `GroupRemoveMemberCommand`, opens local remove confirmation with group-history preservation warning; no group membership mutation yet. |
 | `OPEN_GROUP_REMOVE_MEMBER` for last AI member | Blocks scaffold confirmation and shows `移除后将解散该群`. |
-| `CONFIRM_GROUP_REMOVE_MEMBER` | Scaffold/no-op; validates local context where applicable and does not mutate group membership or history. |
+| `CONFIRM_GROUP_REMOVE_MEMBER` | Requires matching confirmation, validates `GroupRemoveMemberCommand`, persists only selected group membership removal, stays on `CHAT_SETTINGS`, and shows `已移除`. |
 | Disabled explicit actions | No runtime effect. |
 | All other actions | No runtime effect. |
 
