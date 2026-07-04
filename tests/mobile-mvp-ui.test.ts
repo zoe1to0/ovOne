@@ -178,7 +178,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createDraftStage\("群规则", createGroupRulesSettings\(draft, controller\)\)/);
     assert.match(adapter, /rules\.name = "groupRulesText"/);
     assert.match(adapter, /createMenuButton\("保存群规", controller, \{ type: "SAVE_GROUP_RULES" \}\)/);
-    assert.match(adapter, /createDraftStage\("群文件", createScaffoldAction\("群文件暂未开放", controller, \{ type: "OPEN_GROUP_FILES" \}\)\)/);
+    assert.match(adapter, /createDraftStage\("群文件", createGroupFilesSettings\(controller\)\)/);
+    assert.match(adapter, /createDraftNote\(GROUP_FILES_EMPTY_MESSAGE\)/);
+    assert.match(adapter, /createMenuButton\(GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE, controller, \{ type: "OPEN_GROUP_FILES" \}\)/);
     assert.match(adapter, /content\.append\(createDraftStage\("当前聊天设置", createChatAppearanceSettings\(draft, controller\)\)\)/);
     assert.match(adapter, /createMenuButton\("上传聊天背景图片", controller, \{ type: "UPLOAD_CHAT_BACKGROUND_IMAGE" \}\)/);
     assert.match(adapter, /createColorField\("聊天背景颜色", draft\.backgroundColor, controller, "backgroundColor"\)/);

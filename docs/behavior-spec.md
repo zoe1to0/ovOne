@@ -100,7 +100,12 @@ UI event
 - Add Group Member candidates are current-world AI contacts not already in the selected group.
 - Remove Group Member opens a local confirmation and, after confirmed validation, removes only selected group membership while preserving group chat/history/messages, world contacts, private chats, memory, and global/provider data.
 - Removing the last AI member is blocked with `移除后将解散该群`; group dissolution is a separate future action.
-- Background image upload and group files remain scaffold/no-op. Group add/remove member persists only selected group membership after validation.
+- Background image upload remains scaffold/no-op. Group add/remove member persists only selected group membership after validation.
+- Group Files has a scaffold contract in `src/domain/group-files-contract.ts`.
+- Group file upload commands may target only a selected group chat in the current world and may contain only placeholder file metadata: `worldId`, `groupChatId`, `fileName`, `fileType`, `fileSize`, `fileRef`, `uploadedAt`, and `uploadedBy = "user"`.
+- Private chat targets, whole-world file scope, other group targets, message/history mutation, group member/rule mutation, memory mutation, global/provider mutation, retrieval, and AI prompt/runtime injection are rejected.
+- Group Files UI is group-settings-only: it shows `暂无群文件` and the upload scaffold action shows `群文件上传暂未开放`.
+- Future AI access to group files is group-chat-only and must not affect private chats, other groups, or other worlds.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.

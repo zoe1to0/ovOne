@@ -9,6 +9,7 @@ import { createBehaviorRegistry, OVO_CHAT_ID } from "../src/platform/behavior-re
 import type { SemanticMobileState } from "../src/platform/behavior-registry.js";
 import {
   CONTACT_DETAIL_DELETE_FRIEND_WARNING_MESSAGE,
+  GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   LINKED_AI_DISCONNECT_CONFIRMATION_MISMATCH_MESSAGE,
   LINKED_AI_DISCONNECT_DRY_RUN_CONFIRMED_MESSAGE,
   LINKED_AI_DISCONNECT_PREVIEW_REQUIRED_MESSAGE,
@@ -178,7 +179,7 @@ describe("Composer mode state machine", () => {
     registry.execute({ type: "SAVE_GROUP_RULES" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, "GroupRules: invalid group rules patch.");
     registry.execute({ type: "OPEN_GROUP_FILES" }, state);
-    assert.equal(state.chatSettingsDraft?.noticeMessage, "群文件暂未开放");
+    assert.equal(state.chatSettingsDraft?.noticeMessage, GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE);
     registry.execute({ type: "SAVE_CHAT_SETTINGS" }, state);
     assert.equal(state.chatSettingsDraft?.noticeMessage, null);
     assert.equal(state.view.product.snapshot.chatState.chats.get("chat:friend"), originalChat);

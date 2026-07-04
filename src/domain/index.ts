@@ -57,6 +57,22 @@ export type {
   GroupRulesValidationInput
 } from "./group-rules-contract.js";
 export {
+  GROUP_FILES_EMPTY_MESSAGE,
+  GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
+  canAttachFileToGroup,
+  getGroupFileAccessScope,
+  getGroupFileWarnings,
+  validateGroupFileUploadCommand
+} from "./group-files-contract.js";
+export type {
+  GroupFileAccessScope,
+  GroupFileForbiddenField,
+  GroupFileRecord,
+  GroupFileUploadCommand,
+  GroupFileUploadValidation,
+  GroupFileValidationInput
+} from "./group-files-contract.js";
+export {
   GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE,
   GROUP_MEMBER_REMOVE_LAST_AI_MESSAGE,
   GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE,

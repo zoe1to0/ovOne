@@ -55,6 +55,10 @@
 - Group rules are text-based; empty rules mean no extra group-level rules beyond world/contact settings.
 - Group rules apply only to the target group chat and must not affect private chats, other group chats, other worlds, Reality/global settings, group members/files/messages/history/memory, contact preferences, world metadata, Global AI data, provider connections, or actual AI prompt behavior.
 - Current group rules milestone saves text only. It does not enforce rules, inject prompts, or affect AI behavior yet.
+- Group files belong only to the selected group chat. They are group context resources, not whole-world files and not chat history messages.
+- Group files must not enter private chats, other group chats, other worlds, group messages/history, group members, group rules, memory, global AI data, provider connections, retrieval, or AI prompts in the current milestone.
+- Future AI access to group files may happen only when speaking inside that group chat. The same AI must not see those files in private chat, other groups, or other worlds.
+- Current group files milestone is scaffold-only: upload shows `群文件上传暂未开放`, empty lists show `暂无群文件`, no file binary/content is stored, and file deletion/search/retrieval remain future work.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.

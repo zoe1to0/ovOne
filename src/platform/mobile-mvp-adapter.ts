@@ -1,6 +1,8 @@
 ﻿import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
+  GROUP_FILES_EMPTY_MESSAGE,
+  GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
@@ -848,7 +850,7 @@ function createChatSettingsView(
     content.append(
       createDraftStage("群成员", createGroupMembersSettings(snapshot, group, draft, controller)),
       createDraftStage("群规则", createGroupRulesSettings(draft, controller)),
-      createDraftStage("群文件", createScaffoldAction("群文件暂未开放", controller, { type: "OPEN_GROUP_FILES" }))
+      createDraftStage("群文件", createGroupFilesSettings(controller))
     );
   }
 
@@ -929,6 +931,16 @@ function createScaffoldAction(label: string, controller: InteractionController, 
   const section = document.createElement("section");
   section.className = "mvp-create-world-section";
   section.append(createMenuButton(label, controller, action));
+  return section;
+}
+
+function createGroupFilesSettings(controller: InteractionController): HTMLElement {
+  const section = document.createElement("section");
+  section.className = "mvp-create-world-section";
+  section.append(
+    createDraftNote(GROUP_FILES_EMPTY_MESSAGE),
+    createMenuButton(GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE, controller, { type: "OPEN_GROUP_FILES" })
+  );
   return section;
 }
 

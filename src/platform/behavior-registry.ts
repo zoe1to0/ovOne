@@ -1,6 +1,7 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE,
   GROUP_MEMBER_REMOVE_LAST_AI_MESSAGE,
   GROUP_MEMBER_REMOVE_UNAVAILABLE_MESSAGE,
@@ -755,11 +756,20 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         return RENDER;
 
       case "OPEN_GROUP_RULES":
-      case "OPEN_GROUP_FILES":
         if (state.chatSettingsDraft) {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
             noticeMessage: scaffoldNoticeForChatSettingsAction(action.type)
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "OPEN_GROUP_FILES":
+        if (state.chatSettingsDraft) {
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE
           });
         }
         closeOverlay(state);

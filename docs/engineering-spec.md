@@ -227,6 +227,11 @@ UI action
 - `UPDATE_GROUP_RULES_DRAFT` updates local `chatSettingsDraft.groupRulesText` only.
 - `SAVE_GROUP_RULES` validates `GroupRulesPatch`, then Flow Executor calls `shell.saveGroupRules(...)` to persist only the selected group chat's `groupRules.rulesText` metadata and stay on `CHAT_SETTINGS`.
 - `SAVE_GROUP_RULES` must not mutate AI prompt/runtime behavior, messages/history, group membership, group files, group memory, private chats, other group chats, other worlds, contact preferences, world metadata/role metadata, global/provider data, or weather/time permission.
+- Group Files contract lives in `src/domain/group-files-contract.ts`.
+- `GroupFileUploadCommand` may only contain `worldId`, `groupChatId`, `fileName`, `fileType`, `fileSize`, `fileRef`, `uploadedAt`, and `uploadedBy = "user"`.
+- `validateGroupFileUploadCommand(...)` requires the target chat to exist in the selected/current world and be a group chat; private chats, whole-world file scope, and cross-world targets are rejected.
+- Group Files UI renders only in group chat settings, shows `暂无群文件`, and `OPEN_GROUP_FILES` remains a scaffold/no-op upload action with `群文件上传暂未开放`.
+- Future AI access is documented as group-chat-only through `getGroupFileAccessScope(...)`; no upload, parsing, retrieval, prompt injection, or runtime file storage exists yet.
 - `UPLOAD_CHAT_BACKGROUND_IMAGE` and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add/remove confirmation now executes through the guarded group member service.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.

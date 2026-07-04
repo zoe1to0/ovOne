@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-04: Group files contract scaffold added
+
+Decision: Group Files now has a pure contract and group-settings-only UI scaffold.
+
+Rules:
+
+- Group files belong only to the selected group chat, not the whole world, private chats, other groups, or other worlds.
+- `GroupFileUploadCommand` is placeholder metadata only and real upload/parsing/storage/retrieval is not implemented.
+- Future AI access to group files is limited to speaking inside that selected group chat.
+- Group files must not mutate group messages/history, group members, group rules, memory, global AI data, provider connections, retrieval, or AI prompt/runtime behavior in this milestone.
+- Group settings shows `暂无群文件`; upload remains scaffolded with `群文件上传暂未开放`.
+
 ## 2026-07-04: v0.8 group settings core milestone
 
 Decision: `v0.8-group-settings-core` marks the Group Settings core milestone.
