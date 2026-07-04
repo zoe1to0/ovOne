@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-07-04: v0.8 group settings core milestone
+
+Decision: `v0.8-group-settings-core` marks the Group Settings core milestone.
+
+Rules:
+
+- This milestone includes Create Group core, Chat Settings / Group Detail page, chat appearance save, group rules save, group add member execution, and group remove member execution.
+- Removing the last AI member remains blocked with `移除后将解散该群`.
+- Group chat, group history, and group messages are preserved by member add/remove.
+- Group files, group dissolution, and real group memory engine behavior remain future work.
+
 ## 2026-07-04: Group remove member execution implemented
 
 Decision: Remove Group Member now has controlled execution for selected current-world group chats.
