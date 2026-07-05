@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-05: v0.9 group files metadata milestone
+
+Decision: `v0.9-group-files-metadata` marks the Group Files metadata milestone.
+
+Rules:
+
+- This milestone includes the Group Files contract scaffold and Group Files section in group chat settings.
+- Private chats do not show Group Files.
+- Group file creation is metadata-only and appends records only to the selected group chat `groupFiles[]`.
+- `fileName` is required; `fileType` and `fileSize` are optional metadata.
+- File binary/content storage, parsing, retrieval/search, AI prompt/runtime file access, and file deletion remain future work.
+
 ## 2026-07-05: Group file metadata records implemented
 
 Decision: Group Files can now save metadata-only records to a selected group chat.
