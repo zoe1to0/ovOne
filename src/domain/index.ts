@@ -58,6 +58,8 @@ export type {
 } from "./group-rules-contract.js";
 export {
   GROUP_FILES_EMPTY_MESSAGE,
+  GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
+  GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE,
   GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   canAttachFileToGroup,
   getGroupFileAccessScope,

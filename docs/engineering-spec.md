@@ -230,8 +230,10 @@ UI action
 - Group Files contract lives in `src/domain/group-files-contract.ts`.
 - `GroupFileUploadCommand` may only contain `worldId`, `groupChatId`, `fileName`, `fileType`, `fileSize`, `fileRef`, `uploadedAt`, and `uploadedBy = "user"`.
 - `validateGroupFileUploadCommand(...)` requires the target chat to exist in the selected/current world and be a group chat; private chats, whole-world file scope, and cross-world targets are rejected.
-- Group Files UI renders only in group chat settings, shows `暂无群文件`, and `OPEN_GROUP_FILES` remains a scaffold/no-op upload action with `群文件上传暂未开放`.
-- Future AI access is documented as group-chat-only through `getGroupFileAccessScope(...)`; no upload, parsing, retrieval, prompt injection, or runtime file storage exists yet.
+- Group Files UI renders only in group chat settings, shows `暂无群文件`, and accepts metadata-only file records with required `fileName` and optional `fileType` / `fileSize`.
+- `CONFIRM_GROUP_FILE_METADATA` validates the local draft, then Flow Executor calls `shell.saveGroupFileMetadata(...)`.
+- Group file metadata records are stored only on selected `WorldChatSession.groupFiles`; file binary/content, parsing, retrieval, deletion, prompt injection, and AI runtime behavior are not implemented.
+- Future AI access is documented as group-chat-only through `getGroupFileAccessScope(...)`.
 - `UPLOAD_CHAT_BACKGROUND_IMAGE` and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add/remove confirmation now executes through the guarded group member service.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.

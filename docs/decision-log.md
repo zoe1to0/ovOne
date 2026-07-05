@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-05: Group file metadata records implemented
+
+Decision: Group Files can now save metadata-only records to a selected group chat.
+
+Rules:
+
+- `CONFIRM_GROUP_FILE_METADATA` validates `GroupFileUploadCommand` and runs through Flow Executor.
+- The runtime shell appends only `WorldChatSession.groupFiles[]` records for the selected group chat.
+- Required metadata is `fileName`; optional metadata is `fileType` and `fileSize`.
+- Empty file names are rejected with `请输入文件名`; valid saves show `已添加群文件记录`.
+- Group file metadata save must not store binary/content, parse files, run retrieval, inject prompts, mutate messages/history, mutate group members/rules/appearance, mutate memory, or affect contact/world/global/provider data.
+
 ## 2026-07-04: Group files contract scaffold added
 
 Decision: Group Files now has a pure contract and group-settings-only UI scaffold.

@@ -73,7 +73,8 @@ function createWorldStateFromSnapshot(state: WorldState): WorldState {
             ...chat,
             messages: chat.messages.map((message) => ({ ...message })),
             ...(chat.appearance ? { appearance: { ...chat.appearance } } : {}),
-            ...(chat.groupRules ? { groupRules: { ...chat.groupRules } } : {})
+            ...(chat.groupRules ? { groupRules: { ...chat.groupRules } } : {}),
+            ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
           }
         ])
       )

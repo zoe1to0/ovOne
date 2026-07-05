@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createBehaviorRegistry } from "../src/platform/behavior-registry.js";
 import { createFlowExecutor } from "../src/platform/flow-executor.js";
-import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, GROUP_RULES_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
+import { CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE, CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE, GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE, GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE, GROUP_RULES_SAVE_SUCCESS_MESSAGE, WORLD_EDITOR_NAME_REQUIRED_MESSAGE, WORLD_EDITOR_SAVE_SUCCESS_MESSAGE } from "../src/domain/index.js";
 import { GROUP_MEMBER_ADD_SUCCESS_MESSAGE, GROUP_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/group-member-service.js";
 import { WORLD_MEMBER_ADD_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-service.js";
 import { WORLD_MEMBER_REMOVE_SUCCESS_MESSAGE } from "../src/minimal-ui-shell/world-member-remove-service.js";
@@ -362,6 +362,9 @@ describe("FlowExecutor", () => {
     state.chatSettingsDraft = {
       chatId: "chat:studio",
       groupRulesText: "",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
       backgroundImagePlaceholder: "local:background",
       backgroundColor: "#111111",
       myBubbleColor: "#222222",
@@ -454,6 +457,9 @@ describe("FlowExecutor", () => {
     state.chatSettingsDraft = {
       chatId: "group:studio:1",
       groupRulesText: "Stay in character.",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
       backgroundImagePlaceholder: "",
       backgroundColor: "#ffffff",
       myBubbleColor: "#dcecff",
@@ -483,6 +489,166 @@ describe("FlowExecutor", () => {
     assert.equal(state.overlay, null);
     assert.equal(state.settingsOpen, false);
     assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_RULES_SAVE_SUCCESS_MESSAGE);
+  });
+
+  it("executes CONFIRM_GROUP_FILE_METADATA through the runtime group file metadata boundary", () => {
+    const targetWorldId = toWorldId("world:studio");
+    const nextView = createView("group:studio:1", targetWorldId);
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("initial"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (command) => {
+        calls.push(command);
+        return nextView;
+      }
+    );
+    const state = createState(createView("group:studio:1", targetWorldId));
+    state.currentWorldId = targetWorldId;
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          groups: [
+            {
+              id: "group:studio:1",
+              title: "Studio Group",
+              actorIds: ["ai:friend"]
+            }
+          ],
+          chatState: {
+            activeChatId: "group:studio:1",
+            chats: new Map([[
+              "group:studio:1",
+              {
+                id: "group:studio:1",
+                worldId: targetWorldId,
+                title: "Studio Group",
+                messages: []
+              }
+            ]])
+          }
+        }
+      }
+    };
+    state.activeView = "CHAT_SETTINGS";
+    state.activeChatId = "group:studio:1";
+    state.selectedChatIdForSettings = "group:studio:1";
+    state.chatSettingsDraft = {
+      chatId: "group:studio:1",
+      groupRulesText: "",
+      groupFileName: "brief.pdf",
+      groupFileType: "application/pdf",
+      groupFileSize: "1200",
+      backgroundImagePlaceholder: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "#dcecff",
+      otherBubbleColor: "#f2f2f2",
+      groupMemberRemoveConfirmation: null,
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "CONFIRM_GROUP_FILE_METADATA" }, state);
+    const flow = executor.run({ type: "CONFIRM_GROUP_FILE_METADATA" }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, [{
+      worldId: targetWorldId,
+      groupChatId: "group:studio:1",
+      fileName: "brief.pdf",
+      fileType: "application/pdf",
+      fileSize: 1200,
+      fileRef: `group-file:${targetWorldId}:group:studio:1:brief.pdf`,
+      uploadedAt: 0,
+      uploadedBy: "user"
+    }]);
+    assert.equal(flow.executedFlow, "SAVE_GROUP_FILE_METADATA");
+    assert.equal(state.activeView, "CHAT_SETTINGS");
+    assert.equal(state.activeChatId, "group:studio:1");
+    assert.equal(state.selectedChatIdForSettings, "group:studio:1");
+    assert.equal(state.chatSettingsDraft.groupFileName, "");
+    assert.equal(state.chatSettingsDraft.groupFileType, "");
+    assert.equal(state.chatSettingsDraft.groupFileSize, "");
+    assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE);
+  });
+
+  it("rejects group file metadata without a file name before runtime execution", () => {
+    const targetWorldId = toWorldId("world:studio");
+    const calls: unknown[] = [];
+    const shell = createShell(
+      () => createView("initial"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (command) => {
+        calls.push(command);
+        return createView("group:studio:1", targetWorldId);
+      }
+    );
+    const state = createState(createView("group:studio:1", targetWorldId));
+    state.currentWorldId = targetWorldId;
+    state.view = {
+      ...state.view,
+      product: {
+        ...state.view.product,
+        snapshot: {
+          ...state.view.product.snapshot,
+          groups: [{ id: "group:studio:1", title: "Studio Group", actorIds: ["ai:friend"] }],
+          chatState: {
+            activeChatId: "group:studio:1",
+            chats: new Map([["group:studio:1", { id: "group:studio:1", worldId: targetWorldId, title: "Studio Group", messages: [] }]])
+          }
+        }
+      }
+    };
+    state.chatSettingsDraft = {
+      chatId: "group:studio:1",
+      groupRulesText: "",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
+      backgroundImagePlaceholder: "",
+      backgroundColor: "#ffffff",
+      myBubbleColor: "#dcecff",
+      otherBubbleColor: "#f2f2f2",
+      groupMemberRemoveConfirmation: null,
+      noticeMessage: null
+    };
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    registry.execute({ type: "CONFIRM_GROUP_FILE_METADATA" }, state);
+    const flow = executor.run({ type: "CONFIRM_GROUP_FILE_METADATA" }, { shell, state });
+
+    assert.deepEqual(calls, []);
+    assert.equal(flow.executedFlow, undefined);
+    assert.equal(state.chatSettingsDraft.noticeMessage, GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE);
   });
 
   it("executes CONFIRM_GROUP_ADD_MEMBER through the runtime group member boundary", () => {
@@ -560,6 +726,9 @@ describe("FlowExecutor", () => {
     state.chatSettingsDraft = {
       chatId: "group:studio:1",
       groupRulesText: "",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
       backgroundImagePlaceholder: "",
       backgroundColor: "#ffffff",
       myBubbleColor: "#dcecff",
@@ -667,6 +836,9 @@ describe("FlowExecutor", () => {
     state.chatSettingsDraft = {
       chatId: "group:studio:1",
       groupRulesText: "",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
       backgroundImagePlaceholder: "",
       backgroundColor: "#ffffff",
       myBubbleColor: "#dcecff",
@@ -1379,7 +1551,8 @@ function createShell(
   saveChatAppearanceSettings: MinimalProductShellRuntime["saveChatAppearanceSettings"] = () => createView("initial"),
   saveGroupRules: MinimalProductShellRuntime["saveGroupRules"] = () => createView("initial"),
   addGroupMember: MinimalProductShellRuntime["addGroupMember"] = () => createView("initial"),
-  removeGroupMember: MinimalProductShellRuntime["removeGroupMember"] = () => createView("initial")
+  removeGroupMember: MinimalProductShellRuntime["removeGroupMember"] = () => createView("initial"),
+  saveGroupFileMetadata: MinimalProductShellRuntime["saveGroupFileMetadata"] = () => createView("initial")
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -1391,6 +1564,7 @@ function createShell(
     saveContactDetailPreferences,
     saveChatAppearanceSettings,
     saveGroupRules,
+    saveGroupFileMetadata,
     addGroupMember,
     removeGroupMember,
     deleteFriend,

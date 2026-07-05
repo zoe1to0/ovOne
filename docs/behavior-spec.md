@@ -104,7 +104,9 @@ UI event
 - Group Files has a scaffold contract in `src/domain/group-files-contract.ts`.
 - Group file upload commands may target only a selected group chat in the current world and may contain only placeholder file metadata: `worldId`, `groupChatId`, `fileName`, `fileType`, `fileSize`, `fileRef`, `uploadedAt`, and `uploadedBy = "user"`.
 - Private chat targets, whole-world file scope, other group targets, message/history mutation, group member/rule mutation, memory mutation, global/provider mutation, retrieval, and AI prompt/runtime injection are rejected.
-- Group Files UI is group-settings-only: it shows `暂无群文件` and the upload scaffold action shows `群文件上传暂未开放`.
+- Group Files UI is group-settings-only: it shows `暂无群文件` when empty, allows metadata-only records, rejects empty names with `请输入文件名`, and shows `已添加群文件记录` after a valid metadata save.
+- `CONFIRM_GROUP_FILE_METADATA` validates `GroupFileUploadCommand`, then Flow Executor calls `shell.saveGroupFileMetadata(...)` to append only the selected group chat's `groupFiles[]` metadata.
+- Group file metadata save must not store file binary/content, mutate messages/history, group members, group rules, chat appearance, memory, contact/world/global/provider data, retrieval, or AI prompt/runtime behavior.
 - Future AI access to group files is group-chat-only and must not affect private chats, other groups, or other worlds.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
@@ -217,6 +219,14 @@ UI event
 - `SET_COMPOSER_MODE`
 - `TEXT_INPUT`
 - `SUBMIT_MESSAGE`
+- `OPEN_CHAT_SETTINGS`
+- `UPDATE_CHAT_SETTINGS_DRAFT`
+- `UPDATE_GROUP_RULES_DRAFT`
+- `UPDATE_GROUP_FILE_DRAFT`
+- `SAVE_CHAT_SETTINGS`
+- `SAVE_GROUP_RULES`
+- `CONFIRM_GROUP_FILE_METADATA`
+- `OPEN_GROUP_FILES`
 - `CHAT_OPEN_GROUP_MEMBERS`
 - `CHAT_OPEN_SETTINGS`
 - `CHAT_OPEN_BACKGROUND_SETTINGS`
@@ -331,7 +341,9 @@ UI event
 | Cancel group member management | `CANCEL_GROUP_MEMBER_MANAGEMENT` | Clears local group member confirmation/notice state. |
 | Open group rules scaffold | `OPEN_GROUP_RULES` | Legacy scaffold/no-op action retained for explicit routing; group settings now render a text draft directly. |
 | Save group rules | `SAVE_GROUP_RULES` | Validates `GroupRulesPatch`; Flow Executor persists only selected group chat `rulesText`, stays on `CHAT_SETTINGS`, and shows `已保存`. |
-| Open group files scaffold | `OPEN_GROUP_FILES` | Scaffold/no-op on group chat settings page. |
+| Open group files scaffold | `OPEN_GROUP_FILES` | Legacy scaffold/no-op upload notice; real binary upload remains unavailable. |
+| Update group file metadata draft | `UPDATE_GROUP_FILE_DRAFT` | Updates local group file metadata draft fields only. |
+| Confirm group file metadata | `CONFIRM_GROUP_FILE_METADATA` | Validates metadata and Flow Executor appends only selected group chat `groupFiles[]`, stays on `CHAT_SETTINGS`, and shows `已添加群文件记录`. |
 | Emoji button | `OPEN_EMOJI_PICKER` | Opens emoji picker overlay. |
 | File button | `OPEN_FILE_PICKER` | Opens file picker overlay. |
 | Close overlay | `CLOSE_OVERLAY` | Clears current overlay. |

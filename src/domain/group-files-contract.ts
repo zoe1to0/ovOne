@@ -2,6 +2,8 @@ import type { WorldId } from "../world-domain/index.js";
 
 export const GROUP_FILES_EMPTY_MESSAGE = "暂无群文件";
 export const GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE = "群文件上传暂未开放";
+export const GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE = "请输入文件名";
+export const GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE = "已添加群文件记录";
 
 export type GroupFileRecord = Readonly<{
   readonly worldId: WorldId;
@@ -18,11 +20,11 @@ export type GroupFileUploadCommand = Readonly<{
   readonly worldId: WorldId;
   readonly groupChatId: string;
   readonly fileName: string;
-  readonly fileType: string;
-  readonly fileSize: number;
-  readonly fileRef: string;
-  readonly uploadedAt: number;
-  readonly uploadedBy: "user";
+  readonly fileType?: string;
+  readonly fileSize?: number;
+  readonly fileRef?: string;
+  readonly uploadedAt?: number;
+  readonly uploadedBy?: "user";
 }>;
 
 export type GroupFileForbiddenField =
@@ -111,11 +113,12 @@ export function validateGroupFileUploadCommand(
   const worldMatches = Boolean(candidate && candidate.worldId === input.worldId);
   const chatExists = Boolean(candidate && input.chatIds.includes(candidate.groupChatId));
   const groupChat = Boolean(candidate && input.groupChatIds.includes(candidate.groupChatId));
-  const valid = candidate !== null && worldMatches && chatExists && groupChat && forbiddenFields.length === 0;
+  const hasFileName = Boolean(candidate && candidate.fileName.trim());
+  const valid = candidate !== null && hasFileName && worldMatches && chatExists && groupChat && forbiddenFields.length === 0;
   return Object.freeze({
     valid,
     command: valid ? candidate : null,
-    error: valid ? null : "GroupFiles: invalid file upload command.",
+    error: valid ? null : candidate && !hasFileName ? GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE : "GroupFiles: invalid file upload command.",
     forbiddenFields
   });
 }
@@ -138,7 +141,7 @@ export function getGroupFileAccessScope(command: GroupFileUploadCommand): GroupF
 
 export function getGroupFileWarnings(): readonly string[] {
   return Object.freeze([
-    "Group files are scaffold-only and are not uploaded, parsed, retrieved, or injected into AI prompts yet.",
+    "Group files store metadata-only records; binary upload, parsing, retrieval, deletion, and prompt injection remain unavailable.",
     "Future AI access is limited to the selected group chat only."
   ]);
 }
@@ -158,11 +161,11 @@ function normalizeGroupFileUploadCommand(command: unknown): GroupFileUploadComma
     typeof worldId !== "string" ||
     typeof groupChatId !== "string" ||
     typeof fileName !== "string" ||
-    typeof fileType !== "string" ||
-    typeof fileSize !== "number" ||
-    typeof fileRef !== "string" ||
-    typeof uploadedAt !== "number" ||
-    uploadedBy !== "user"
+    (fileType !== undefined && typeof fileType !== "string") ||
+    (fileSize !== undefined && typeof fileSize !== "number") ||
+    (fileRef !== undefined && typeof fileRef !== "string") ||
+    (uploadedAt !== undefined && typeof uploadedAt !== "number") ||
+    (uploadedBy !== undefined && uploadedBy !== "user")
   ) {
     return null;
   }
@@ -170,11 +173,11 @@ function normalizeGroupFileUploadCommand(command: unknown): GroupFileUploadComma
     worldId: worldId as WorldId,
     groupChatId,
     fileName,
-    fileType,
-    fileSize,
-    fileRef,
-    uploadedAt,
-    uploadedBy
+    fileType: fileType ?? "",
+    fileSize: fileSize ?? 0,
+    fileRef: fileRef ?? `group-file:${groupChatId}:${fileName}`,
+    uploadedAt: uploadedAt ?? 0,
+    uploadedBy: uploadedBy ?? "user"
   });
 }
 

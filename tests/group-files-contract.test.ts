@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   canAttachFileToGroup,
+  GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
   getGroupFileAccessScope,
   getGroupFileWarnings,
   validateGroupFileUploadCommand
@@ -33,6 +34,27 @@ describe("Group Files contract scaffold", () => {
     assert.equal(result.valid, true);
     assert.equal(result.command?.groupChatId, "group:one");
     assert.equal(canAttachFileToGroup(validCommand, input), true);
+  });
+
+  it("accepts fileName-only metadata and rejects empty file names", () => {
+    const result = validateGroupFileUploadCommand({
+      worldId,
+      groupChatId: "group:one",
+      fileName: "notes.md"
+    }, input);
+
+    assert.equal(result.valid, true);
+    assert.equal(result.command?.fileType, "");
+    assert.equal(result.command?.fileSize, 0);
+    assert.equal(result.command?.uploadedBy, "user");
+
+    const empty = validateGroupFileUploadCommand({
+      worldId,
+      groupChatId: "group:one",
+      fileName: ""
+    }, input);
+    assert.equal(empty.valid, false);
+    assert.equal(empty.error, GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE);
   });
 
   it("rejects private chat, cross-world, and missing chat targets", () => {

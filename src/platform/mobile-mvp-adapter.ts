@@ -827,6 +827,9 @@ function createChatSettingsView(
   const draft = state.chatSettingsDraft ?? {
     chatId: chat?.id ?? "",
     groupRulesText: "",
+    groupFileName: "",
+    groupFileType: "",
+    groupFileSize: "",
     backgroundImagePlaceholder: "",
     backgroundColor: "#ffffff",
     myBubbleColor: "#dcecff",
@@ -850,7 +853,7 @@ function createChatSettingsView(
     content.append(
       createDraftStage("群成员", createGroupMembersSettings(snapshot, group, draft, controller)),
       createDraftStage("群规则", createGroupRulesSettings(draft, controller)),
-      createDraftStage("群文件", createGroupFilesSettings(controller))
+      createDraftStage("群文件", createGroupFilesSettings(chat, draft, controller))
     );
   }
 
@@ -934,14 +937,53 @@ function createScaffoldAction(label: string, controller: InteractionController, 
   return section;
 }
 
-function createGroupFilesSettings(controller: InteractionController): HTMLElement {
+function createGroupFilesSettings(
+  chat: WorldChatSession | null,
+  draft: NonNullable<SemanticMobileState["chatSettingsDraft"]>,
+  controller: InteractionController
+): HTMLElement {
   const section = document.createElement("section");
   section.className = "mvp-create-world-section";
+  const files = chat?.groupFiles ?? [];
+  if (files.length === 0) {
+    section.append(createDraftNote(GROUP_FILES_EMPTY_MESSAGE));
+  } else {
+    const list = document.createElement("section");
+    list.className = "mvp-create-world-section";
+    for (const file of files) {
+      const item = document.createElement("p");
+      item.className = "mvp-create-world-note";
+      item.textContent = file.fileName;
+      list.append(item);
+    }
+    section.append(list);
+  }
   section.append(
-    createDraftNote(GROUP_FILES_EMPTY_MESSAGE),
-    createMenuButton(GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE, controller, { type: "OPEN_GROUP_FILES" })
+    createGroupFileField("文件名", "fileName", draft.groupFileName, controller),
+    createGroupFileField("文件类型", "fileType", draft.groupFileType, controller),
+    createGroupFileField("文件大小", "fileSize", draft.groupFileSize, controller),
+    createMenuButton("添加群文件记录", controller, { type: "CONFIRM_GROUP_FILE_METADATA" })
   );
   return section;
+}
+
+function createGroupFileField(
+  label: string,
+  field: "fileName" | "fileType" | "fileSize",
+  value: string,
+  controller: InteractionController
+): HTMLElement {
+  const wrapper = document.createElement("label");
+  wrapper.className = "mvp-create-world-field";
+  const text = document.createElement("span");
+  text.textContent = label;
+  const input = document.createElement("input");
+  input.type = field === "fileSize" ? "number" : "text";
+  input.name = `groupFile.${field}`;
+  input.value = value;
+  bindGroupFileDraftInput(input, controller, field);
+  wrapper.append(text, input);
+  return wrapper;
 }
 
 function createGroupRulesSettings(
@@ -1917,6 +1959,16 @@ function bindGroupRulesDraftInput(
 ): void {
   input.addEventListener("input", () => {
     controller.dispatch({ type: "UPDATE_GROUP_RULES_DRAFT", rulesText: input.value });
+  });
+}
+
+function bindGroupFileDraftInput(
+  input: HTMLInputElement,
+  controller: InteractionController,
+  field: "fileName" | "fileType" | "fileSize"
+): void {
+  input.addEventListener("input", () => {
+    controller.dispatch({ type: "UPDATE_GROUP_FILE_DRAFT", field, value: input.value });
   });
 }
 

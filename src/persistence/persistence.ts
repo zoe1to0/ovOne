@@ -123,6 +123,7 @@ export function createPersistentMinimalUiShell(
     saveContactDetailPreferences: (patch) => withAutosave(shell.saveContactDetailPreferences(patch)),
     saveChatAppearanceSettings: (patch) => withAutosave(shell.saveChatAppearanceSettings(patch)),
     saveGroupRules: (patch) => withAutosave(shell.saveGroupRules(patch)),
+    saveGroupFileMetadata: (command) => withAutosave(shell.saveGroupFileMetadata(command)),
     addGroupMember: (command) => withAutosave(shell.addGroupMember(command)),
     removeGroupMember: (command) => withAutosave(shell.removeGroupMember(command)),
     deleteFriend: (command) => withAutosave(shell.deleteFriend(command)),
@@ -147,7 +148,8 @@ export function serializeSnapshot(snapshot: WorldSnapshot): SerializedWorldSnaps
       activeChatId: snapshot.chatState.activeChatId,
       chats: [...snapshot.chatState.chats.values()].map((chat) => ({
         ...chat,
-        messages: chat.messages.map((message) => ({ ...message }))
+        messages: chat.messages.map((message) => ({ ...message })),
+        ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
       }))
     },
     memorySummary: {
@@ -184,7 +186,8 @@ export function deserializeSnapshot(snapshot: WorldSnapshot | SerializedWorldSna
       activeChatId: serialized.chatState.activeChatId,
       chats: readonlyMap(new Map(serialized.chatState.chats.map((chat) => [chat.id, {
         ...chat,
-        messages: chat.messages.map((message) => ({ ...message }))
+        messages: chat.messages.map((message) => ({ ...message })),
+        ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
       }])))
     },
     memorySummary: {
@@ -291,7 +294,8 @@ function restoreCustomSnapshotIntoApp(app: AppRuntime, snapshot: WorldSnapshot):
       activeChatId: snapshot.chatState.activeChatId,
       chats: new Map([...snapshot.chatState.chats.entries()].map(([id, chat]) => [id, {
         ...chat,
-        messages: chat.messages.map((message) => ({ ...message }))
+        messages: chat.messages.map((message) => ({ ...message })),
+        ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
       }]))
     }
   } satisfies WorldState;
@@ -401,12 +405,13 @@ function restoreChats(app: AppRuntime, snapshot: WorldSnapshot): void {
 
     state = app.worldDomain.getWorldState(snapshot.worldMeta.id);
     const currentChat = state.chat.chats.get(chat.id);
-    if (currentChat && (chat.appearance || chat.groupRules)) {
+    if (currentChat && (chat.appearance || chat.groupRules || chat.groupFiles)) {
       const nextChats = new Map<string, WorldChatSession>(state.chat.chats);
       nextChats.set(chat.id, {
         ...currentChat,
         ...(chat.appearance ? { appearance: { ...chat.appearance } } : {}),
-        ...(chat.groupRules ? { groupRules: { ...chat.groupRules } } : {})
+        ...(chat.groupRules ? { groupRules: { ...chat.groupRules } } : {}),
+        ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
       });
       state = createSnapshotState({
         ...state,

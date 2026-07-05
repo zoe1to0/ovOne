@@ -656,6 +656,93 @@ describe("Minimal UI Shell", () => {
     }), /invalid group rules patch/);
   });
 
+  it("adds group file metadata only on the selected group chat", () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = shell.view().activeWorldId;
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9300,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Original Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9301,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other Friend",
+        kind: "assistant"
+      }
+    });
+
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Group Files World",
+      worldviewSourceType: "text",
+      worldviewText: "A files test place.",
+      selectedAIModelIds: ["ai:friend", "ai:other"],
+      nextMode: "random-role"
+    });
+    const customWorldId = created.activeWorldId;
+    const firstGroup = shell.createGroupChat({
+      groupName: "Files A",
+      selectedWorldContactIds: ["ai:friend", "ai:other"]
+    });
+    const firstGroupId = firstGroup.product.snapshot.chatState.activeChatId!;
+    const secondGroup = shell.createGroupChat({
+      groupName: "Files B",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const secondGroupId = secondGroup.product.snapshot.chatState.activeChatId!;
+    const firstChatBefore = secondGroup.product.snapshot.chatState.chats.get(firstGroupId)!;
+    const messagesBefore = firstChatBefore.messages;
+    const membersBefore = secondGroup.product.snapshot.groups.find((group) => group.id === firstGroupId)?.actorIds;
+    const rulesBefore = firstChatBefore.groupRules;
+    const appearanceBefore = firstChatBefore.appearance;
+    const memoryBefore = secondGroup.product.snapshot.memorySummary;
+    const contactsBefore = secondGroup.product.snapshot.contacts;
+    const settingsBefore = secondGroup.product.snapshot.runtimeState.metadata.settings;
+
+    const saved = shell.saveGroupFileMetadata({
+      worldId: customWorldId,
+      groupChatId: firstGroupId,
+      fileName: "brief.pdf",
+      fileType: "application/pdf",
+      fileSize: 1200
+    });
+
+    const files = saved.product.snapshot.chatState.chats.get(firstGroupId)?.groupFiles ?? [];
+    assert.equal(files.length, 1);
+    assert.equal(files[0]?.fileName, "brief.pdf");
+    assert.equal(files[0]?.fileType, "application/pdf");
+    assert.equal(files[0]?.fileSize, 1200);
+    assert.equal("content" in files[0]!, false);
+    assert.equal(saved.product.snapshot.chatState.chats.get(secondGroupId)?.groupFiles, undefined);
+    assert.deepEqual(saved.product.snapshot.chatState.chats.get(firstGroupId)?.messages, messagesBefore);
+    assert.deepEqual(saved.product.snapshot.groups.find((group) => group.id === firstGroupId)?.actorIds, membersBefore);
+    assert.deepEqual(saved.product.snapshot.chatState.chats.get(firstGroupId)?.groupRules, rulesBefore);
+    assert.deepEqual(saved.product.snapshot.chatState.chats.get(firstGroupId)?.appearance, appearanceBefore);
+    assert.deepEqual(saved.product.snapshot.memorySummary, memoryBefore);
+    assert.deepEqual(saved.product.snapshot.contacts, contactsBefore);
+    assert.deepEqual(saved.product.snapshot.runtimeState.metadata.settings, settingsBefore);
+
+    const realityGroup = shell.switchWorld(realityWorldId);
+    assert.equal(realityGroup.product.snapshot.chatState.chats.has(firstGroupId), false);
+    const customAfterReality = shell.switchWorld(customWorldId);
+    assert.equal(customAfterReality.product.snapshot.chatState.chats.get(firstGroupId)?.groupFiles?.[0]?.fileName, "brief.pdf");
+    assert.throws(() => shell.saveGroupFileMetadata({
+      worldId: customWorldId,
+      groupChatId: `chat:${customWorldId}:ai:friend`,
+      fileName: "private.txt"
+    }), /invalid file metadata command/);
+  });
+
   it("keeps non-blank role assignment as an explicit placeholder", () => {
     const app = App.init();
     const shell = MinimalUiShell.init(app);

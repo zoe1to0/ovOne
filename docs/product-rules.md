@@ -49,7 +49,7 @@
 - Private chat settings show only current chat appearance scaffolds.
 - Chat settings appearance scaffolds include upload chat background image, chat background color, my bubble color, and opposite-side bubble color.
 - Chat Settings save contract may only target current-chat appearance fields: `worldId`, `chatId`, `backgroundImageRef`, `backgroundColor`, `myBubbleColor`, and `otherBubbleColor`.
-- Chat settings save persists only the selected chat's appearance metadata. Group rules save persists only the selected group chat's `rulesText` metadata. Group Add/Remove Member persists only the selected group chat's member list. Background image upload and group files remain no-op scaffolds.
+- Chat settings save persists only the selected chat's appearance metadata. Group rules save persists only the selected group chat's `rulesText` metadata. Group Add/Remove Member persists only the selected group chat's member list. Group file metadata save persists only selected group chat `groupFiles[]` records. Background image upload remains a no-op scaffold.
 - Chat settings save must not mutate group membership, messages/history, chat identity, contact preferences, world metadata, world role metadata, global/provider data, or weather/time permission.
 - Group rules belong only to one group chat in the current world and are edited from that group chat's Chat Settings / Group Detail page.
 - Group rules are text-based; empty rules mean no extra group-level rules beyond world/contact settings.
@@ -58,7 +58,9 @@
 - Group files belong only to the selected group chat. They are group context resources, not whole-world files and not chat history messages.
 - Group files must not enter private chats, other group chats, other worlds, group messages/history, group members, group rules, memory, global AI data, provider connections, retrieval, or AI prompts in the current milestone.
 - Future AI access to group files may happen only when speaking inside that group chat. The same AI must not see those files in private chat, other groups, or other worlds.
-- Current group files milestone is scaffold-only: upload shows `群文件上传暂未开放`, empty lists show `暂无群文件`, no file binary/content is stored, and file deletion/search/retrieval remain future work.
+- Current group files milestone stores metadata-only `GroupFileRecord` entries under the selected group chat. Required metadata is `fileName`; optional metadata is `fileType` and `fileSize`.
+- Empty group file names are rejected with `请输入文件名`; valid metadata save shows `已添加群文件记录`.
+- No file binary/content is stored, and file deletion/search/retrieval remain future work.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.

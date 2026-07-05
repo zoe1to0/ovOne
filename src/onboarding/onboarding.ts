@@ -135,6 +135,14 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    saveGroupFileMetadata: (command) => {
+      try {
+        return shell.saveGroupFileMetadata(command);
+      } catch {
+        telemetry.record("error.invalid-event", { source: "saveGroupFileMetadata", worldId: command.worldId });
+        return decorate();
+      }
+    },
     addGroupMember: (command) => {
       try {
         return shell.addGroupMember(command);

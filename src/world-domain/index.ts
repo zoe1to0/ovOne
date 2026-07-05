@@ -14,6 +14,7 @@ export type {
   StructuralPatchEvent,
   WorldDefinition,
   ChatAppearanceSettings,
+  GroupFileRecord,
   GroupRulesSettings,
   WorldChatMessage,
   WorldChatSession,

@@ -2,10 +2,13 @@ import type { MinimalProductShellRuntime } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_SAVE_SUCCESS_MESSAGE,
   CONTACT_DETAIL_SAVE_SUCCESS_MESSAGE,
+  GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
+  GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE,
   GROUP_RULES_SAVE_SUCCESS_MESSAGE,
   validateDeleteFriendCommand,
   validateChatSettingsPatch,
   validateGroupAddMemberCommand,
+  validateGroupFileUploadCommand,
   validateGroupRemoveMemberCommand,
   validateGroupRulesPatch,
   WORLD_EDITOR_SAVE_SUCCESS_MESSAGE,
@@ -22,8 +25,10 @@ import {
   chatSettingsPatchFromDraft,
   createChatSettingsContractInput,
   createGroupMemberManagementInput,
+  createGroupFilesContractInput,
   createGroupRulesContractInput,
   createContactDetailContractInput,
+  groupFileUploadCommandFromDraft,
   groupRulesPatchFromDraft,
   sanitizeCreateWorldDraft,
   validateCreateWorldDraft,
@@ -40,7 +45,7 @@ export type FlowExecutorContext = Readonly<{
 
 export type FlowExecutorResult = Readonly<{
   readonly shouldRender: boolean;
-  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "SAVE_GROUP_RULES" | "ADD_GROUP_MEMBER" | "REMOVE_GROUP_MEMBER" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
+  readonly executedFlow?: "SEND_MESSAGE" | "SWITCH_WORLD" | "CREATE_WORLD" | "CREATE_GROUP" | "SAVE_WORLD_METADATA" | "SAVE_CONTACT_DETAIL_PREFERENCES" | "SAVE_CHAT_SETTINGS" | "SAVE_GROUP_RULES" | "SAVE_GROUP_FILE_METADATA" | "ADD_GROUP_MEMBER" | "REMOVE_GROUP_MEMBER" | "DELETE_FRIEND" | "ADD_WORLD_MEMBER" | "REMOVE_WORLD_MEMBER";
 }>;
 
 export type FlowExecutor = Readonly<{
@@ -259,6 +264,38 @@ export function createFlowExecutor(): FlowExecutor {
           noticeMessage: GROUP_RULES_SAVE_SUCCESS_MESSAGE
         });
         return Object.freeze({ shouldRender: true, executedFlow: "SAVE_GROUP_RULES" });
+      }
+      if (action.type === "CONFIRM_GROUP_FILE_METADATA") {
+        const draft = context.state.chatSettingsDraft;
+        if (!draft) {
+          return NO_FLOW;
+        }
+        const validation = validateGroupFileUploadCommand(
+          groupFileUploadCommandFromDraft(draft, context.state.currentWorldId),
+          createGroupFilesContractInput(context.state)
+        );
+        if (!validation.valid || !validation.command) {
+          context.state.chatSettingsDraft = Object.freeze({
+            ...draft,
+            noticeMessage: validation.error ?? GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE
+          });
+          return Object.freeze({ shouldRender: true });
+        }
+        context.state.view = context.shell.saveGroupFileMetadata(validation.command);
+        context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+        context.state.activeView = "CHAT_SETTINGS";
+        context.state.activeChatId = validation.command.groupChatId;
+        context.state.selectedChatIdForSettings = validation.command.groupChatId;
+        context.state.overlay = null;
+        context.state.settingsOpen = false;
+        context.state.chatSettingsDraft = Object.freeze({
+          ...draft,
+          groupFileName: "",
+          groupFileType: "",
+          groupFileSize: "",
+          noticeMessage: GROUP_FILES_METADATA_ADD_SUCCESS_MESSAGE
+        });
+        return Object.freeze({ shouldRender: true, executedFlow: "SAVE_GROUP_FILE_METADATA" });
       }
       if (action.type === "CONFIRM_GROUP_ADD_MEMBER") {
         const draft = context.state.chatSettingsDraft;

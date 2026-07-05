@@ -1,6 +1,7 @@
 import type { MinimalProductShellView } from "../minimal-ui-shell/index.js";
 import {
   CHAT_SETTINGS_BACKGROUND_UPLOAD_UNAVAILABLE_MESSAGE,
+  GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
   GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   GROUP_MEMBER_ADD_UNAVAILABLE_MESSAGE,
   GROUP_MEMBER_REMOVE_LAST_AI_MESSAGE,
@@ -10,6 +11,7 @@ import {
   buildLinkedAIDisconnectPreview,
   guardLinkedAIDisconnectExecution,
   validateGroupAddMemberCommand,
+  validateGroupFileUploadCommand,
   validateGroupRemoveMemberCommand,
   validateChatSettingsPatch,
   validateContactDetailPreferencePatch,
@@ -145,6 +147,9 @@ export type CreateGroupDraft = Readonly<{
 export type ChatSettingsDraft = Readonly<{
   readonly chatId: string;
   readonly groupRulesText: string;
+  readonly groupFileName: string;
+  readonly groupFileType: string;
+  readonly groupFileSize: string;
   readonly backgroundImagePlaceholder: string;
   readonly backgroundColor: string;
   readonly myBubbleColor: string;
@@ -183,9 +188,11 @@ export type InteractionAction =
   | { readonly type: "OPEN_CHAT_SETTINGS" }
   | { readonly type: "UPDATE_CHAT_SETTINGS_DRAFT"; readonly field: "backgroundColor" | "myBubbleColor" | "otherBubbleColor"; readonly value: string }
   | { readonly type: "UPDATE_GROUP_RULES_DRAFT"; readonly rulesText: string }
+  | { readonly type: "UPDATE_GROUP_FILE_DRAFT"; readonly field: "fileName" | "fileType" | "fileSize"; readonly value: string }
   | { readonly type: "CANCEL_CHAT_SETTINGS" }
   | { readonly type: "SAVE_CHAT_SETTINGS" }
   | { readonly type: "SAVE_GROUP_RULES" }
+  | { readonly type: "CONFIRM_GROUP_FILE_METADATA" }
   | { readonly type: "OPEN_GROUP_ADD_MEMBER"; readonly worldContactId?: string }
   | { readonly type: "OPEN_GROUP_REMOVE_MEMBER"; readonly worldContactId?: string }
   | { readonly type: "CONFIRM_GROUP_ADD_MEMBER"; readonly worldContactId: string }
@@ -293,9 +300,11 @@ type DisabledInteractionAction = Exclude<
   | "OPEN_CHAT_SETTINGS"
   | "UPDATE_CHAT_SETTINGS_DRAFT"
   | "UPDATE_GROUP_RULES_DRAFT"
+  | "UPDATE_GROUP_FILE_DRAFT"
   | "CANCEL_CHAT_SETTINGS"
   | "SAVE_CHAT_SETTINGS"
   | "SAVE_GROUP_RULES"
+  | "CONFIRM_GROUP_FILE_METADATA"
   | "OPEN_GROUP_ADD_MEMBER"
   | "OPEN_GROUP_REMOVE_MEMBER"
   | "CONFIRM_GROUP_ADD_MEMBER"
@@ -527,6 +536,9 @@ export function createBehaviorRegistry(): BehaviorRegistry {
     return Object.freeze({
       chatId,
       groupRulesText: chat?.groupRules?.rulesText ?? "",
+      groupFileName: "",
+      groupFileType: "",
+      groupFileSize: "",
       backgroundImagePlaceholder: chat?.appearance?.backgroundImageRef ?? "",
       backgroundColor: chat?.appearance?.backgroundColor ?? "#ffffff",
       myBubbleColor: chat?.appearance?.myBubbleColor ?? "#dcecff",
@@ -708,6 +720,17 @@ export function createBehaviorRegistry(): BehaviorRegistry {
         });
         return RENDER;
 
+      case "UPDATE_GROUP_FILE_DRAFT":
+        if (!state.chatSettingsDraft) {
+          return RENDER;
+        }
+        state.chatSettingsDraft = Object.freeze({
+          ...state.chatSettingsDraft,
+          [action.field === "fileName" ? "groupFileName" : action.field === "fileType" ? "groupFileType" : "groupFileSize"]: action.value,
+          noticeMessage: null
+        });
+        return RENDER;
+
       case "CANCEL_CHAT_SETTINGS":
         state.activeView = "CHAT_VIEW";
         state.activeChatId = state.selectedChatIdForSettings;
@@ -739,6 +762,20 @@ export function createBehaviorRegistry(): BehaviorRegistry {
           state.chatSettingsDraft = Object.freeze({
             ...state.chatSettingsDraft,
             noticeMessage: validation.valid ? null : validation.error
+          });
+        }
+        closeOverlay(state);
+        return RENDER;
+
+      case "CONFIRM_GROUP_FILE_METADATA":
+        if (state.chatSettingsDraft) {
+          const validation = validateGroupFileUploadCommand(
+            groupFileUploadCommandFromDraft(state.chatSettingsDraft, state.currentWorldId),
+            createGroupFilesContractInput(state)
+          );
+          state.chatSettingsDraft = Object.freeze({
+            ...state.chatSettingsDraft,
+            noticeMessage: validation.valid ? null : validation.error ?? GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE
           });
         }
         closeOverlay(state);
@@ -1688,6 +1725,20 @@ export function groupRulesPatchFromDraft(draft: ChatSettingsDraft, worldId: Worl
   };
 }
 
+export function groupFileUploadCommandFromDraft(draft: ChatSettingsDraft, worldId: WorldId) {
+  const fileSize = Number(draft.groupFileSize);
+  return {
+    worldId,
+    groupChatId: draft.chatId,
+    fileName: draft.groupFileName,
+    fileType: draft.groupFileType,
+    fileSize: Number.isFinite(fileSize) && fileSize > 0 ? fileSize : 0,
+    fileRef: `group-file:${worldId}:${draft.chatId}:${draft.groupFileName.trim() || "draft"}`,
+    uploadedAt: 0,
+    uploadedBy: "user" as const
+  };
+}
+
 export function createChatSettingsContractInput(state: SemanticMobileState) {
   return {
     worldId: state.currentWorldId,
@@ -1701,6 +1752,10 @@ export function createGroupRulesContractInput(state: SemanticMobileState) {
     chatIds: [...state.view.product.snapshot.chatState.chats.keys()],
     groupChatIds: state.view.product.snapshot.groups.map((group) => group.id)
   };
+}
+
+export function createGroupFilesContractInput(state: SemanticMobileState) {
+  return createGroupRulesContractInput(state);
 }
 
 export function createGroupMemberManagementInput(state: SemanticMobileState) {

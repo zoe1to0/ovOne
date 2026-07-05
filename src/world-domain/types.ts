@@ -94,6 +94,17 @@ export type GroupRulesSettings = Readonly<{
   readonly rulesText: string;
 }>;
 
+export type GroupFileRecord = Readonly<{
+  readonly worldId: WorldId;
+  readonly groupChatId: string;
+  readonly fileName: string;
+  readonly fileType: string;
+  readonly fileSize: number;
+  readonly fileRef: string;
+  readonly uploadedAt: number;
+  readonly uploadedBy: "user";
+}>;
+
 export type WorldChatSession = Readonly<{
   readonly id: string;
   readonly worldId: WorldId;
@@ -101,6 +112,7 @@ export type WorldChatSession = Readonly<{
   readonly messages: readonly WorldChatMessage[];
   readonly appearance?: ChatAppearanceSettings;
   readonly groupRules?: GroupRulesSettings;
+  readonly groupFiles?: readonly GroupFileRecord[];
 }>;
 
 export type WorldChatState = Readonly<{

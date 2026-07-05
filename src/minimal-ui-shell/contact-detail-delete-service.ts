@@ -118,7 +118,10 @@ function createWorldStateFromSnapshot(state: WorldState): WorldState {
       chats: new Map<string, WorldChatSession>(
         [...state.chat.chats.entries()].map(([chatId, chat]) => [chatId, {
           ...chat,
-          messages: chat.messages.map((message) => ({ ...message }))
+          messages: chat.messages.map((message) => ({ ...message })),
+          ...(chat.appearance ? { appearance: { ...chat.appearance } } : {}),
+          ...(chat.groupRules ? { groupRules: { ...chat.groupRules } } : {}),
+          ...(chat.groupFiles ? { groupFiles: chat.groupFiles.map((file) => ({ ...file })) } : {})
         }])
       )
     }
