@@ -17,8 +17,8 @@ Last audited: 2026-06-29.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
-- Create Group can create a current-world group chat with selected current-world AI contacts, and group add/remove-member execution can update selected group membership. Group files, initial AI messages, group dissolution, and real group memory behavior are not implemented.
-- Chat Settings / Group Detail still has scaffold-only background upload and group files. Group add/remove member execution and appearance color/background reference save are implemented for selected current-world targets only.
+- Create Group can create a current-world group chat with selected current-world AI contacts, and group add/remove-member execution can update selected group membership. Group file metadata records are implemented, but real file upload/content handling, initial AI messages, group dissolution, and real group memory behavior are not implemented.
+- Chat Settings / Group Detail still has scaffold-only background upload. Group file metadata records, group add/remove member execution, and appearance color/background reference save are implemented for selected current-world targets only.
 - Group member management has a contract and Add/Remove Group Member execution. Removing the last AI member remains blocked because group dissolution is not implemented.
 - Group rules save persists text to selected group chat metadata, but rules do not affect AI behavior, prompts, memory, or runtime enforcement yet.
 - Group files support metadata-only records on selected group chats, but no real upload, file binary/content storage, file parsing, retrieval, deletion, prompt injection, or AI runtime file reading exists yet.
@@ -44,13 +44,13 @@ Last audited: 2026-06-29.
 - Linked AI disconnect execution snapshots and rollback plans are design contracts only; they capture the future mutation scope and restoration requirements but do not execute disconnect or rollback.
 - Linked AI disconnect preflight validates future operation order only; actual Global AI Link/provider/world cleanup execution remains unimplemented.
 - Linked AI disconnect atomic executor is disabled/simulation-only; `execute` mode is unavailable and real runtime mutation remains unimplemented.
-- Group-member removal is not implemented yet; group chats, other group members, group history, and removed AI historical group messages must remain until explicit group dissolution behavior exists.
+- Group-member removal execution removes only selected group membership; group chats, other group members, group history, and removed AI historical group messages must remain until explicit group dissolution behavior exists.
 - World Editor Add Member creates only custom-world `WorldContact`, private `WorldChat`, and isolated memory placeholder metadata; it must not be treated as role editing, group membership, initial message generation, provider connection management, or real memory engine behavior.
 - World Editor Remove Member deletes only custom-world `WorldContact`, private `WorldChat`, and memory placeholder metadata after confirmation; it must not be treated as group-member removal execution, group chat deletion, group message deletion, provider disconnect, Global AI Link deletion, Reality mutation, other-world mutation, or real memory-engine cleanup.
 - Create World import document options are disabled with an inline unavailable notice; official quick world options remain scaffold placeholders only.
 - Reality is shown as locked in the editor selector and World Editor page; Reality worldview editing remains unavailable.
 - Emoji picker and file picker panel items do not dispatch follow-up controller actions.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid `CONFIRM_CREATE_GROUP`, valid custom-world `SAVE_WORLD_EDITOR`, valid `SAVE_CONTACT_DETAIL_PREFERENCES`, valid `SAVE_CHAT_SETTINGS`, confirmed `CONFIRM_DELETE_FRIEND`, valid custom-world `ADD_WORLD_MEMBER`, and confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER` are the UI actions currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, valid random-role `CONFIRM_CREATE_WORLD_DRAFT`, valid `CONFIRM_CREATE_WORLD_DETAIL`, valid `CONFIRM_CREATE_GROUP`, valid custom-world `SAVE_WORLD_EDITOR`, valid `SAVE_CONTACT_DETAIL_PREFERENCES`, valid `SAVE_CHAT_SETTINGS`, valid `SAVE_GROUP_RULES`, valid `CONFIRM_GROUP_FILE_METADATA`, confirmed `CONFIRM_DELETE_FRIEND`, valid custom-world `ADD_WORLD_MEMBER`, confirmed custom-world `CONFIRM_REMOVE_WORLD_MEMBER`, valid `CONFIRM_GROUP_ADD_MEMBER`, and confirmed `CONFIRM_GROUP_REMOVE_MEMBER` are the UI actions currently handled by Flow Executor.
 - Production UI code lives in a large single adapter file, so controller, router, state, view helpers, and DOM rendering are not physically separated yet.
 
 ## Current Warning

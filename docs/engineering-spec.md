@@ -201,7 +201,7 @@ UI action
 - Create Group can run in Reality or custom worlds, enters the new group chat, and does not generate initial AI messages.
 - Create Group defaults blank group names to `群聊`.
 - Chat List uses plain group title only; Chat View header uses `chatHeaderTitle(...)` to display `群名称（x）`, where `x = 1 + selected AI member count`.
-- Create Group does not support post-creation member management execution, group files, cross-world members, automatic bootstrap groups, or real memory engine behavior yet.
+- Create Group supports post-creation group add/remove member execution and metadata-only group file records through Chat Settings. Cross-world members, automatic bootstrap groups, real file upload/content handling, and real memory engine behavior are not implemented yet.
 - Chat settings use `CHAT_SETTINGS` as a full route/page resolved through `activeView -> ViewRouter.resolve -> renderShellPage`.
 - The chat `...` button dispatches `OPEN_CHAT_SETTINGS` directly through `InteractionController`; it does not open a settings overlay.
 - `SemanticMobileState.selectedChatIdForSettings` and `chatSettingsDraft` store local chat appearance draft state.

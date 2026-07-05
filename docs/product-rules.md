@@ -36,7 +36,7 @@
 - Create Group requires at least one AI member, creates placeholder group memory metadata, opens the new group chat, and does not generate initial AI messages.
 - Empty Create Group names default to `群聊`.
 - Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
-- Create Group does not support group files, cross-world members, group dissolution, or real memory engine behavior yet; post-creation add/remove member execution is supported for current-world AI contacts only.
+- Create Group supports metadata-only group file records through Chat Settings. Real file upload/content handling, cross-world members, group dissolution, and real memory engine behavior remain unimplemented; post-creation add/remove member execution is supported for current-world AI contacts only.
 - Chat `...` settings opens a full page, not an overlay.
 - Group chat settings show group members, add/remove member execution, text-based group rules draft scaffold, group files scaffold, and current chat appearance controls.
 - Group member management applies only inside the selected group chat in the current world.
