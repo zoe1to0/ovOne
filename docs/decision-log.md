@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-05: Group file real upload contract scaffold added
+
+Decision: Group Files now has a pure contract boundary for future real upload/storage/retrieval/deletion work.
+
+Rules:
+
+- Real upload remains unimplemented; the current runtime still stores metadata-only group file records.
+- Future uploaded files may belong only to one selected group chat and may hold metadata plus storage reference only.
+- Storage references must not contain raw binary, extracted text, chunks, embeddings, prompt-ready content, private-chat scope, whole-world scope, or cross-world scope.
+- Future retrieval access is same-group-chat-only and must reject private chats, other groups, other worlds, and deleted files.
+- Upload success must not auto-inject file content into prompts, and parsing/indexing/retrieval remain separate future layers.
+- Future deletion must target selected `groupChatId + fileId` while preserving group chat, messages/history, historical file mentions, members, rules, appearance, world contacts, private chats, memory scopes, and global/provider data.
+
 ## 2026-07-05: v0.9 group files metadata milestone
 
 Decision: `v0.9-group-files-metadata` marks the Group Files metadata milestone.

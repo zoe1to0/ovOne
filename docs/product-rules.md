@@ -61,6 +61,9 @@
 - Current group files milestone stores metadata-only `GroupFileRecord` entries under the selected group chat. Required metadata is `fileName`; optional metadata is `fileType` and `fileSize`.
 - Empty group file names are rejected with `请输入文件名`; valid metadata save shows `已添加群文件记录`.
 - No file binary/content is stored, and file deletion/search/retrieval remain future work.
+- Real group file upload has a contract boundary only. Future uploaded files may store metadata plus a storage reference for one selected group chat, but must not store raw binary, extracted text, chunks, embeddings, or prompt-ready content in the chat/message/settings state.
+- Future AI file access must be group-chat-scoped: the same group chat may read through a future retrieval layer, while private chats, other group chats, and other worlds are forbidden. Upload success must not automatically inject file content into prompts.
+- Future file deletion must target only `groupChatId + fileId`, must make deleted files non-readable to AI, and must preserve group messages/history, historical messages that mention the file, members, rules, appearance, world contacts, private chats, memory scopes, and global/provider data.
 - Current welcome transition scaffold: after successful world creation, loading text is `{worldName} 载入中…`; Empty Role, Blank World, and project-document worlds use no-identity welcome text, while identity worlds use explicit user role names or scaffold placeholder `新世界中的你`.
 - Current World Editor: ovO -> Edit World can open a route/page for existing worlds; Reality name/worldview remain locked, custom world name/worldview can be saved, Add Member can add an existing linked AI to a custom world, and confirmed Remove Member can remove an AI from a custom world.
 - World Editor save contract: custom world save may only target `worldId`, `name`, and `worldview`; contact/chat/memory/global AI link mutations are forbidden.

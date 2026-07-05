@@ -21,7 +21,7 @@ Last audited: 2026-06-29.
 - Chat Settings / Group Detail still has scaffold-only background upload. Group file metadata records, group add/remove member execution, and appearance color/background reference save are implemented for selected current-world targets only.
 - Group member management has a contract and Add/Remove Group Member execution. Removing the last AI member remains blocked because group dissolution is not implemented.
 - Group rules save persists text to selected group chat metadata, but rules do not affect AI behavior, prompts, memory, or runtime enforcement yet.
-- Group files support metadata-only records on selected group chats, but no real upload, file binary/content storage, file parsing, retrieval, deletion, prompt injection, or AI runtime file reading exists yet.
+- Group files support metadata-only records on selected group chats and have a pure real-upload/storage/retrieval/deletion contract boundary, but no real upload, file binary/content storage, file parsing, retrieval/search, deletion execution, prompt injection, or AI runtime file reading exists yet.
 - Chat Settings image upload remains unimplemented; `backgroundImageRef` can be saved only as an existing draft/reference value, not through real upload.
 - Create World loading/welcome transition is scaffold state with explicit completion, but no polished animation timing, real generated identity, or loading process exists yet.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.

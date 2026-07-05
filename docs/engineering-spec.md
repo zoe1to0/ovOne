@@ -234,6 +234,13 @@ UI action
 - `CONFIRM_GROUP_FILE_METADATA` validates the local draft, then Flow Executor calls `shell.saveGroupFileMetadata(...)`.
 - Group file metadata records are stored only on selected `WorldChatSession.groupFiles`; file binary/content, parsing, retrieval, deletion, prompt injection, and AI runtime behavior are not implemented.
 - Future AI access is documented as group-chat-only through `getGroupFileAccessScope(...)`.
+- Real group file upload contract scaffolding also lives in `src/domain/group-files-contract.ts`.
+- `GroupFileStorageRef` permits only storage-reference metadata: provider, bucket/key/path placeholders, content type, size, checksum/hash placeholders, creation time, and `uploadedBy = "user"`.
+- `validateGroupFileStorageRef(...)` rejects raw binary, full extracted text, chunks, embeddings, prompt-ready content, cross-world storage scope, private-chat storage scope, and whole-world storage scope.
+- `validateGroupFileRealUploadContract(...)` accepts only the selected current-world group chat target and remains pure/read-only; it does not upload, parse, store binary/content, retrieve, or mutate runtime state.
+- `canReadGroupFileInChat(...)` defines future retrieval permission only: same group chat is allowed, private chat / other group / other world / deleted file are rejected, and no content retrieval, parsing, embeddings, LLM call, or AI runtime behavior occurs.
+- `canDeleteGroupFileRecord(...)` and `getGroupFileDeletionRules(...)` define deletion scope only. Future deletion must target selected `groupChatId + fileId`, make deleted files non-readable, and preserve group chat, messages/history, historical file mentions, members, rules, appearance, world contacts, private chats, memory scopes, and global/provider data.
+- `getGroupFilePromptInjectionBoundary(...)` documents that upload success never auto-injects file content into prompts; parsing and retrieval are separate future layers.
 - `UPLOAD_CHAT_BACKGROUND_IMAGE` and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add/remove confirmation now executes through the guarded group member service.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.

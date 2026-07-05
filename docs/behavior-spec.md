@@ -108,6 +108,10 @@ UI event
 - `CONFIRM_GROUP_FILE_METADATA` validates `GroupFileUploadCommand`, then Flow Executor calls `shell.saveGroupFileMetadata(...)` to append only the selected group chat's `groupFiles[]` metadata.
 - Group file metadata save must not store file binary/content, mutate messages/history, group members, group rules, chat appearance, memory, contact/world/global/provider data, retrieval, or AI prompt/runtime behavior.
 - Future AI access to group files is group-chat-only and must not affect private chats, other groups, or other worlds.
+- Real group file upload is contract-only: `GroupFileRealUploadContract` and `GroupFileStorageRef` define future upload/storage boundaries but no UI upload, binary storage, parsing, retrieval, search, prompt injection, deletion execution, or message/history mutation exists.
+- Storage references may contain provider and bucket/key/path placeholders, content type, size, checksum/hash placeholders, creation time, and `uploadedBy = "user"` only. Raw binary, extracted text, chunks, embeddings, prompt-ready content, private-chat scope, whole-world scope, and cross-world scope are rejected.
+- Future retrieval permission is defined by `canReadGroupFileInChat(...)`: same group chat can be allowed later, while private chat, other group chat, other world, and deleted files are forbidden. The helper does not retrieve, parse, embed, call LLMs, or change AI runtime behavior.
+- Future deletion is scoped to selected `groupChatId + fileId` and must preserve group messages/history, historical messages mentioning the file, group members/rules/appearance, world contacts, private chats, memory scopes, and global/provider data.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.
