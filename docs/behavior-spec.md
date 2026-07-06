@@ -112,6 +112,10 @@ UI event
 - Storage references may contain provider and bucket/key/path placeholders, content type, size, checksum/hash placeholders, creation time, and `uploadedBy = "user"` only. Raw binary, extracted text, chunks, embeddings, prompt-ready content, private-chat scope, whole-world scope, and cross-world scope are rejected.
 - Future retrieval permission is defined by `canReadGroupFileInChat(...)`: same group chat can be allowed later, while private chat, other group chat, other world, and deleted files are forbidden. The helper does not retrieve, parse, embed, call LLMs, or change AI runtime behavior.
 - Future deletion is scoped to selected `groupChatId + fileId` and must preserve group messages/history, historical messages mentioning the file, group members/rules/appearance, world contacts, private chats, memory scopes, and global/provider data.
+- Upload preflight is contract-only and defines order, adapter shape, rollback, audit, error states, and a disabled execution gate. It stops before real file writes.
+- The required preflight order is: validate group target -> validate current world scope -> validate file metadata -> validate storage ref shape -> validate storage adapter capability -> create metadata placeholder plan -> create upload-pending lifecycle plan -> create rollback plan -> create audit log plan -> stop before any real file write.
+- The storage adapter contract is interface-only with `prepareUpload`, `commitUpload`, `abortUpload`, and `getUploadStatus`; real upload implementation remains unavailable.
+- `canExecuteGroupFileUpload(...)` returns false with `真实群文件上传暂未开放`.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until revoked in Me -> Settings.

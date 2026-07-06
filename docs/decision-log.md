@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-06: Group file upload preflight contract added
+
+Decision: Group Files now has a pure preflight contract before any real upload/storage execution can be enabled.
+
+Rules:
+
+- Preflight order is fixed: validate group target, validate current world scope, validate file metadata, validate storage ref shape, validate storage adapter capability, create metadata placeholder plan, create upload-pending lifecycle plan, create rollback plan, create audit log plan, stop before any real file write.
+- `GroupFileStorageAdapterContract` is interface-only and may expose only `prepareUpload`, `commitUpload`, `abortUpload`, and `getUploadStatus`.
+- The preflight plan must not write files, upload to cloud, store binary/content, parse files, retrieve/search, inject prompts, execute deletion, or mutate messages/history.
+- Rollback plans are descriptive only and must preserve group chat, messages/history, members, rules, appearance, world contacts, private chats, memory scopes, and global/provider data.
+- Future audit logs may record metadata and status fields only; raw content, extracted text, chunks, embeddings, and prompt-ready content are forbidden.
+- `canExecuteGroupFileUpload(...)` returns false with `真实群文件上传暂未开放`.
+
 ## 2026-07-05: Group file real upload contract scaffold added
 
 Decision: Group Files now has a pure contract boundary for future real upload/storage/retrieval/deletion work.

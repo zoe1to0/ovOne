@@ -1,5 +1,7 @@
 import type { WorldId } from "../world-domain/index.js";
 
+export const GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE = "真实群文件上传暂未开放";
+
 export const GROUP_FILES_EMPTY_MESSAGE = "暂无群文件";
 export const GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE = "群文件上传暂未开放";
 export const GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE = "请输入文件名";
@@ -178,6 +180,133 @@ export type GroupFilePromptInjectionBoundary = Readonly<{
   readonly changesAiRuntime: false;
 }>;
 
+export type GroupFileUploadPreflightStep =
+  | "validate-group-target"
+  | "validate-current-world-scope"
+  | "validate-file-metadata"
+  | "validate-storage-ref-shape"
+  | "validate-storage-adapter-capability"
+  | "create-metadata-placeholder-plan"
+  | "create-upload-pending-lifecycle-plan"
+  | "create-rollback-plan"
+  | "create-audit-log-plan"
+  | "stop-before-real-file-write";
+
+export type GroupFileUploadErrorCode =
+  | "invalid-group-target"
+  | "invalid-world-scope"
+  | "invalid-file-metadata"
+  | "invalid-storage-ref"
+  | "invalid-storage-adapter"
+  | "real-upload-disabled";
+
+export type GroupFileUploadErrorState = Readonly<{
+  readonly code: GroupFileUploadErrorCode;
+  readonly message: string;
+  readonly step: GroupFileUploadPreflightStep;
+}>;
+
+export type GroupFileStorageAdapterMethod =
+  | "prepareUpload"
+  | "commitUpload"
+  | "abortUpload"
+  | "getUploadStatus";
+
+export type GroupFileStorageAdapterContract = Readonly<{
+  readonly adapterId: string;
+  readonly methods: readonly GroupFileStorageAdapterMethod[];
+  readonly interfaceOnly: true;
+  readonly writesFiles: false;
+  readonly uploadsToCloud: false;
+  readonly acceptsRawBinary: false;
+  readonly storesBinaryInDomainState: false;
+  readonly storesExtractedText: false;
+  readonly storesChunks: false;
+  readonly storesEmbeddings: false;
+  readonly storesPromptReadyContent: false;
+}>;
+
+export type GroupFileUploadRollbackPlan = Readonly<{
+  readonly descriptiveOnly: true;
+  readonly executesRollback: false;
+  readonly actions: readonly (
+    | "remove-upload-pending-metadata-placeholder"
+    | "mark-file-record-as-failed"
+    | "discard-storage-ref-placeholder"
+    | "write-future-audit-failure-entry"
+  )[];
+  readonly preservesGroupChat: true;
+  readonly preservesMessagesHistory: true;
+  readonly preservesGroupMembers: true;
+  readonly preservesGroupRules: true;
+  readonly preservesChatAppearance: true;
+  readonly preservesWorldContacts: true;
+  readonly preservesPrivateChats: true;
+  readonly preservesMemoryScopes: true;
+  readonly preservesGlobalProviderData: true;
+}>;
+
+export type GroupFileUploadAuditLogEntry = Readonly<{
+  readonly worldId: WorldId;
+  readonly groupChatId: string;
+  readonly fileId: string;
+  readonly fileName: string;
+  readonly lifecycleTransition: "metadata-only->upload-pending";
+  readonly actor: "user";
+  readonly timestamp: number;
+  readonly resultStatus: "planned";
+  readonly failureReason: string | null;
+  readonly containsRawFileContent: false;
+  readonly containsExtractedText: false;
+  readonly containsChunks: false;
+  readonly containsEmbeddings: false;
+  readonly containsPromptReadyContent: false;
+}>;
+
+export type GroupFileUploadAuditBoundary = Readonly<{
+  readonly allowedFields: readonly ("worldId" | "groupChatId" | "fileId" | "fileName" | "lifecycleTransition" | "actor" | "timestamp" | "resultStatus" | "failureReason")[];
+  readonly excludesRawFileContent: true;
+  readonly excludesExtractedText: true;
+  readonly excludesChunks: true;
+  readonly excludesEmbeddings: true;
+  readonly excludesPromptReadyContent: true;
+}>;
+
+export type GroupFileUploadPreflightPlan = Readonly<{
+  readonly worldId: WorldId;
+  readonly groupChatId: string;
+  readonly fileId: string;
+  readonly fileName: string;
+  readonly steps: readonly GroupFileUploadPreflightStep[];
+  readonly storageAdapter: GroupFileStorageAdapterContract;
+  readonly storageRef: GroupFileStorageRef;
+  readonly lifecyclePlan: readonly ["metadata-only", "upload-pending"];
+  readonly rollbackPlan: GroupFileUploadRollbackPlan;
+  readonly auditLogPlan: GroupFileUploadAuditLogEntry;
+  readonly stopsBeforeRealFileWrite: true;
+  readonly executesUpload: false;
+  readonly writesFiles: false;
+  readonly storesBinaryContent: false;
+  readonly parsesFiles: false;
+  readonly retrievesFiles: false;
+  readonly injectsPromptContent: false;
+  readonly mutatesMessagesHistory: false;
+}>;
+
+export type GroupFileUploadPreflightResult = Readonly<{
+  readonly valid: boolean;
+  readonly plan: GroupFileUploadPreflightPlan | null;
+  readonly errors: readonly GroupFileUploadErrorState[];
+}>;
+
+export type GroupFileUploadFailureRules = Readonly<{
+  readonly disabledReason: typeof GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE;
+  readonly realUploadEnabled: false;
+  readonly executeUpload: false;
+  readonly executeRollback: false;
+  readonly preserveRuntimeData: true;
+}>;
+
 const ROOT_ALLOWED_KEYS = new Set([
   "worldId",
   "groupChatId",
@@ -212,6 +341,26 @@ const STORAGE_REF_ALLOWED_KEYS = new Set([
 ]);
 
 const DELETION_ALLOWED_KEYS = new Set(["worldId", "groupChatId", "fileId"]);
+
+const PREFLIGHT_STEPS: readonly GroupFileUploadPreflightStep[] = Object.freeze([
+  "validate-group-target",
+  "validate-current-world-scope",
+  "validate-file-metadata",
+  "validate-storage-ref-shape",
+  "validate-storage-adapter-capability",
+  "create-metadata-placeholder-plan",
+  "create-upload-pending-lifecycle-plan",
+  "create-rollback-plan",
+  "create-audit-log-plan",
+  "stop-before-real-file-write"
+]);
+
+const STORAGE_ADAPTER_METHODS: readonly GroupFileStorageAdapterMethod[] = Object.freeze([
+  "prepareUpload",
+  "commitUpload",
+  "abortUpload",
+  "getUploadStatus"
+]);
 
 const LIFECYCLE_STATUSES = new Set<GroupFileUploadLifecycleStatus>([
   "metadata-only",
@@ -431,6 +580,146 @@ export function getGroupFilePromptInjectionBoundary(): GroupFilePromptInjectionB
   });
 }
 
+export function createGroupFileUploadPreflightPlan(
+  contract: unknown,
+  input: GroupFileRealUploadValidationInput,
+  storageAdapter: unknown,
+  timestamp = 0
+): GroupFileUploadPreflightResult {
+  const uploadValidation = validateGroupFileRealUploadContract(contract, input);
+  const adapterErrors = validateStorageAdapterContract(storageAdapter);
+  const errors: GroupFileUploadErrorState[] = [];
+  const candidate = isRecord(contract) ? contract : null;
+  if (!uploadValidation.valid || !uploadValidation.contract || typeof candidate?.fileName !== "string" || !candidate.fileName.trim()) {
+    errors.push(...createUploadValidationErrors(candidate, input, uploadValidation));
+  }
+  errors.push(...adapterErrors);
+  if (errors.length > 0 || !uploadValidation.contract) {
+    return Object.freeze({
+      valid: false,
+      plan: null,
+      errors: Object.freeze(errors)
+    });
+  }
+  const adapterContract = storageAdapter as GroupFileStorageAdapterContract;
+  const rollbackPlan = createGroupFileUploadRollbackPlan(uploadValidation.contract);
+  const auditLogPlan = createGroupFileUploadAuditEntry(uploadValidation.contract, timestamp);
+  return Object.freeze({
+    valid: true,
+    plan: Object.freeze({
+      worldId: uploadValidation.contract.worldId,
+      groupChatId: uploadValidation.contract.groupChatId,
+      fileId: uploadValidation.contract.fileId,
+      fileName: uploadValidation.contract.fileName,
+      steps: PREFLIGHT_STEPS,
+      storageAdapter: adapterContract,
+      storageRef: uploadValidation.contract.storageRef,
+      lifecyclePlan: Object.freeze(["metadata-only", "upload-pending"] as const),
+      rollbackPlan,
+      auditLogPlan,
+      stopsBeforeRealFileWrite: true,
+      executesUpload: false,
+      writesFiles: false,
+      storesBinaryContent: false,
+      parsesFiles: false,
+      retrievesFiles: false,
+      injectsPromptContent: false,
+      mutatesMessagesHistory: false
+    }),
+    errors: Object.freeze([])
+  });
+}
+
+export function validateGroupFileUploadPreflightPlan(plan: unknown): GroupFileUploadPreflightResult {
+  if (!isRecord(plan)) {
+    return Object.freeze({
+      valid: false,
+      plan: null,
+      errors: Object.freeze([createUploadError("invalid-file-metadata", "GroupFiles: invalid preflight plan.", "create-metadata-placeholder-plan")])
+    });
+  }
+  const stepsValid = Array.isArray(plan.steps) && arraysEqual(plan.steps, PREFLIGHT_STEPS);
+  const adapterErrors = validateStorageAdapterContract(plan.storageAdapter);
+  const lifecycleValid =
+    Array.isArray(plan.lifecyclePlan) &&
+    plan.lifecyclePlan.length === 2 &&
+    plan.lifecyclePlan[0] === "metadata-only" &&
+    plan.lifecyclePlan[1] === "upload-pending";
+  const rollbackValid = isRecord(plan.rollbackPlan) && plan.rollbackPlan.descriptiveOnly === true && plan.rollbackPlan.executesRollback === false;
+  const auditValid = isRecord(plan.auditLogPlan) && plan.auditLogPlan.containsRawFileContent === false && plan.auditLogPlan.containsPromptReadyContent === false;
+  const stopsBeforeWrite = plan.stopsBeforeRealFileWrite === true && plan.executesUpload === false && plan.writesFiles === false;
+  const errors = [
+    ...(!stepsValid ? [createUploadError("invalid-file-metadata", "GroupFiles: invalid preflight operation order.", "validate-file-metadata")] : []),
+    ...adapterErrors,
+    ...(!lifecycleValid ? [createUploadError("invalid-file-metadata", "GroupFiles: invalid lifecycle plan.", "create-upload-pending-lifecycle-plan")] : []),
+    ...(!rollbackValid ? [createUploadError("invalid-file-metadata", "GroupFiles: invalid rollback plan.", "create-rollback-plan")] : []),
+    ...(!auditValid ? [createUploadError("invalid-file-metadata", "GroupFiles: invalid audit log plan.", "create-audit-log-plan")] : []),
+    ...(!stopsBeforeWrite ? [createUploadError("real-upload-disabled", GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE, "stop-before-real-file-write")] : [])
+  ];
+  return Object.freeze({
+    valid: errors.length === 0,
+    plan: errors.length === 0 ? plan as GroupFileUploadPreflightPlan : null,
+    errors: Object.freeze(errors)
+  });
+}
+
+export function createGroupFileUploadRollbackPlan(_contract: Pick<GroupFileRealUploadContract, "worldId" | "groupChatId" | "fileId">): GroupFileUploadRollbackPlan {
+  return Object.freeze({
+    descriptiveOnly: true,
+    executesRollback: false,
+    actions: Object.freeze([
+      "remove-upload-pending-metadata-placeholder",
+      "mark-file-record-as-failed",
+      "discard-storage-ref-placeholder",
+      "write-future-audit-failure-entry"
+    ] as const),
+    preservesGroupChat: true,
+    preservesMessagesHistory: true,
+    preservesGroupMembers: true,
+    preservesGroupRules: true,
+    preservesChatAppearance: true,
+    preservesWorldContacts: true,
+    preservesPrivateChats: true,
+    preservesMemoryScopes: true,
+    preservesGlobalProviderData: true
+  });
+}
+
+export function getGroupFileUploadAuditBoundary(): GroupFileUploadAuditBoundary {
+  return Object.freeze({
+    allowedFields: Object.freeze([
+      "worldId",
+      "groupChatId",
+      "fileId",
+      "fileName",
+      "lifecycleTransition",
+      "actor",
+      "timestamp",
+      "resultStatus",
+      "failureReason"
+    ] as const),
+    excludesRawFileContent: true,
+    excludesExtractedText: true,
+    excludesChunks: true,
+    excludesEmbeddings: true,
+    excludesPromptReadyContent: true
+  });
+}
+
+export function canExecuteGroupFileUpload(_plan: GroupFileUploadPreflightPlan | null): false {
+  return false;
+}
+
+export function getGroupFileUploadFailureRules(): GroupFileUploadFailureRules {
+  return Object.freeze({
+    disabledReason: GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE,
+    realUploadEnabled: false,
+    executeUpload: false,
+    executeRollback: false,
+    preserveRuntimeData: true
+  });
+}
+
 function getForbiddenGroupFileFields(
   command: unknown,
   allowedKeys: ReadonlySet<string> = ROOT_ALLOWED_KEYS
@@ -592,6 +881,99 @@ function collectStorageRefForbiddenFields(
     }
     collectStorageRefForbiddenFields(child, forbidden, null);
   }
+}
+
+function validateStorageAdapterContract(adapter: unknown): readonly GroupFileUploadErrorState[] {
+  if (!isRecord(adapter)) {
+    return Object.freeze([createUploadError("invalid-storage-adapter", "GroupFiles: invalid storage adapter contract.", "validate-storage-adapter-capability")]);
+  }
+  const methods = Array.isArray(adapter.methods) ? adapter.methods : [];
+  const methodsValid =
+    methods.length === STORAGE_ADAPTER_METHODS.length &&
+    STORAGE_ADAPTER_METHODS.every((method) => methods.includes(method));
+  const flagsValid =
+    adapter.interfaceOnly === true &&
+    adapter.writesFiles === false &&
+    adapter.uploadsToCloud === false &&
+    adapter.acceptsRawBinary === false &&
+    adapter.storesBinaryInDomainState === false &&
+    adapter.storesExtractedText === false &&
+    adapter.storesChunks === false &&
+    adapter.storesEmbeddings === false &&
+    adapter.storesPromptReadyContent === false;
+  if (typeof adapter.adapterId === "string" && methodsValid && flagsValid) {
+    return Object.freeze([]);
+  }
+  return Object.freeze([createUploadError("invalid-storage-adapter", "GroupFiles: storage adapter must be interface-only.", "validate-storage-adapter-capability")]);
+}
+
+function createUploadValidationErrors(
+  candidate: Readonly<Record<string, unknown>> | null,
+  input: GroupFileRealUploadValidationInput,
+  validation: GroupFileRealUploadValidation
+): readonly GroupFileUploadErrorState[] {
+  const errors: GroupFileUploadErrorState[] = [];
+  if (!candidate || typeof candidate.groupChatId !== "string" || !input.groupChatIds.includes(candidate.groupChatId)) {
+    errors.push(createUploadError("invalid-group-target", "GroupFiles: upload target must be a current-world group chat.", "validate-group-target"));
+  }
+  if (!candidate || candidate.worldId !== input.worldId) {
+    errors.push(createUploadError("invalid-world-scope", "GroupFiles: upload target must stay in the current world.", "validate-current-world-scope"));
+  }
+  if (!candidate || typeof candidate.fileName !== "string" || !candidate.fileName.trim() || typeof candidate.fileId !== "string") {
+    errors.push(createUploadError("invalid-file-metadata", "GroupFiles: invalid file metadata.", "validate-file-metadata"));
+  }
+  if (validation.forbiddenFields.includes("privateChatTarget") || validation.forbiddenFields.includes("wholeWorldScope") || validation.forbiddenFields.includes("otherGroupTarget")) {
+    errors.push(createUploadError("invalid-group-target", "GroupFiles: private, other-group, and whole-world file scopes are forbidden.", "validate-group-target"));
+  }
+  if (validation.forbiddenFields.some((field) => STORAGE_REF_FORBIDDEN_VALUES.has(field))) {
+    errors.push(createUploadError("invalid-storage-ref", "GroupFiles: invalid storage reference shape.", "validate-storage-ref-shape"));
+  }
+  if (errors.length === 0) {
+    errors.push(createUploadError("invalid-file-metadata", validation.error ?? "GroupFiles: invalid upload preflight.", "validate-file-metadata"));
+  }
+  return Object.freeze(errors);
+}
+
+const STORAGE_REF_FORBIDDEN_VALUES = new Set<string>([
+  "rawBinary",
+  "fullExtractedText",
+  "embeddings",
+  "chunks",
+  "promptReadyContent",
+  "crossWorldStorageScope",
+  "privateChatStorageScope",
+  "wholeWorldStorageScope"
+]);
+
+function createGroupFileUploadAuditEntry(contract: GroupFileRealUploadContract, timestamp: number): GroupFileUploadAuditLogEntry {
+  return Object.freeze({
+    worldId: contract.worldId,
+    groupChatId: contract.groupChatId,
+    fileId: contract.fileId,
+    fileName: contract.fileName,
+    lifecycleTransition: "metadata-only->upload-pending",
+    actor: "user",
+    timestamp,
+    resultStatus: "planned",
+    failureReason: null,
+    containsRawFileContent: false,
+    containsExtractedText: false,
+    containsChunks: false,
+    containsEmbeddings: false,
+    containsPromptReadyContent: false
+  });
+}
+
+function createUploadError(
+  code: GroupFileUploadErrorCode,
+  message: string,
+  step: GroupFileUploadPreflightStep
+): GroupFileUploadErrorState {
+  return Object.freeze({ code, message, step });
+}
+
+function arraysEqual(left: readonly unknown[], right: readonly unknown[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

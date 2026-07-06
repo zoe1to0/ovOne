@@ -3,14 +3,20 @@ import assert from "node:assert/strict";
 import {
   canAttachFileToGroup,
   canDeleteGroupFileRecord,
+  canExecuteGroupFileUpload,
   canReadGroupFileInChat,
+  createGroupFileUploadPreflightPlan,
   GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
+  GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE,
   getGroupFileAccessScope,
   getGroupFileDeletionRules,
   getGroupFilePromptInjectionBoundary,
+  getGroupFileUploadAuditBoundary,
+  getGroupFileUploadFailureRules,
   getGroupFileWarnings,
   validateGroupFileRealUploadContract,
   validateGroupFileStorageRef,
+  validateGroupFileUploadPreflightPlan,
   validateGroupFileUploadCommand
 } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
@@ -56,6 +62,20 @@ const validRealUploadContract = Object.freeze({
   fileName: "brief.pdf",
   lifecycleStatus: "uploaded" as const,
   storageRef: validStorageRef
+});
+
+const validStorageAdapter = Object.freeze({
+  adapterId: "interface:group-files",
+  methods: Object.freeze(["prepareUpload", "commitUpload", "abortUpload", "getUploadStatus"] as const),
+  interfaceOnly: true,
+  writesFiles: false,
+  uploadsToCloud: false,
+  acceptsRawBinary: false,
+  storesBinaryInDomainState: false,
+  storesExtractedText: false,
+  storesChunks: false,
+  storesEmbeddings: false,
+  storesPromptReadyContent: false
 });
 
 describe("Group Files contract scaffold", () => {
@@ -293,5 +313,139 @@ describe("Group Files contract scaffold", () => {
     assert.equal(boundary.parsingSeparateFromUpload, true);
     assert.equal(boundary.retrievalSeparateFromUpload, true);
     assert.equal(boundary.changesAiRuntime, false);
+  });
+
+  it("creates a deterministic upload preflight plan in the required order and stops before writes", () => {
+    const result = createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, validStorageAdapter, 12);
+
+    assert.equal(result.valid, true);
+    assert.deepEqual(result.plan?.steps, [
+      "validate-group-target",
+      "validate-current-world-scope",
+      "validate-file-metadata",
+      "validate-storage-ref-shape",
+      "validate-storage-adapter-capability",
+      "create-metadata-placeholder-plan",
+      "create-upload-pending-lifecycle-plan",
+      "create-rollback-plan",
+      "create-audit-log-plan",
+      "stop-before-real-file-write"
+    ]);
+    assert.deepEqual(result.plan?.lifecyclePlan, ["metadata-only", "upload-pending"]);
+    assert.equal(result.plan?.stopsBeforeRealFileWrite, true);
+    assert.equal(result.plan?.executesUpload, false);
+    assert.equal(result.plan?.writesFiles, false);
+    assert.equal(result.plan?.storesBinaryContent, false);
+    assert.equal(result.plan?.parsesFiles, false);
+    assert.equal(result.plan?.retrievesFiles, false);
+    assert.equal(result.plan?.injectsPromptContent, false);
+    assert.equal(result.plan?.mutatesMessagesHistory, false);
+    assert.equal(validateGroupFileUploadPreflightPlan(result.plan).valid, true);
+  });
+
+  it("rejects invalid upload preflight targets, scopes, metadata, storage refs, and adapters", () => {
+    assert.equal(createGroupFileUploadPreflightPlan({
+      ...validRealUploadContract,
+      groupChatId: "private:one"
+    }, realUploadInput, validStorageAdapter).errors.some((error) => error.code === "invalid-group-target"), true);
+    assert.equal(createGroupFileUploadPreflightPlan({
+      ...validRealUploadContract,
+      worldId: toWorldId("world:other")
+    }, realUploadInput, validStorageAdapter).errors.some((error) => error.code === "invalid-world-scope"), true);
+    assert.equal(createGroupFileUploadPreflightPlan({
+      ...validRealUploadContract,
+      fileName: ""
+    }, realUploadInput, validStorageAdapter).errors.some((error) => error.code === "invalid-file-metadata"), true);
+    assert.equal(createGroupFileUploadPreflightPlan({
+      ...validRealUploadContract,
+      worldScope: true
+    }, realUploadInput, validStorageAdapter).errors.some((error) => error.code === "invalid-group-target"), true);
+    assert.equal(createGroupFileUploadPreflightPlan({
+      ...validRealUploadContract,
+      storageRef: {
+        ...validStorageRef,
+        rawBinary: new Uint8Array()
+      }
+    }, realUploadInput, validStorageAdapter).errors.some((error) => error.code === "invalid-storage-ref"), true);
+    assert.equal(createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, {
+      ...validStorageAdapter,
+      writesFiles: true
+    }).errors.some((error) => error.code === "invalid-storage-adapter"), true);
+  });
+
+  it("keeps the storage adapter contract interface-only", () => {
+    const result = createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, validStorageAdapter);
+
+    assert.equal(result.plan?.storageAdapter.interfaceOnly, true);
+    assert.deepEqual(result.plan?.storageAdapter.methods, ["prepareUpload", "commitUpload", "abortUpload", "getUploadStatus"]);
+    assert.equal(result.plan?.storageAdapter.writesFiles, false);
+    assert.equal(result.plan?.storageAdapter.uploadsToCloud, false);
+    assert.equal(result.plan?.storageAdapter.acceptsRawBinary, false);
+    assert.equal(result.plan?.storageAdapter.storesBinaryInDomainState, false);
+    assert.equal(result.plan?.storageAdapter.storesExtractedText, false);
+    assert.equal(result.plan?.storageAdapter.storesChunks, false);
+    assert.equal(result.plan?.storageAdapter.storesEmbeddings, false);
+    assert.equal(result.plan?.storageAdapter.storesPromptReadyContent, false);
+  });
+
+  it("keeps upload execution disabled with the explicit product reason", () => {
+    const result = createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, validStorageAdapter);
+    const failureRules = getGroupFileUploadFailureRules();
+
+    assert.equal(canExecuteGroupFileUpload(result.plan), false);
+    assert.equal(failureRules.disabledReason, GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE);
+    assert.equal(failureRules.disabledReason, "真实群文件上传暂未开放");
+    assert.equal(failureRules.realUploadEnabled, false);
+    assert.equal(failureRules.executeUpload, false);
+    assert.equal(failureRules.executeRollback, false);
+    assert.equal(failureRules.preserveRuntimeData, true);
+  });
+
+  it("defines rollback as descriptive only and preserves runtime data", () => {
+    const result = createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, validStorageAdapter);
+    const rollback = result.plan?.rollbackPlan;
+
+    assert.equal(rollback?.descriptiveOnly, true);
+    assert.equal(rollback?.executesRollback, false);
+    assert.deepEqual(rollback?.actions, [
+      "remove-upload-pending-metadata-placeholder",
+      "mark-file-record-as-failed",
+      "discard-storage-ref-placeholder",
+      "write-future-audit-failure-entry"
+    ]);
+    assert.equal(rollback?.preservesGroupChat, true);
+    assert.equal(rollback?.preservesMessagesHistory, true);
+    assert.equal(rollback?.preservesGroupMembers, true);
+    assert.equal(rollback?.preservesGroupRules, true);
+    assert.equal(rollback?.preservesChatAppearance, true);
+    assert.equal(rollback?.preservesWorldContacts, true);
+    assert.equal(rollback?.preservesPrivateChats, true);
+    assert.equal(rollback?.preservesMemoryScopes, true);
+    assert.equal(rollback?.preservesGlobalProviderData, true);
+  });
+
+  it("defines audit log boundaries without file content or derived retrieval data", () => {
+    const result = createGroupFileUploadPreflightPlan(validRealUploadContract, realUploadInput, validStorageAdapter, 99);
+    const audit = result.plan?.auditLogPlan;
+    const boundary = getGroupFileUploadAuditBoundary();
+
+    assert.equal(audit?.worldId, worldId);
+    assert.equal(audit?.groupChatId, "group:one");
+    assert.equal(audit?.fileId, "file:brief");
+    assert.equal(audit?.fileName, "brief.pdf");
+    assert.equal(audit?.lifecycleTransition, "metadata-only->upload-pending");
+    assert.equal(audit?.actor, "user");
+    assert.equal(audit?.timestamp, 99);
+    assert.equal(audit?.resultStatus, "planned");
+    assert.equal(audit?.containsRawFileContent, false);
+    assert.equal(audit?.containsExtractedText, false);
+    assert.equal(audit?.containsChunks, false);
+    assert.equal(audit?.containsEmbeddings, false);
+    assert.equal(audit?.containsPromptReadyContent, false);
+    assert.equal(boundary.excludesRawFileContent, true);
+    assert.equal(boundary.excludesExtractedText, true);
+    assert.equal(boundary.excludesChunks, true);
+    assert.equal(boundary.excludesEmbeddings, true);
+    assert.equal(boundary.excludesPromptReadyContent, true);
   });
 });

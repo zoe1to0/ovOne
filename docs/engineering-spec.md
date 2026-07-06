@@ -241,6 +241,12 @@ UI action
 - `canReadGroupFileInChat(...)` defines future retrieval permission only: same group chat is allowed, private chat / other group / other world / deleted file are rejected, and no content retrieval, parsing, embeddings, LLM call, or AI runtime behavior occurs.
 - `canDeleteGroupFileRecord(...)` and `getGroupFileDeletionRules(...)` define deletion scope only. Future deletion must target selected `groupChatId + fileId`, make deleted files non-readable, and preserve group chat, messages/history, historical file mentions, members, rules, appearance, world contacts, private chats, memory scopes, and global/provider data.
 - `getGroupFilePromptInjectionBoundary(...)` documents that upload success never auto-injects file content into prompts; parsing and retrieval are separate future layers.
+- Group file upload preflight contract is pure/read-only and also lives in `src/domain/group-files-contract.ts`.
+- `createGroupFileUploadPreflightPlan(...)` orders future work as: validate group target, validate current world scope, validate file metadata, validate storage ref shape, validate storage adapter capability, create metadata placeholder plan, create upload-pending lifecycle plan, create rollback plan, create audit log plan, stop before any real file write.
+- `GroupFileStorageAdapterContract` is interface-only and may expose only `prepareUpload`, `commitUpload`, `abortUpload`, and `getUploadStatus`; it must report no file writes, no cloud upload, no raw binary acceptance, and no domain storage of binary/extracted/chunk/embedding/prompt-ready content.
+- `createGroupFileUploadRollbackPlan(...)` is descriptive only and does not execute rollback. It may describe removing an upload-pending placeholder, marking a file failed, discarding storage ref placeholders, and writing a future audit failure entry while preserving runtime data.
+- `getGroupFileUploadAuditBoundary(...)` allows only metadata audit fields and excludes raw content, extracted text, chunks, embeddings, and prompt-ready content.
+- `canExecuteGroupFileUpload(...)` returns false; `getGroupFileUploadFailureRules(...)` reports `真实群文件上传暂未开放`.
 - `UPLOAD_CHAT_BACKGROUND_IMAGE` and `OPEN_GROUP_FILES` remain UI scaffold/no-op actions. Group member add/remove confirmation now executes through the guarded group member service.
 - World Editor remove-member contract lives in `src/domain/world-member-remove-contract.ts`.
 - `WorldRemoveMemberCommand` contains `worldId` and `actorId`.
