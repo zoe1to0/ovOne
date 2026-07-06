@@ -156,4 +156,5 @@ export type MinimalProductShellRuntime = Readonly<{
 export type MinimalProductShellOptions = Readonly<{
   readonly worldIds?: readonly WorldId[];
   readonly aiProviderBridge?: AIProviderBridge;
+  readonly groupBurstRandom?: () => number;
 }>;

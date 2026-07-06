@@ -29,7 +29,7 @@ Last audited: 2026-06-29.
 - ovO world menu supports read-only world switching and a World Editor page scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
-- Real Chat Runtime v1 connects active private/group chat sending to AI Provider Bridge with mock-provider support, but it is non-streaming, chooses only one group responder, and does not include memory, group rules, group files, retrieval, or multi-provider routing.
+- Real Chat Runtime v1 connects active private/group chat sending to AI Provider Bridge with mock-provider support, but it is non-streaming, uses only a bounded 1-3 response group burst without advanced turn policy/background autonomous chat, and does not include memory, group rules, group files, retrieval, or multi-provider routing.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` now renders Contacts Detail preference/delete content; preference saving and confirmed current-world Delete Friend are implemented.

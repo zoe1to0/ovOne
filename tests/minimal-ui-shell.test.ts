@@ -58,7 +58,7 @@ describe("Minimal UI Shell", () => {
     assert.equal(JSON.stringify(next).includes("OVONE_AI_API_KEY"), false);
   });
 
-  it("sends group chat messages to the first available AI member only", async () => {
+  it("sends group chat messages through a bounded multi-AI burst", async () => {
     const app = App.init();
     const realityWorldId = toWorldId("reality");
     app.worldDomain.applyStructuralPatch({
@@ -81,7 +81,7 @@ describe("Minimal UI Shell", () => {
         kind: "assistant"
       }
     });
-    const shell = MinimalUiShell.init(app);
+    const shell = MinimalUiShell.init(app, { groupBurstRandom: queuedRandom([0.99, 0, 0, 0]) });
     shell.switchWorld(realityWorldId);
     const group = shell.createGroupChat({
       groupName: "Runtime Group",
@@ -92,11 +92,209 @@ describe("Minimal UI Shell", () => {
     const next = await shell.sendMessageWithAI("hello group");
     const messages = next.product.snapshot.chatState.chats.get(groupChatId)?.messages ?? [];
 
-    assert.equal(messages.at(-2)?.authorActorId, "user");
-    assert.equal(messages.at(-2)?.text, "hello group");
+    assert.equal(messages.at(-4)?.authorActorId, "user");
+    assert.equal(messages.at(-4)?.text, "hello group");
+    assert.deepEqual(messages.slice(-3).map((message) => message.authorActorId), ["ai:first", "ai:second", "ai:first"]);
+    assert.equal(messages.slice(-3).every((message) => message.text.startsWith("mock:")), true);
+    assert.equal(messages.slice(1).length, 3);
+  });
+
+  it("lets later group AI turns see earlier turns from the same burst", async () => {
+    const capturedBodies: string[] = [];
+    let callCount = 0;
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async (_url: string, init: { readonly body?: string }) => {
+        capturedBodies.push(init.body ?? "");
+        callCount += 1;
+        return new Response(JSON.stringify({
+          choices: [{ message: { content: `turn-${callCount}` } }]
+        }), { status: 200 });
+      }
+    });
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First AI",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second AI",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app, {
+      aiProviderBridge: bridge,
+      groupBurstRandom: queuedRandom([0.99, 0, 0, 0])
+    });
+    shell.switchWorld(realityWorldId);
+    shell.createGroupChat({
+      groupName: "Context Group",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+
+    const next = await shell.sendMessageWithAI("burst context");
+
+    assert.equal(capturedBodies.length, 3);
+    assert.equal(capturedBodies[0]?.includes("turn-1"), false);
+    assert.equal(capturedBodies[1]?.includes("turn-1"), true);
+    assert.equal(capturedBodies[2]?.includes("turn-2"), true);
+    assert.deepEqual(next.product.chat.messages.slice(-3).map((message) => message.text), ["turn-1", "turn-2", "turn-3"]);
+  });
+
+  it("limits group burst responders to current group members and stops at one AI for one-member groups", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First AI",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:outside",
+        displayName: "Outside AI",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app, { groupBurstRandom: queuedRandom([0.99, 0.99, 0.99, 0.99]) });
+    shell.switchWorld(realityWorldId);
+    const group = shell.createGroupChat({
+      groupName: "One Member",
+      selectedWorldContactIds: ["ai:first"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+
+    const next = await shell.sendMessageWithAI("only member");
+    const messages = next.product.snapshot.chatState.chats.get(groupChatId)?.messages ?? [];
+
+    assert.equal(messages.filter((message) => message.authorActorId !== "user").length, 1);
     assert.equal(messages.at(-1)?.authorActorId, "ai:first");
-    assert.equal(messages.at(-1)?.text, "mock:hello group");
-    assert.equal(messages.some((message) => message.authorActorId === "ai:second"), false);
+    assert.equal(messages.some((message) => message.authorActorId === "ovone"), false);
+    assert.equal(messages.some((message) => message.authorActorId === "ai:outside"), false);
+  });
+
+  it("excludes removed group members from later burst responses", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First AI",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second AI",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app, { groupBurstRandom: queuedRandom([0.99, 0, 0, 0]) });
+    shell.switchWorld(realityWorldId);
+    const group = shell.createGroupChat({
+      groupName: "Removed Member",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+    shell.removeGroupMember({
+      worldId: realityWorldId,
+      groupChatId,
+      worldContactId: "ai:first"
+    });
+
+    const next = await shell.sendMessageWithAI("after remove");
+    const messages = next.product.snapshot.chatState.chats.get(groupChatId)?.messages ?? [];
+
+    assert.equal(messages.filter((message) => message.text === "mock:after remove").length, 1);
+    assert.equal(messages.at(-1)?.authorActorId, "ai:second");
+    assert.equal(messages.some((message) => message.authorActorId === "ai:first"), false);
+  });
+
+  it("stops group bursts after a provider failure", async () => {
+    let callCount = 0;
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async () => {
+        callCount += 1;
+        return callCount === 1
+          ? new Response(JSON.stringify({ choices: [{ message: { content: "turn-ok" } }] }), { status: 200 })
+          : new Response(JSON.stringify({ error: { message: "provider down" } }), { status: 500 });
+      }
+    });
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First AI",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second AI",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app, {
+      aiProviderBridge: bridge,
+      groupBurstRandom: queuedRandom([0.99, 0, 0, 0])
+    });
+    shell.switchWorld(realityWorldId);
+    shell.createGroupChat({
+      groupName: "Failure Group",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+
+    const next = await shell.sendMessageWithAI("fail mid-burst");
+    const aiMessages = next.product.chat.messages.filter((message) => message.authorName !== "You");
+
+    assert.equal(callCount, 2);
+    assert.equal(aiMessages.length, 2);
+    assert.equal(aiMessages[0]?.text, "turn-ok");
+    assert.equal(aiMessages[1]?.text, "AI provider error: provider down");
   });
 
   it("appends provider failures clearly inside the active chat", async () => {
@@ -1651,5 +1849,14 @@ function createWorldBootstrapPlan(view: ReturnType<MinimalProductShellRuntime["v
   return createWorldSettings(view).bootstrapPlan as {
     privateMessages: { contactId: string; status: string }[];
     groups: unknown[];
+  };
+}
+
+function queuedRandom(values: readonly number[]): () => number {
+  let index = 0;
+  return () => {
+    const value = values[index] ?? values.at(-1) ?? 0;
+    index += 1;
+    return value;
   };
 }

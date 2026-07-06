@@ -154,7 +154,8 @@ UI event
 - Mock provider returns deterministic local/test responses.
 - OpenAI-compatible provider calls are normalized through `callAIProviderChat(...)`; missing API keys return `provider-not-configured`.
 - Provider API keys are read only from local/server env-style config and are not exposed in client-visible state.
-- `SUBMIT_MESSAGE` uses `shell.sendMessageWithAI(...)` in the interactive path: private chats append a user message and one AI response in the same private chat; group chats append a user message and one response from the first available current-world AI member in `actorIds`.
+- `SUBMIT_MESSAGE` uses `shell.sendMessageWithAI(...)` in the interactive path: private chats append a user message and one AI response in the same private chat; group chats append a user message and then run a bounded random multi-AI burst in the same group chat.
+- Group burst runtime chooses `replyTurnCount` from 1 to 3, caps the Trial MVP burst at 3 AI responses, uses only eligible current-world AI members in the active group `actorIds`, excludes ovO/system assistants and removed/cross-world contacts, avoids the same AI twice in a row when multiple eligible members exist, and stops immediately after a provider failure.
 - Real Chat Runtime v1 prompt context uses recent messages from the selected chat plus basic identity only. Memory, group rules, group files, world files, other chats, and other worlds are not injected.
 - Provider failure appends a clear provider-error message to the same active chat.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
@@ -366,7 +367,7 @@ UI event
 | Toggle composer mode | `TOGGLE_COMPOSER_MODE` | Uses composer mode state machine to rotate the current mode for the given composer kind. |
 | Set composer mode | `SET_COMPOSER_MODE` | Sets the requested mode only when it is valid for the given composer kind. |
 | Text input | `TEXT_INPUT` | Updates `inputDraft` and skips render. |
-| Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the async real-chat runtime effect, calls AI Provider Bridge, and writes the user message plus one assistant/error response only to the active chat in the current world. |
+| Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the async real-chat runtime effect, calls AI Provider Bridge, and writes the user message plus one private-chat assistant/error response or bounded group burst only to the active chat in the current world. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |

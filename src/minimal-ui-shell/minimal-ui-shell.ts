@@ -222,6 +222,7 @@ function init(app: AppRuntime, options: MinimalProductShellOptions = {}): Minima
       worldId: activeWorldId,
       text: trimmed,
       ...(options.aiProviderBridge ? { bridge: options.aiProviderBridge } : {}),
+      ...(options.groupBurstRandom ? { random: options.groupBurstRandom } : {}),
       nextSequence: () => {
         sequence += 1;
         return sequence;

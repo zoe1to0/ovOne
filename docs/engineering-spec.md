@@ -184,9 +184,13 @@ UI action
 - `callAIProviderChat(...)` supports deterministic `mock` responses and an OpenAI-compatible adapter response normalization path.
 - Missing real-provider API keys return `provider-not-configured`; raw provider payloads are normalized before they can reach UI-facing state.
 - Real Chat Runtime v1 lives in `src/minimal-ui-shell/real-chat-runtime.ts` and is reached from `SUBMIT_MESSAGE` through `FlowExecutor.runAsync(...)` and `shell.sendMessageWithAI(...)`.
-- `sendMessageWithAI(...)` appends the user message to the active chat in the current world, calls AI Provider Bridge, and appends one assistant response or clear provider-error message to the same chat.
+- `sendMessageWithAI(...)` appends the user message to the active chat in the current world, calls AI Provider Bridge, and appends assistant responses or a clear provider-error message to the same chat.
 - Private chat v1 chooses the private chat contact when the chat id maps to a world contact; otherwise it uses the world's system assistant.
-- Group chat v1 chooses exactly one responder: the first available current-world AI member in the group's `actorIds`.
+- Group Multi-AI Burst Runtime v1 chooses a random group `replyTurnCount` from 1 to 3, with 3 as the Trial MVP hard max.
+- Group burst responders are chosen only from eligible current-world AI members in the active group chat `actorIds`; ovO/system assistants, removed members, and cross-world contacts are not eligible.
+- If a group has only one eligible AI member, it replies once. If multiple eligible AIs exist, responder selection avoids the same AI twice in a row when possible.
+- Later turns in the same group burst can see prior user and AI messages from that active group chat burst.
+- If an AI Provider Bridge call fails during a group burst, the runtime appends a clear provider-error message for that turn and stops the burst. No automatic continuation runs after the bounded burst ends.
 - Real Chat Runtime v1 prompt context uses only recent messages from the selected chat plus basic responder/world/chat identity.
 - Real Chat Runtime v1 must not inject memory, group rules, group files, world files, other chats, or other worlds into the provider request.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
@@ -455,7 +459,7 @@ Overlays are opened and closed through explicit actions. They no longer use togg
 | `TOGGLE_COMPOSER_MODE` | Rotates the current composer mode for the requested composer kind. |
 | `SET_COMPOSER_MODE` | Sets the requested composer mode only when valid for the requested composer kind. |
 | `TEXT_INPUT` | Updates `inputDraft` only and does not call render. |
-| `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor uses `shell.sendMessageWithAI(text)` in the interactive path to append the user message, call AI Provider Bridge, and append one assistant/error response to the same active chat. |
+| `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor uses `shell.sendMessageWithAI(text)` in the interactive path to append the user message, call AI Provider Bridge, and append a private-chat assistant/error response or a bounded group burst to the same active chat. |
 | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |
@@ -534,7 +538,7 @@ Unknown `activeView` values are resolved to `CHAT_LIST` with `fallbackApplied: t
 
 | Action | Runtime effect |
 | --- | --- |
-| `SUBMIT_MESSAGE` with non-empty trimmed text | Interactive controller path calls `shell.sendMessageWithAI(text)` through `FlowExecutor.runAsync(...)`, appends the user message, calls AI Provider Bridge, appends one assistant/error response to the same active chat, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. Legacy synchronous `FlowExecutor.run(...)` still calls `shell.sendMessage(text)` for direct/runtime compatibility. |
+| `SUBMIT_MESSAGE` with non-empty trimmed text | Interactive controller path calls `shell.sendMessageWithAI(text)` through `FlowExecutor.runAsync(...)`, appends the user message, calls AI Provider Bridge, appends one private-chat assistant/error response or a bounded group burst to the same active chat, updates `state.view`, syncs `activeChatId`, and sets `activeView` to `CHAT_VIEW`. Legacy synchronous `FlowExecutor.run(...)` still calls `shell.sendMessage(text)` for direct/runtime compatibility. |
 | `SUBMIT_MESSAGE` with empty trimmed text | No runtime effect. |
 | `SWITCH_WORLD` | Calls `shell.switchWorld(worldId)`, updates `state.view`, and syncs `currentWorldId` from the resulting snapshot. |
 | `CONFIRM_CREATE_WORLD_DRAFT` with `nextMode = "random-role"`, non-empty name, and selected AI | Calls `shell.createWorldFromDraft(draft)`, updates `state.view`, syncs `currentWorldId`, sets `worldCreationTransition`, lands on `CHAT_LIST`, clears active chat/contact/overlay/settings state, and clears `createWorldDraft`. |
@@ -629,7 +633,7 @@ Current package version: `0.1.0`.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - Minimal random-role Create World and Detailed Edit scaffold confirmation create and switch into a custom world, but real role generation, document parsing, AI initial messages, and auto group creation are not implemented.
 - ovO world menu supports read-only world switching and editor selection scaffold, but no create/edit world flow is implemented yet.
-- No real memory engine exists behind the world-scoped model foundation. Real Chat Runtime v1 can call AI Provider Bridge for active private/group chats, but memory is not included yet.
+- No real memory engine exists behind the world-scoped model foundation. Real Chat Runtime v1 can call AI Provider Bridge for active private chats and bounded group bursts, but memory is not included yet.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` renders current-world preference/delete content; preference save is implemented for current-world `WorldContact` fields, and confirmed Delete Friend deletes only current-world contact/private chat/memory placeholder data.

@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-06: Group Multi-AI Burst Runtime v1 added
+
+Decision: Group chats now use a bounded multi-AI burst after a user message while private chats keep one user message -> one AI response behavior.
+
+Rules:
+
+- Group burst runtime randomly chooses `replyTurnCount` from 1 to 3, with 3 as the Trial MVP hard max.
+- Eligible group responders come only from current-world AI members in the active group chat `actorIds`; ovO/system assistants, removed members, and cross-world contacts are excluded.
+- A one-AI group replies once. With multiple eligible AIs, the runtime avoids choosing the same AI twice in a row when possible.
+- Later burst turns may see prior user and AI messages from the same active group chat burst.
+- Provider failure appends a clear error for that turn and stops the burst.
+- No memory, group rules, group files, retrieval, background autonomous chat, automatic continuation, or API-key exposure was added.
+
 ## 2026-07-06: AI Provider Bridge v1 added
 
 Decision: ovOne now has a safe AI Provider Bridge v1 boundary before Real Chat Runtime.
@@ -1038,7 +1051,7 @@ Rules:
 
 - The runtime appends the user message to the active chat in the current world.
 - Private chats receive one AI response in the same private chat.
-- Group chats receive one AI response from the first available current-world AI member in the group member list.
+- Group chats now use the bounded Group Multi-AI Burst Runtime v1: 1 to 3 eligible current-world group AI members may respond, with no automatic continuation after the burst.
 - Provider failures append a clear provider-error message to the same active chat.
 - Prompt context is limited to recent messages from the selected chat plus basic identity.
 - Memory, group rules, group files, world files, other chats, and other worlds are not included in v1 provider prompts.

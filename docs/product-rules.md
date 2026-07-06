@@ -36,7 +36,10 @@
 - Create Group requires at least one AI member, creates placeholder group memory metadata, opens the new group chat, and does not generate initial AI messages.
 - Real Chat Runtime v1 can call one AI Provider Bridge for active private chats and group chats.
 - Private chat responses stay in the selected private chat in the current world.
-- Group chat v1 chooses one responder only: the first available current-world AI member in the group's member list.
+- Group Multi-AI Burst Runtime v1 chooses a random `replyTurnCount` from 1 to 3 after a group user message, with 3 as the Trial MVP hard max.
+- Group burst responders must come only from eligible current-world AI members in the active group; ovO/system assistants, removed members, and cross-world contacts are excluded.
+- If a group has one eligible AI member, it replies once. With multiple eligible members, the runtime should avoid choosing the same AI twice in a row when possible.
+- A failed provider call appends a clear error for that turn and stops the burst. No background autonomous chat or automatic continuation runs after the burst ends.
 - Real Chat Runtime v1 prompt context may use only recent messages from the selected chat plus basic identity. It must not include memory, group rules, group files, world files, other chats, or other worlds.
 - Empty Create Group names default to `群聊`.
 - Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
