@@ -1,5 +1,16 @@
 # ovOne Decision Log
 
+## 2026-07-06: Trial MVP scope locked
+
+Decision: Trial MVP scope is frozen in `docs/trial-mvp-scope.md`.
+
+Rules:
+
+- Trial MVP must be a usable app skeleton with stable product architecture, not a toy demo.
+- The shortest usable trial requires local trial entry, world switching, locked Reality, custom world creation, world contact add, private/group chat use, sending messages, one real AI provider bridge, world isolation, minimal world-scoped memory, and a usable external-trial UI flow.
+- Real file upload, parsing/indexing, retrieval/search, AI group-file access, advanced memory, full accounts, payments, production permission hardening, multi-provider production routing, and admin/analytics remain outside Trial MVP.
+- Next implementation order is v0.13 AI Provider Bridge, v0.14 Real Chat Runtime, v0.15 Minimal World Memory, v0.16 Local Trial Session, and v0.17 Trial UI Pass.
+
 ## 2026-07-06: Group file deletion contract scaffold added
 
 Decision: Group Files now has a pure deletion contract before any file deletion execution can be enabled.
