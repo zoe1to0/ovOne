@@ -5,7 +5,7 @@ Last audited: 2026-06-29.
 ## Current Known Engineering Issues
 
 - Disabled explicit actions exist for creation/chat menu flows but do not implement product behavior yet.
-- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, but the current runtime is not yet Trial MVP complete because minimal world memory behavior and local trial session flow still need implementation.
+- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, but the current runtime is not yet Trial MVP complete because local trial session flow and Trial UI pass still need implementation.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
@@ -18,7 +18,7 @@ Last audited: 2026-06-29.
 - Create World Detailed Edit exposes scaffold fields only; Random Role slot data and selected user role slot are placeholder metadata.
 - Random Role detail slots are not assigned to participants yet; real random assignment remains unimplemented.
 - World Bootstrap Planner and stub executor create deterministic placeholder private messages only; they do not generate AI text, create memory, or auto-create group chats yet.
-- Create Group can create a current-world group chat with selected current-world AI contacts, and group add/remove-member execution can update selected group membership. Group file metadata records are implemented, but real file upload/content handling, initial AI messages, group dissolution, and real group memory behavior are not implemented.
+- Create Group can create a current-world group chat with selected current-world AI contacts, and group add/remove-member execution can update selected group membership. Group file metadata records are implemented, but real file upload/content handling, initial AI messages, group dissolution, and advanced group memory behavior are not implemented.
 - Chat Settings / Group Detail still has scaffold-only background upload. Group file metadata records, group add/remove member execution, and appearance color/background reference save are implemented for selected current-world targets only.
 - Group member management has a contract and Add/Remove Group Member execution. Removing the last AI member remains blocked because group dissolution is not implemented.
 - Group rules save persists text to selected group chat metadata, but rules do not affect AI behavior, prompts, memory, or runtime enforcement yet.
@@ -28,13 +28,13 @@ Last audited: 2026-06-29.
 - Create World missing-name and missing-AI validation are explicit, but broader validation beyond required world name and selected AI is not implemented yet.
 - ovO world menu supports read-only world switching and a World Editor page scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
-- Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
-- Real Chat Runtime v1 connects active private/group chat sending to AI Provider Bridge with mock-provider support, but it is non-streaming, uses only a bounded 1-3 response group burst without advanced turn policy/background autonomous chat, and does not include memory, group rules, group files, retrieval, or multi-provider routing.
+- Minimal AI-scoped world memory is implemented only for explicit `记住：`, `记住:`, and `remember:` commands. Automatic memory extraction, summarization, editing/deletion, advanced memory pools, and memory UI are not implemented.
+- Real Chat Runtime v1 connects active private/group chat sending to AI Provider Bridge with mock-provider support, but it is non-streaming, uses only a bounded 1-3 response group burst without advanced turn policy/background autonomous chat, and does not include group rules, group files, retrieval, or multi-provider routing.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` now renders Contacts Detail preference/delete content; preference saving and confirmed current-world Delete Friend are implemented.
 - `settingsOpen` is hidden sub-navigation inside Me.
-- ovO panel has read-only world switching, custom world metadata saving, world-level role/member metadata saving, Contacts Detail preference saving, Contacts Detail confirmed Delete Friend, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no group membership cleanup, initial member messages after member add, real Me Settings disconnect execution, or real memory engine integration yet.
+- ovO panel has read-only world switching, custom world metadata saving, world-level role/member metadata saving, Contacts Detail preference saving, Contacts Detail confirmed Delete Friend, Add Member execution for custom-world contact/chat/memory placeholder creation, and confirmed Remove Member execution for custom-world contact/private chat/memory placeholder deletion, but no group membership cleanup, initial member messages after member add, real Me Settings disconnect execution, or advanced memory engine integration yet.
 - `SAVE_WORLD_EDITOR` persists custom world name/worldview metadata plus allowed world-level role/member metadata; it must not be treated as Contacts Detail preference editing, chat editing, memory editing, GlobalAIModel editing, or GlobalAILink editing.
 - World Editor role/member scaffold now collects and saves world-level user role and AI member role metadata for custom worlds.
 - World Editor role/member scaffold must not be treated as Contacts Detail behavior; contact remark/nickname, `你认为他是怎样的人？`, answer mode, chat tone/how the contact speaks to the user, and emoji permission remain outside World Editor.

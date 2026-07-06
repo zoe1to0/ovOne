@@ -156,7 +156,10 @@ UI event
 - Provider API keys are read only from local/server env-style config and are not exposed in client-visible state.
 - `SUBMIT_MESSAGE` uses `shell.sendMessageWithAI(...)` in the interactive path: private chats append a user message and one AI response in the same private chat; group chats append a user message and then run a bounded random multi-AI burst in the same group chat.
 - Group burst runtime chooses `replyTurnCount` from 1 to 3, caps the Trial MVP burst at 3 AI responses, uses only eligible current-world AI members in the active group `actorIds`, excludes ovO/system assistants and removed/cross-world contacts, avoids the same AI twice in a row when multiple eligible members exist, and stops immediately after a provider failure.
-- Real Chat Runtime v1 prompt context uses recent messages from the selected chat plus basic identity only. Memory, group rules, group files, world files, other chats, and other worlds are not injected.
+- Minimal AI-Scoped World Memory v1 is keyed by `worldId + ownerWorldContactId`; memory is not shared by the whole world.
+- Explicit user messages beginning with `记住：`, `记住:`, or `remember:` create active memory items. Normal messages do not create memory.
+- Private-chat memory is written only to that private AI contact. Group-chat memory is written to each eligible AI member in that group chat only.
+- Real Chat Runtime v1 prompt context uses recent messages from the selected chat, basic identity, and at most 10 active memory items owned by the responding AI in the current world. Group rules, group files, world files, other chats, other worlds, and other AI contacts' memories are not injected.
 - Provider failure appends a clear provider-error message to the same active chat.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
@@ -433,7 +436,7 @@ These actions are named and routed but intentionally do not implement product be
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.
-- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, future group member removal, initial member messages after member add, and real memory engine integration are not implemented yet.
+- ovO world-button menu hierarchy is bound, World Editor can save custom world metadata and world-level role/member metadata, Add Member can create custom-world contact/chat/memory placeholder data, confirmed Remove Member can delete custom-world contact/private chat/memory placeholder data, Contacts Detail can save current-world contact preferences and execute confirmed current-world Delete Friend, and Me Settings can open/cancel linked-AI disconnect confirmation. Actual global disconnect mutation, future group member removal, initial member messages after member add, automatic memory extraction, and advanced memory engine behavior are not implemented yet.
 - Create Group creates manual current-world group chats from selected current-world AI contacts, creates placeholder group memory metadata, opens the new group chat, and generates no initial AI messages.
 - Create Group defaults an empty group name to `群聊`.
 - Chat List renders group chats with group name only; Chat View header renders group name plus user-inclusive member count, e.g. `群聊（3）`.

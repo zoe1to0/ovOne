@@ -33,6 +33,22 @@ export type {
   AIProviderName
 } from "./ai-provider-bridge.js";
 export {
+  AI_SCOPED_WORLD_MEMORY_MAX_PROMPT_ITEMS,
+  AI_SCOPED_WORLD_MEMORY_SETTINGS_KEY,
+  appendAIScopedWorldMemoryItems,
+  createAIScopedWorldMemoryItems,
+  formatAIScopedWorldMemoryPromptSection,
+  parseExplicitMemoryCommand,
+  readAIScopedWorldMemoryItems,
+  resolveAIScopedWorldMemoriesForResponder
+} from "./ai-scoped-world-memory.js";
+export type {
+  AIScopedWorldMemoryCaptureInput,
+  AIScopedWorldMemoryItem,
+  AIScopedWorldMemorySourceType,
+  AIScopedWorldMemoryStatus
+} from "./ai-scoped-world-memory.js";
+export {
   isBootstrapItemExecutable,
   isBootstrapItemFinal,
   markBootstrapItemStubGenerated,

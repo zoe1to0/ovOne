@@ -1,7 +1,14 @@
 import type { AppRuntime } from "../app/index.js";
 import { toChatEventId, toMessageId, transition } from "../chat-kernel/index.js";
 import type { ChatId, MessageId } from "../chat-kernel/index.js";
-import { callAIProviderChat, createAIProviderBridge } from "../domain/index.js";
+import {
+  appendAIScopedWorldMemoryItems,
+  callAIProviderChat,
+  createAIProviderBridge,
+  createAIScopedWorldMemoryItems,
+  formatAIScopedWorldMemoryPromptSection,
+  resolveAIScopedWorldMemoriesForResponder
+} from "../domain/index.js";
 import type { AIProviderBridge, AIProviderChatRequest, AIProviderMessage } from "../domain/index.js";
 import type { WorldChatMessage, WorldChatSession, WorldContact, WorldId, WorldState } from "../world-domain/index.js";
 
@@ -46,6 +53,8 @@ export async function sendMessageThroughRealChatRuntime(input: RealChatRuntimeIn
     throw new Error(`RealChatRuntime: world "${input.worldId}" does not have an active chat.`);
   }
 
+  const userSequence = input.nextSequence();
+  const userMessageId = realChatMessageId(input.worldId, chatId, userSequence);
   const userMessageState = appendMessage({
     app: input.app,
     state: initialState,
@@ -53,15 +62,25 @@ export async function sendMessageThroughRealChatRuntime(input: RealChatRuntimeIn
     chatId,
     authorActorId: initialState.world.ownerActorId,
     text: trimmed,
-    sequence: input.nextSequence()
+    sequence: userSequence
   });
+  captureExplicitMemoryCommand({
+    app: input.app,
+    state: userMessageState,
+    worldId: input.worldId,
+    chatId,
+    sourceMessageId: userMessageId,
+    text: trimmed,
+    createdAt: realChatTimestamp(userSequence)
+  });
+  const runtimeState = input.app.worldDomain.getWorldState(input.worldId);
   const bridge = input.bridge ?? createAIProviderBridge({ provider: "mock", model: "mock-trial" });
-  const assistantTurns = isGroupChat(userMessageState, chatId)
+  const assistantTurns = isGroupChat(runtimeState, chatId)
     ? await runGroupBurst({
         ...input,
         bridge,
         chatId,
-        state: userMessageState
+        state: runtimeState
       })
     : [await runSingleAssistantTurn({
         app: input.app,
@@ -262,7 +281,7 @@ function appendMessage(input: Readonly<{
   readonly text: string;
   readonly sequence: number;
 }>): WorldState {
-  const timestamp = 10000 + input.sequence;
+  const timestamp = realChatTimestamp(input.sequence);
   const nextState = transition(input.state, {
     id: toChatEventId(`event:real-chat:${input.worldId}:${input.chatId}:${input.sequence}`),
     type: "message.submitted",
@@ -270,7 +289,7 @@ function appendMessage(input: Readonly<{
     timestamp,
     payload: {
       chatId: input.chatId as ChatId,
-      messageId: toMessageId(`message:real-chat:${input.worldId}:${input.chatId}:${input.sequence}`) as MessageId,
+      messageId: toMessageId(realChatMessageId(input.worldId, input.chatId, input.sequence)) as MessageId,
       authorActorId: input.authorActorId,
       text: input.text,
       createdAt: timestamp
@@ -278,6 +297,41 @@ function appendMessage(input: Readonly<{
   });
   input.app.worldDomain.commitState(nextState);
   return nextState;
+}
+
+function captureExplicitMemoryCommand(input: Readonly<{
+  readonly app: AppRuntime;
+  readonly state: WorldState;
+  readonly worldId: WorldId;
+  readonly chatId: string;
+  readonly sourceMessageId: string;
+  readonly text: string;
+  readonly createdAt: number;
+}>): void {
+  const items = createAIScopedWorldMemoryItems({
+    state: input.state,
+    chatId: input.chatId,
+    sourceMessageId: input.sourceMessageId,
+    text: input.text,
+    createdAt: input.createdAt
+  });
+  if (items.length === 0) {
+    return;
+  }
+  input.app.worldDomain.applyStructuralPatch({
+    type: "world.settings.adjusted",
+    worldId: input.worldId,
+    timestamp: input.createdAt,
+    settings: appendAIScopedWorldMemoryItems(input.state.metadata.settings, items)
+  });
+}
+
+function realChatTimestamp(sequence: number): number {
+  return 10000 + sequence;
+}
+
+function realChatMessageId(worldId: WorldId, chatId: string, sequence: number): string {
+  return `message:real-chat:${worldId}:${chatId}:${sequence}`;
 }
 
 function activeChat(state: WorldState, chatId: string): WorldChatSession {
@@ -315,6 +369,10 @@ function systemPromptForResponder(state: WorldState, chat: WorldChatSession, res
   }
   if (responder.worldPersonaNotes?.trim()) {
     identity.push(`World persona notes: ${responder.worldPersonaNotes}.`);
+  }
+  const memorySection = formatAIScopedWorldMemoryPromptSection(resolveAIScopedWorldMemoriesForResponder(state, responder));
+  if (memorySection) {
+    identity.push(memorySection);
   }
   return identity.join(" ");
 }

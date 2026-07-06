@@ -1,5 +1,22 @@
 # ovOne Decision Log
 
+## 2026-07-07: Minimal AI-Scoped World Memory v1 added
+
+Decision: Trial MVP memory is now scoped to a specific AI contact inside a specific world, keyed by `worldId + ownerWorldContactId`.
+
+Rules:
+
+- Memory is not shared by the whole world.
+- Same base AI in different worlds has separate memory.
+- Different AI contacts in the same world do not share memory by default.
+- Explicit user messages beginning with `记住：`, `记住:`, or `remember:` create memory; normal messages do not.
+- Private-chat memory is written only to that private AI contact in that world.
+- Group-chat memory is written to each eligible AI member participating in that group chat, and not to non-members, ovO/system assistants, removed members, other worlds, or same-base-model contacts elsewhere.
+- An AI's private-chat and group-chat memory inside the same world are unified for that AI.
+- Provider prompts include at most 10 active memory items for the responding AI under `Your memory in this world:`.
+- Memory prompts must not include inactive/deleted memory, another AI contact's memory, another world's memory, group rules, group files, world files, other chats, or other worlds.
+- Automatic memory extraction, summarization, edit/delete memory UI, and advanced memory pools remain future work.
+
 ## 2026-07-06: Group Multi-AI Burst Runtime v1 added
 
 Decision: Group chats now use a bounded multi-AI burst after a user message while private chats keep one user message -> one AI response behavior.

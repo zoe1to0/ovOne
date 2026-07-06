@@ -28,8 +28,10 @@ Chats and Contacts are scoped to the active world. Me is global and never change
 - Global AI Link is app-level.
 - World Contact is world-level.
 - Chat is world-level.
-- Memory is world-level.
+- Minimal Trial MVP memory is AI-scoped inside a world, not shared by the whole world.
+- The memory isolation key is `worldId + ownerWorldContactId`.
 - The same base AI model can appear in multiple worlds, but each world owns an independent contact/chat/memory instance.
+- Different AI contacts in the same world do not share memory by default.
 - Deleting an AI contact in one world deletes only that world's contact/chat/memory for that AI.
 - Deleting a contact does not disconnect the AI model globally.
 - Re-adding the same AI model to that world creates a new clean instance.
@@ -191,8 +193,14 @@ UI action
 - If a group has only one eligible AI member, it replies once. If multiple eligible AIs exist, responder selection avoids the same AI twice in a row when possible.
 - Later turns in the same group burst can see prior user and AI messages from that active group chat burst.
 - If an AI Provider Bridge call fails during a group burst, the runtime appends a clear provider-error message for that turn and stops the burst. No automatic continuation runs after the bounded burst ends.
-- Real Chat Runtime v1 prompt context uses only recent messages from the selected chat plus basic responder/world/chat identity.
-- Real Chat Runtime v1 must not inject memory, group rules, group files, world files, other chats, or other worlds into the provider request.
+- Real Chat Runtime v1 prompt context uses recent messages from the selected chat, basic responder/world/chat identity, and a bounded AI-scoped memory section for the responding AI only.
+- Minimal AI-Scoped World Memory v1 stores explicit user memory commands only when a user message starts with `记住：`, `记住:`, or `remember:`.
+- Memory items live in `metadata.settings.aiScopedWorldMemoryItems` and contain `id`, `worldId`, `ownerWorldContactId`, `sourceType`, `sourceChatId`, optional `sourceGroupId`, `sourceMessageId`, `content`, `createdAt`, `createdBy = user`, and `status = active`.
+- Private-chat memory is written only to the private chat AI contact in that world.
+- Group-chat memory is written to each eligible AI member currently participating in that group chat, and not to non-members, ovO/system assistants, removed members, other worlds, or same-base-model contacts elsewhere.
+- An AI's private-chat and group-chat memory are unified within the same `worldId + ownerWorldContactId` scope.
+- Provider prompts include at most 10 active memory items for the responding AI under `Your memory in this world:`. Very long memory content is trimmed safely.
+- Real Chat Runtime v1 must not inject inactive/deleted memory, another AI contact's memory, another world's memory, group rules, group files, world files, other chats, or other worlds into the provider request.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
@@ -633,7 +641,7 @@ Current package version: `0.1.0`.
 - Unknown `activeView` falls back to `CHAT_LIST` in ViewRouter.
 - Minimal random-role Create World and Detailed Edit scaffold confirmation create and switch into a custom world, but real role generation, document parsing, AI initial messages, and auto group creation are not implemented.
 - ovO world menu supports read-only world switching and editor selection scaffold, but no create/edit world flow is implemented yet.
-- No real memory engine exists behind the world-scoped model foundation. Real Chat Runtime v1 can call AI Provider Bridge for active private chats and bounded group bursts, but memory is not included yet.
+- Minimal AI-scoped world memory exists for explicit memory commands and prompt readback. Automatic extraction, summarization, edit/delete memory UI, advanced memory pools, group rules/files injection, and cross-world memory are not implemented.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` renders current-world preference/delete content; preference save is implemented for current-world `WorldContact` fields, and confirmed Delete Friend deletes only current-world contact/private chat/memory placeholder data.

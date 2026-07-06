@@ -47,7 +47,7 @@ Trial MVP principle: build a usable app skeleton with stable product architectur
 ## Next Implementation Order
 
 1. v0.13 AI Provider Bridge: added as a safe bridge.
-2. v0.14 Real Chat Runtime: active private/group chat sends now call AI Provider Bridge; private chats receive one AI response and group chats use a bounded 1-3 AI burst with no memory/rules/files injection.
-3. v0.15 Minimal World Memory
+2. v0.14 Real Chat Runtime: active private/group chat sends now call AI Provider Bridge; private chats receive one AI response and group chats use a bounded 1-3 AI burst.
+3. v0.15 Minimal World Memory: explicit `记住：` / `记住:` / `remember:` commands create AI-scoped memories keyed by `worldId + ownerWorldContactId`; prompts read at most 10 active memories for the responding AI only.
 4. v0.16 Local Trial Session
 5. v0.17 Trial UI Pass

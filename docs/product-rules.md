@@ -16,8 +16,10 @@
 - Global AI Link is app-level.
 - World Contact is world-level.
 - Chat is world-level.
-- Memory is world-level.
+- Minimal Trial MVP memory is AI-scoped inside a world, not shared by the whole world.
+- Memory isolation key: `worldId + ownerWorldContactId`.
 - The same base AI model can appear in multiple worlds, but each world owns an independent contact/chat/memory instance.
+- Different AI contacts in the same world do not share memory by default.
 - Deleting an AI contact in one world deletes only that world's contact/chat/memory for that AI.
 - Deleting a contact does not disconnect the AI model globally.
 - Deleting an AI friend in Reality deletes only that AI model's Reality contact/chat/memory.
@@ -40,7 +42,11 @@
 - Group burst responders must come only from eligible current-world AI members in the active group; ovO/system assistants, removed members, and cross-world contacts are excluded.
 - If a group has one eligible AI member, it replies once. With multiple eligible members, the runtime should avoid choosing the same AI twice in a row when possible.
 - A failed provider call appends a clear error for that turn and stops the burst. No background autonomous chat or automatic continuation runs after the burst ends.
-- Real Chat Runtime v1 prompt context may use only recent messages from the selected chat plus basic identity. It must not include memory, group rules, group files, world files, other chats, or other worlds.
+- Minimal AI-Scoped World Memory v1 captures memory only from explicit user messages beginning with `记住：`, `记住:`, or `remember:`.
+- Private-chat memory belongs only to that AI contact in that world.
+- Group-chat memory is written to each eligible AI member participating in that group chat only.
+- An AI's private-chat memory and group-chat memory inside the same world are unified for that AI.
+- Real Chat Runtime v1 prompt context may use recent messages from the selected chat, basic identity, and at most 10 active memories owned by the responding AI in the current world. It must not include another AI's memory, another world's memory, group rules, group files, world files, other chats, or other worlds.
 - Empty Create Group names default to `群聊`.
 - Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
 - Create Group supports metadata-only group file records through Chat Settings. Real file upload/content handling, cross-world members, group dissolution, and real memory engine behavior remain unimplemented; post-creation add/remove member execution is supported for current-world AI contacts only.
@@ -126,7 +132,7 @@
 - `GlobalAILink` is global.
 - `WorldContact` is per-world.
 - `Chat` is per-world.
-- `Memory` is per-world.
+- `Memory` is per-world-contact: `worldId + ownerWorldContactId`.
 - Me is global.
 - World switching lands on the active world's Chats list.
 
@@ -137,5 +143,5 @@
 - `World` describes an isolated data scope.
 - `WorldContact` describes a per-world contact instance backed by a base AI model.
 - `WorldChat` describes a per-world chat instance.
-- `WorldMemoryScope` describes a per-world memory namespace placeholder.
+- `WorldMemoryScope` describes legacy/foundation world memory namespace metadata; Trial MVP active memory items are AI-scoped by world contact.
 - `WorldScopedSnapshot` is the current foundation read model for resolving world-specific contacts/chats without exposing world UI.

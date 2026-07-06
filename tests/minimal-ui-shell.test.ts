@@ -12,7 +12,7 @@ import {
 } from "../src/minimal-ui-shell/index.js";
 import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.js";
 import { App } from "../src/app/index.js";
-import { createAIProviderBridge, resolveGroupAddMemberCandidates } from "../src/domain/index.js";
+import { createAIProviderBridge, readAIScopedWorldMemoryItems, resolveGroupAddMemberCandidates } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 import { toChatEventId, toChatId, toMessageId, transition } from "../src/chat-kernel/index.js";
 import type { ChatId } from "../src/chat-kernel/index.js";
@@ -332,7 +332,280 @@ describe("Minimal UI Shell", () => {
     assert.equal(defaultReturned.product.snapshot.chatState.chats.get(defaultChatId)?.messages.some((message) => message.text === "mock:reality only"), false);
   });
 
-  it("builds v1 provider prompts without memory, group rules, or group files", async () => {
+  it("captures private explicit memory only for the selected AI contact and world", async () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:other",
+        displayName: "Other",
+        kind: "assistant"
+      }
+    });
+    const created = shell.switchWorld(realityWorldId);
+    const custom = shell.createWorldFromDraft({
+      worldName: "Private Memory World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:other", "ai:friend"],
+      nextMode: "random-role"
+    });
+    const customWorldId = custom.activeWorldId;
+    const friendChatId = `chat:${customWorldId}:ai:friend`;
+    selectChat(app, customWorldId, friendChatId);
+
+    await shell.sendMessageWithAI("记住：likes moon tea");
+    await shell.sendMessageWithAI("ordinary message");
+
+    const items = readAIScopedWorldMemoryItems(shell.view().product.snapshot.runtimeState.metadata.settings);
+    assert.equal(items.length, 1);
+    assert.equal(items[0]?.worldId, customWorldId);
+    assert.equal(items[0]?.ownerWorldContactId, "ai:friend");
+    assert.equal(items[0]?.sourceType, "private_chat");
+    assert.equal(items[0]?.sourceChatId, friendChatId);
+    assert.equal(items[0]?.content, "likes moon tea");
+    assert.equal(items.some((item) => item.ownerWorldContactId === "ai:other"), false);
+
+    const realityAfter = shell.switchWorld(realityWorldId);
+    assert.equal(readAIScopedWorldMemoryItems(realityAfter.product.snapshot.runtimeState.metadata.settings).length, 0);
+    const secondCustom = shell.createWorldFromDraft({
+      worldName: "Second Private Memory World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:friend"],
+      nextMode: "random-role"
+    });
+    assert.equal(readAIScopedWorldMemoryItems(secondCustom.product.snapshot.runtimeState.metadata.settings).length, 0);
+    assert.equal(secondCustom.product.snapshot.contacts.some((contact) => contact.actorId === "ai:friend"), true);
+    assert.equal(created.activeWorldId, realityWorldId);
+  });
+
+  it("captures remember-colon private memory and includes only that AI memory in prompts", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app);
+    shell.switchWorld(realityWorldId);
+    const created = shell.createWorldFromDraft({
+      worldName: "Prompt Memory World",
+      worldviewSourceType: "blank",
+      worldviewText: "",
+      selectedAIModelIds: ["ai:second", "ai:first"],
+      nextMode: "random-role"
+    });
+    const worldId = created.activeWorldId;
+    const firstChatId = `chat:${worldId}:ai:first`;
+    const secondChatId = `chat:${worldId}:ai:second`;
+    selectChat(app, worldId, firstChatId);
+    await shell.sendMessageWithAI("remember: first likes quiet rooms");
+    selectChat(app, worldId, secondChatId);
+    await shell.sendMessageWithAI("remember: second likes bright rooms");
+
+    let capturedBody = "";
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async (_url: string, init: { readonly body?: string }) => {
+        capturedBody = init.body ?? "";
+        return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), { status: 200 });
+      }
+    });
+    const runtime = MinimalUiShell.init(app, { aiProviderBridge: bridge });
+    runtime.switchWorld(worldId);
+    selectChat(app, worldId, firstChatId);
+
+    await runtime.sendMessageWithAI("what do you remember?");
+
+    assert.equal(capturedBody.includes("Your memory in this world:"), true);
+    assert.equal(capturedBody.includes("first likes quiet rooms"), true);
+    assert.equal(capturedBody.includes("second likes bright rooms"), false);
+  });
+
+  it("fans group explicit memory out only to participating group AI members", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    for (const [index, actorId] of ["ai:first", "ai:second", "ai:outside"].entries()) {
+      app.worldDomain.applyStructuralPatch({
+        type: "ai.contact.added",
+        worldId: realityWorldId,
+        timestamp: 9100 + index,
+        contact: {
+          actorId,
+          displayName: actorId,
+          kind: "assistant"
+        }
+      });
+    }
+    const shell = MinimalUiShell.init(app, { groupBurstRandom: queuedRandom([0.34, 0, 0]) });
+    shell.switchWorld(realityWorldId);
+    const group = shell.createGroupChat({
+      groupName: "Memory Group",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+
+    await shell.sendMessageWithAI("记住: group launch code");
+
+    const items = readAIScopedWorldMemoryItems(shell.view().product.snapshot.runtimeState.metadata.settings);
+    assert.deepEqual(items.map((item) => item.ownerWorldContactId).sort(), ["ai:first", "ai:second"]);
+    assert.equal(items.every((item) => item.worldId === realityWorldId), true);
+    assert.equal(items.every((item) => item.sourceType === "group_chat"), true);
+    assert.equal(items.every((item) => item.sourceChatId === groupChatId), true);
+    assert.equal(items.every((item) => item.sourceGroupId === groupChatId), true);
+    assert.equal(items.some((item) => item.ownerWorldContactId === "ai:outside"), false);
+  });
+
+  it("uses each group responder's own memory during a multi-AI burst", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app);
+    shell.switchWorld(realityWorldId);
+    startPrivateChat(app, realityWorldId, "ai:first", "First");
+    startPrivateChat(app, realityWorldId, "ai:second", "Second");
+    selectChat(app, realityWorldId, `chat:${realityWorldId}:ai:first`);
+    await shell.sendMessageWithAI("remember: first-only memory");
+    selectChat(app, realityWorldId, `chat:${realityWorldId}:ai:second`);
+    await shell.sendMessageWithAI("remember: second-only memory");
+    const group = shell.createGroupChat({
+      groupName: "Owner Memory Group",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+    selectChat(app, realityWorldId, group.product.snapshot.chatState.activeChatId!);
+
+    const capturedBodies: string[] = [];
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async (_url: string, init: { readonly body?: string }) => {
+        capturedBodies.push(init.body ?? "");
+        return new Response(JSON.stringify({ choices: [{ message: { content: `ok-${capturedBodies.length}` } }] }), { status: 200 });
+      }
+    });
+    const runtime = MinimalUiShell.init(app, {
+      aiProviderBridge: bridge,
+      groupBurstRandom: queuedRandom([0.34, 0, 0])
+    });
+    runtime.switchWorld(realityWorldId);
+
+    await runtime.sendMessageWithAI("group prompt with memory");
+
+    assert.equal(capturedBodies.length, 2);
+    assert.equal(capturedBodies[0]?.includes("first-only memory"), true);
+    assert.equal(capturedBodies[0]?.includes("second-only memory"), false);
+    assert.equal(capturedBodies[1]?.includes("second-only memory"), true);
+    assert.equal(capturedBodies[1]?.includes("first-only memory"), false);
+    assert.equal(capturedBodies.some((body) => body.includes("groupRules")), false);
+    assert.equal(capturedBodies.some((body) => body.includes("groupFiles")), false);
+  });
+
+  it("bounds memory prompts to the latest ten active items", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app);
+    shell.switchWorld(realityWorldId);
+    startPrivateChat(app, realityWorldId, "ai:friend", "Friend");
+    selectChat(app, realityWorldId, `chat:${realityWorldId}:ai:friend`);
+    for (let index = 1; index <= 12; index += 1) {
+      await shell.sendMessageWithAI(`remember: fact-${index}`);
+    }
+
+    let capturedBody = "";
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async (_url: string, init: { readonly body?: string }) => {
+        capturedBody = init.body ?? "";
+        return new Response(JSON.stringify({ choices: [{ message: { content: "ok" } }] }), { status: 200 });
+      }
+    });
+    const runtime = MinimalUiShell.init(app, { aiProviderBridge: bridge });
+    runtime.switchWorld(realityWorldId);
+    selectChat(app, realityWorldId, `chat:${realityWorldId}:ai:friend`);
+
+    await runtime.sendMessageWithAI("bounded memory?");
+
+    const systemPrompt = JSON.parse(capturedBody).messages[0].content as string;
+    const memoryLines = systemPrompt.split("\n").filter((line) => line.startsWith("- "));
+    assert.equal(memoryLines.includes("- fact-1"), false);
+    assert.equal(memoryLines.includes("- fact-2"), false);
+    assert.equal(memoryLines.includes("- fact-3"), true);
+    assert.equal(memoryLines.includes("- fact-12"), true);
+    assert.equal(memoryLines.length, 10);
+  });
+
+  it("builds v1 provider prompts without group rules or group files", async () => {
     let capturedBody = "";
     const bridge = createAIProviderBridge({
       provider: "openai-compatible",
@@ -1850,6 +2123,38 @@ function createWorldBootstrapPlan(view: ReturnType<MinimalProductShellRuntime["v
     privateMessages: { contactId: string; status: string }[];
     groups: unknown[];
   };
+}
+
+function startPrivateChat(app: ReturnType<typeof App.init>, worldId: ReturnType<typeof toWorldId>, actorId: string, title: string): void {
+  const chatId = `chat:${worldId}:${actorId}`;
+  const state = app.worldDomain.getWorldState(worldId);
+  if (state.chat.chats.has(chatId)) {
+    selectChat(app, worldId, chatId);
+    return;
+  }
+  app.worldDomain.commitState(transition(state, {
+    id: toChatEventId(`event:test:start-chat:${worldId}:${actorId}`),
+    type: "chat.started",
+    worldId,
+    timestamp: 9700 + state.chat.chats.size,
+    payload: {
+      chatId: toChatId(chatId) as ChatId,
+      title
+    }
+  }));
+}
+
+function selectChat(app: ReturnType<typeof App.init>, worldId: ReturnType<typeof toWorldId>, chatId: string): void {
+  const state = app.worldDomain.getWorldState(worldId);
+  app.worldDomain.commitState(transition(state, {
+    id: toChatEventId(`event:test:select-chat:${worldId}:${chatId}`),
+    type: "chat.selected",
+    worldId,
+    timestamp: 9800 + state.chat.chats.size,
+    payload: {
+      chatId: toChatId(chatId) as ChatId
+    }
+  }));
 }
 
 function queuedRandom(values: readonly number[]): () => number {
