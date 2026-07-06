@@ -2,18 +2,23 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   canAttachFileToGroup,
+  canDeleteGroupFile,
   canDeleteGroupFileRecord,
   canExecuteGroupFileUpload,
+  canReadDeletedGroupFile,
   canReadGroupFileInChat,
+  createGroupFileDeletionPlan,
   createGroupFileUploadPreflightPlan,
   GROUP_FILES_FILE_NAME_REQUIRED_MESSAGE,
   GROUP_FILES_REAL_UPLOAD_DISABLED_MESSAGE,
   getGroupFileAccessScope,
+  getGroupFileDeletionBoundary,
   getGroupFileDeletionRules,
   getGroupFilePromptInjectionBoundary,
   getGroupFileUploadAuditBoundary,
   getGroupFileUploadFailureRules,
   getGroupFileWarnings,
+  validateGroupFileDeletionCommand,
   validateGroupFileRealUploadContract,
   validateGroupFileStorageRef,
   validateGroupFileUploadPreflightPlan,
@@ -303,6 +308,84 @@ describe("Group Files contract scaffold", () => {
     assert.equal(rules.preservesMemoryScopes, true);
     assert.equal(rules.preservesGlobalProviderData, true);
     assert.equal(rules.executesDeletion, false);
+  });
+
+  it("validates group file deletion commands for the selected current-world group file only", () => {
+    const deletionInput = {
+      ...realUploadInput,
+      fileIds: ["file:brief"]
+    };
+    const valid = validateGroupFileDeletionCommand({
+      worldId,
+      groupChatId: "group:one",
+      fileId: "file:brief"
+    }, deletionInput);
+    const privateChat = validateGroupFileDeletionCommand({
+      worldId,
+      groupChatId: "private:one",
+      fileId: "file:brief"
+    }, deletionInput);
+    const crossWorld = validateGroupFileDeletionCommand({
+      worldId: toWorldId("world:other"),
+      groupChatId: "group:one",
+      fileId: "file:brief"
+    }, deletionInput);
+    const wholeWorld = validateGroupFileDeletionCommand({
+      worldId,
+      groupChatId: "group:one",
+      fileId: "file:brief",
+      worldScope: true
+    }, deletionInput);
+
+    assert.equal(valid.valid, true);
+    assert.equal(valid.command?.fileId, "file:brief");
+    assert.equal(canDeleteGroupFile(valid.command, deletionInput), true);
+    assert.equal(privateChat.valid, false);
+    assert.equal(crossWorld.valid, false);
+    assert.equal(wholeWorld.valid, false);
+    assert.ok(wholeWorld.forbiddenFields.includes("wholeWorldScope"));
+  });
+
+  it("creates a descriptive-only deletion plan without runtime mutation", () => {
+    const result = createGroupFileDeletionPlan({
+      worldId,
+      groupChatId: "group:one",
+      fileId: "file:brief"
+    }, {
+      ...realUploadInput,
+      fileIds: ["file:brief"]
+    });
+    const plan = result.plan;
+    const boundary = getGroupFileDeletionBoundary();
+
+    assert.equal(result.valid, true);
+    assert.equal(plan?.descriptiveOnly, true);
+    assert.equal(plan?.executesDeletion, false);
+    assert.equal(plan?.deletesFileRecord, false);
+    assert.equal(plan?.deletesStorageRef, false);
+    assert.equal(plan?.deletesMessagesHistory, false);
+    assert.equal(plan?.deletesHistoricalMentions, false);
+    assert.equal(plan?.deletedFileAiReadable, false);
+    assert.equal(canReadDeletedGroupFile("file:brief"), false);
+    assert.equal(plan?.preservesGroupChat, true);
+    assert.equal(plan?.preservesMessagesHistory, true);
+    assert.equal(plan?.preservesHistoricalFileMentions, true);
+    assert.equal(plan?.preservesGroupMembers, true);
+    assert.equal(plan?.preservesGroupRules, true);
+    assert.equal(plan?.preservesChatAppearance, true);
+    assert.equal(plan?.preservesWorldContacts, true);
+    assert.equal(plan?.preservesPrivateChats, true);
+    assert.equal(plan?.preservesMemoryScopes, true);
+    assert.equal(plan?.preservesGlobalProviderData, true);
+    assert.equal(boundary.scopedToSelectedGroupChatAndFile, true);
+    assert.equal(boundary.executesDeletion, false);
+    assert.equal(boundary.deletesFileRecords, false);
+    assert.equal(boundary.deletesStorageRefs, false);
+    assert.equal(boundary.deletesHistoricalMentions, false);
+    assert.equal(boundary.deletedFilesAiReadable, false);
+    assert.equal(boundary.affectsPrivateChats, false);
+    assert.equal(boundary.affectsOtherGroups, false);
+    assert.equal(boundary.affectsOtherWorlds, false);
   });
 
   it("documents that upload never auto-injects file content into prompts", () => {

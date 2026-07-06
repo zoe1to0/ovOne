@@ -1,5 +1,17 @@
 # ovOne Decision Log
 
+## 2026-07-06: Group file deletion contract scaffold added
+
+Decision: Group Files now has a pure deletion contract before any file deletion execution can be enabled.
+
+Rules:
+
+- `GroupFileDeletionCommand` requires `worldId`, `groupChatId`, and `fileId`.
+- Deletion commands are valid only for the selected current-world group chat and reject private chat, cross-world, whole-world, other-group, and unknown mutation scopes.
+- `GroupFileDeletionPlan` is descriptive only and does not delete file records, storage refs, group chat, messages/history, historical mentions, members, rules, appearance, contacts, private chats, memory scopes, or global/provider data.
+- Deleted files are not AI-readable in future retrieval; `canReadDeletedGroupFile(...)` returns false.
+- Runtime deletion execution remains unimplemented.
+
 ## 2026-07-06: v0.10 Group Files upload contract milestone
 
 Decision: Tag `v0.10-group-files-upload-contract` records the Group Files upload contract milestone.

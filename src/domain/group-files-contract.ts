@@ -99,11 +99,13 @@ export type GroupFileRealUploadContract = Readonly<{
   readonly storageRef: GroupFileStorageRef;
 }>;
 
-export type GroupFileDeletionContract = Readonly<{
+export type GroupFileDeletionCommand = Readonly<{
   readonly worldId: WorldId;
   readonly groupChatId: string;
   readonly fileId: string;
 }>;
+
+export type GroupFileDeletionContract = GroupFileDeletionCommand;
 
 export type GroupFileRetrievalAccessScope = Readonly<{
   readonly fileWorldId: WorldId;
@@ -144,6 +146,62 @@ export type GroupFileDeletionValidation = Readonly<{
   readonly valid: boolean;
   readonly contract: GroupFileDeletionContract | null;
   readonly error: string | null;
+  readonly forbiddenFields?: readonly GroupFileForbiddenField[];
+}>;
+
+export type GroupFileDeletionPlan = Readonly<{
+  readonly worldId: WorldId;
+  readonly groupChatId: string;
+  readonly fileId: string;
+  readonly descriptiveOnly: true;
+  readonly executesDeletion: false;
+  readonly deletesFileRecord: false;
+  readonly deletesStorageRef: false;
+  readonly deletesMessagesHistory: false;
+  readonly deletesHistoricalMentions: false;
+  readonly affectsPrivateChats: false;
+  readonly affectsOtherGroups: false;
+  readonly affectsOtherWorlds: false;
+  readonly deletedFileAiReadable: false;
+  readonly preservesGroupChat: true;
+  readonly preservesMessagesHistory: true;
+  readonly preservesHistoricalFileMentions: true;
+  readonly preservesGroupMembers: true;
+  readonly preservesGroupRules: true;
+  readonly preservesChatAppearance: true;
+  readonly preservesWorldContacts: true;
+  readonly preservesPrivateChats: true;
+  readonly preservesMemoryScopes: true;
+  readonly preservesGlobalProviderData: true;
+}>;
+
+export type GroupFileDeletionResult = Readonly<{
+  readonly valid: boolean;
+  readonly command: GroupFileDeletionCommand | null;
+  readonly plan: GroupFileDeletionPlan | null;
+  readonly error: string | null;
+  readonly forbiddenFields: readonly GroupFileForbiddenField[];
+}>;
+
+export type GroupFileDeletionBoundary = Readonly<{
+  readonly scopedToSelectedGroupChatAndFile: true;
+  readonly executesDeletion: false;
+  readonly deletesFileRecords: false;
+  readonly deletesStorageRefs: false;
+  readonly deletesMessagesHistory: false;
+  readonly deletesHistoricalMentions: false;
+  readonly deletedFilesAiReadable: false;
+  readonly affectsPrivateChats: false;
+  readonly affectsOtherGroups: false;
+  readonly affectsOtherWorlds: false;
+  readonly preservesGroupChat: true;
+  readonly preservesGroupMembers: true;
+  readonly preservesGroupRules: true;
+  readonly preservesChatAppearance: true;
+  readonly preservesWorldContacts: true;
+  readonly preservesPrivateChats: true;
+  readonly preservesMemoryScopes: true;
+  readonly preservesGlobalProviderData: true;
 }>;
 
 export type GroupFileStorageRefForbiddenField =
@@ -555,18 +613,99 @@ export function canReadGroupFileInChat(
 }
 
 export function canDeleteGroupFileRecord(command: unknown, input: GroupFileDeletionValidationInput): GroupFileDeletionValidation {
+  const result = validateGroupFileDeletionCommand(command, input);
+  return Object.freeze({
+    valid: result.valid,
+    contract: result.command,
+    error: result.error,
+    forbiddenFields: result.forbiddenFields
+  });
+}
+
+export function validateGroupFileDeletionCommand(command: unknown, input: GroupFileDeletionValidationInput): GroupFileDeletionResult {
+  const forbiddenFields = getForbiddenGroupFileFields(command, DELETION_ALLOWED_KEYS);
   const candidate = normalizeGroupFileDeletionContract(command);
-  const valid = Boolean(
-    candidate &&
-    candidate.worldId === input.worldId &&
-    candidate.groupChatId === input.selectedGroupChatId &&
-    input.groupChatIds.includes(candidate.groupChatId) &&
-    input.fileIds.includes(candidate.fileId)
-  );
+  const worldMatches = Boolean(candidate && candidate.worldId === input.worldId);
+  const chatExists = Boolean(candidate && input.chatIds.includes(candidate.groupChatId));
+  const groupChat = Boolean(candidate && input.groupChatIds.includes(candidate.groupChatId));
+  const selectedGroupChat = Boolean(candidate && candidate.groupChatId === input.selectedGroupChatId);
+  const fileExists = Boolean(candidate && input.fileIds.includes(candidate.fileId));
+  const valid = Boolean(candidate && worldMatches && chatExists && groupChat && selectedGroupChat && fileExists && forbiddenFields.length === 0);
   return Object.freeze({
     valid,
-    contract: valid ? candidate : null,
-    error: valid ? null : "GroupFiles: invalid file deletion contract."
+    command: valid ? candidate : null,
+    plan: null,
+    error: valid ? null : "GroupFiles: invalid file deletion command.",
+    forbiddenFields
+  });
+}
+
+export function createGroupFileDeletionPlan(command: unknown, input: GroupFileDeletionValidationInput): GroupFileDeletionResult {
+  const validation = validateGroupFileDeletionCommand(command, input);
+  if (!validation.valid || !validation.command) {
+    return validation;
+  }
+  return Object.freeze({
+    valid: true,
+    command: validation.command,
+    plan: Object.freeze({
+      worldId: validation.command.worldId,
+      groupChatId: validation.command.groupChatId,
+      fileId: validation.command.fileId,
+      descriptiveOnly: true,
+      executesDeletion: false,
+      deletesFileRecord: false,
+      deletesStorageRef: false,
+      deletesMessagesHistory: false,
+      deletesHistoricalMentions: false,
+      affectsPrivateChats: false,
+      affectsOtherGroups: false,
+      affectsOtherWorlds: false,
+      deletedFileAiReadable: false,
+      preservesGroupChat: true,
+      preservesMessagesHistory: true,
+      preservesHistoricalFileMentions: true,
+      preservesGroupMembers: true,
+      preservesGroupRules: true,
+      preservesChatAppearance: true,
+      preservesWorldContacts: true,
+      preservesPrivateChats: true,
+      preservesMemoryScopes: true,
+      preservesGlobalProviderData: true
+    }),
+    error: null,
+    forbiddenFields: Object.freeze([])
+  });
+}
+
+export function canDeleteGroupFile(command: unknown, input: GroupFileDeletionValidationInput): boolean {
+  return validateGroupFileDeletionCommand(command, input).valid;
+}
+
+export function canReadDeletedGroupFile(_fileId: string): false {
+  return false;
+}
+
+export function getGroupFileDeletionBoundary(): GroupFileDeletionBoundary {
+  return Object.freeze({
+    scopedToSelectedGroupChatAndFile: true,
+    executesDeletion: false,
+    deletesFileRecords: false,
+    deletesStorageRefs: false,
+    deletesMessagesHistory: false,
+    deletesHistoricalMentions: false,
+    deletedFilesAiReadable: false,
+    affectsPrivateChats: false,
+    affectsOtherGroups: false,
+    affectsOtherWorlds: false,
+    preservesGroupChat: true,
+    preservesGroupMembers: true,
+    preservesGroupRules: true,
+    preservesChatAppearance: true,
+    preservesWorldContacts: true,
+    preservesPrivateChats: true,
+    preservesMemoryScopes: true,
+    preservesGlobalProviderData: true
   });
 }
 
