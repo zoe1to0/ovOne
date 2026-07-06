@@ -1,5 +1,11 @@
 # ovOne Decision Log
 
+## 2026-07-06: v0.10 Group Files upload contract milestone
+
+Decision: Tag `v0.10-group-files-upload-contract` records the Group Files upload contract milestone.
+
+This milestone represents Group Files metadata records, the real upload contract scaffold, upload preflight contract, interface-only storage adapter boundary, descriptive rollback plan, audit boundary, disabled execution gate, and no real upload/binary storage/parsing/retrieval/AI runtime access/deletion execution.
+
 ## 2026-07-06: Group file upload preflight contract added
 
 Decision: Group Files now has a pure preflight contract before any real upload/storage execution can be enabled.
