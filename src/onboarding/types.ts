@@ -12,7 +12,7 @@ export type OnboardedProductShellView = MinimalProductShellView & Readonly<{
   readonly onboarding: OnboardingState;
 }>;
 
-export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "openScreen" | "switchWorld" | "createWorldFromDraft" | "saveWorldMetadata" | "saveWorldRoleMetadata" | "saveContactDetailPreferences" | "saveChatAppearanceSettings" | "saveGroupRules" | "saveGroupFileMetadata" | "addGroupMember" | "removeGroupMember" | "deleteFriend" | "sendMessage" | "view"> & Readonly<{
+export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "openScreen" | "switchWorld" | "createWorldFromDraft" | "saveWorldMetadata" | "saveWorldRoleMetadata" | "saveContactDetailPreferences" | "saveChatAppearanceSettings" | "saveGroupRules" | "saveGroupFileMetadata" | "addGroupMember" | "removeGroupMember" | "deleteFriend" | "sendMessage" | "sendMessageWithAI" | "view"> & Readonly<{
   readonly openScreen: MinimalProductShellRuntime["openScreen"];
   readonly switchWorld: MinimalProductShellRuntime["switchWorld"];
   readonly createWorldFromDraft: MinimalProductShellRuntime["createWorldFromDraft"];
@@ -28,6 +28,7 @@ export type OnboardedProductShellRuntime = Omit<MinimalProductShellRuntime, "ope
   readonly addWorldMember: MinimalProductShellRuntime["addWorldMember"];
   readonly removeWorldMember: MinimalProductShellRuntime["removeWorldMember"];
   readonly sendMessage: MinimalProductShellRuntime["sendMessage"];
+  readonly sendMessageWithAI: MinimalProductShellRuntime["sendMessageWithAI"];
   readonly view: () => OnboardedProductShellView;
   readonly onboarding: () => OnboardingState;
   readonly telemetry: BetaTelemetry;

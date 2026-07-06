@@ -12,7 +12,7 @@ import {
 } from "../src/minimal-ui-shell/index.js";
 import type { MinimalProductShellRuntime } from "../src/minimal-ui-shell/index.js";
 import { App } from "../src/app/index.js";
-import { resolveGroupAddMemberCandidates } from "../src/domain/index.js";
+import { createAIProviderBridge, resolveGroupAddMemberCandidates } from "../src/domain/index.js";
 import { toWorldId } from "../src/world-domain/index.js";
 import { toChatEventId, toChatId, toMessageId, transition } from "../src/chat-kernel/index.js";
 import type { ChatId } from "../src/chat-kernel/index.js";
@@ -43,6 +43,158 @@ describe("Minimal UI Shell", () => {
     assert.equal(next.product.chat.messages.at(-1)?.text, "hello product");
     assert.equal(next.product.inputPanel.targetChatId, next.product.chat.chatId);
     assert.equal(shell.snapshot().chatState.chats.get(next.product.chat.chatId!)?.messages.at(-1)?.text, "hello product");
+  });
+
+  it("sends private chat messages through the AI provider bridge", async () => {
+    const shell = MinimalUiShell.init(App.init());
+
+    const next = await shell.sendMessageWithAI("hello provider");
+    const messages = next.product.chat.messages;
+
+    assert.equal(messages.at(-2)?.authorName, "You");
+    assert.equal(messages.at(-2)?.text, "hello provider");
+    assert.equal(messages.at(-1)?.authorName, "ovOne");
+    assert.equal(messages.at(-1)?.text, "mock:hello provider");
+    assert.equal(JSON.stringify(next).includes("OVONE_AI_API_KEY"), false);
+  });
+
+  it("sends group chat messages to the first available AI member only", async () => {
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:first",
+        displayName: "First AI",
+        kind: "assistant"
+      }
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9101,
+      contact: {
+        actorId: "ai:second",
+        displayName: "Second AI",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app);
+    shell.switchWorld(realityWorldId);
+    const group = shell.createGroupChat({
+      groupName: "Runtime Group",
+      selectedWorldContactIds: ["ai:first", "ai:second"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+
+    const next = await shell.sendMessageWithAI("hello group");
+    const messages = next.product.snapshot.chatState.chats.get(groupChatId)?.messages ?? [];
+
+    assert.equal(messages.at(-2)?.authorActorId, "user");
+    assert.equal(messages.at(-2)?.text, "hello group");
+    assert.equal(messages.at(-1)?.authorActorId, "ai:first");
+    assert.equal(messages.at(-1)?.text, "mock:hello group");
+    assert.equal(messages.some((message) => message.authorActorId === "ai:second"), false);
+  });
+
+  it("appends provider failures clearly inside the active chat", async () => {
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      model: "trial-real"
+    });
+    const shell = MinimalUiShell.init(App.init(), { aiProviderBridge: bridge });
+
+    const next = await shell.sendMessageWithAI("needs config");
+    const errorMessage = next.product.chat.messages.at(-1);
+
+    assert.equal(errorMessage?.authorName, "ovOne");
+    assert.equal(errorMessage?.text, "AI provider error: AI provider API key is not configured.");
+    assert.equal(JSON.stringify(next).includes("apiKey"), false);
+  });
+
+  it("writes AI responses only to the captured active world and chat", async () => {
+    const app = App.init();
+    const shell = MinimalUiShell.init(app);
+    const defaultWorldId = shell.view().activeWorldId;
+    const realityWorldId = toWorldId("reality");
+    const defaultChatId = shell.view().product.snapshot.chatState.activeChatId!;
+
+    await shell.sendMessageWithAI("default world only");
+    const defaultAfter = shell.view();
+    const realityAfter = shell.switchWorld(realityWorldId);
+
+    assert.equal(defaultAfter.product.snapshot.chatState.chats.get(defaultChatId)?.messages.at(-1)?.text, "mock:default world only");
+    assert.equal(realityAfter.product.chat.messages.some((message) => message.text === "mock:default world only"), false);
+
+    await shell.sendMessageWithAI("reality only");
+    const defaultReturned = shell.switchWorld(defaultWorldId);
+    assert.equal(defaultReturned.product.snapshot.chatState.chats.get(defaultChatId)?.messages.some((message) => message.text === "mock:reality only"), false);
+  });
+
+  it("builds v1 provider prompts without memory, group rules, or group files", async () => {
+    let capturedBody = "";
+    const bridge = createAIProviderBridge({
+      provider: "openai-compatible",
+      baseUrl: "https://provider.invalid/v1",
+      apiKey: "test-key",
+      model: "trial-real"
+    }, {
+      fetchImpl: async (_url: string, init: { readonly body?: string }) => {
+        capturedBody = init.body ?? "";
+        return new Response(JSON.stringify({
+          choices: [{ message: { content: "normalized provider response" } }]
+        }), { status: 200 });
+      }
+    });
+    const app = App.init();
+    const realityWorldId = toWorldId("reality");
+    app.worldDomain.applyStructuralPatch({
+      type: "ai.contact.added",
+      worldId: realityWorldId,
+      timestamp: 9100,
+      contact: {
+        actorId: "ai:friend",
+        displayName: "Friend",
+        kind: "assistant"
+      }
+    });
+    const shell = MinimalUiShell.init(app, { aiProviderBridge: bridge });
+    shell.switchWorld(realityWorldId);
+    const group = shell.createGroupChat({
+      groupName: "No Context Leak",
+      selectedWorldContactIds: ["ai:friend"]
+    });
+    const groupChatId = group.product.snapshot.chatState.activeChatId!;
+    shell.saveGroupRules({
+      worldId: realityWorldId,
+      groupChatId,
+      rulesText: "secret group rule"
+    });
+    shell.saveGroupFileMetadata({
+      worldId: realityWorldId,
+      groupChatId,
+      fileName: "secret-file.pdf",
+      fileType: "application/pdf",
+      fileSize: 20
+    });
+    app.worldDomain.applyStructuralPatch({
+      type: "world.settings.adjusted",
+      worldId: realityWorldId,
+      timestamp: 9102,
+      settings: {
+        memoryHint: "secret memory"
+      }
+    });
+
+    await shell.sendMessageWithAI("prompt boundary");
+
+    assert.equal(capturedBody.includes("prompt boundary"), true);
+    assert.equal(capturedBody.includes("secret group rule"), false);
+    assert.equal(capturedBody.includes("secret-file.pdf"), false);
+    assert.equal(capturedBody.includes("secret memory"), false);
   });
 
   it("switches worlds without cross-world message leakage", () => {

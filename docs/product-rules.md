@@ -34,6 +34,10 @@
 - Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero bootstrap groups. No real text generation or automatic group creation is implemented yet.
 - Create Group creates a current-world group chat from selected current-world AI contacts in Reality or custom worlds.
 - Create Group requires at least one AI member, creates placeholder group memory metadata, opens the new group chat, and does not generate initial AI messages.
+- Real Chat Runtime v1 can call one AI Provider Bridge for active private chats and group chats.
+- Private chat responses stay in the selected private chat in the current world.
+- Group chat v1 chooses one responder only: the first available current-world AI member in the group's member list.
+- Real Chat Runtime v1 prompt context may use only recent messages from the selected chat plus basic identity. It must not include memory, group rules, group files, world files, other chats, or other worlds.
 - Empty Create Group names default to `群聊`.
 - Chat List shows group chats by group name only; Chat View header shows group name with member count as `群名称（x）`, where `x` is the user plus selected AI members.
 - Create Group supports metadata-only group file records through Chat Settings. Real file upload/content handling, cross-world members, group dissolution, and real memory engine behavior remain unimplemented; post-creation add/remove member execution is supported for current-world AI contacts only.

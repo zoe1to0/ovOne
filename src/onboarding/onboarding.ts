@@ -212,6 +212,25 @@ function createOnboardedShell(
         return decorate();
       }
     },
+    sendMessageWithAI: async (text) => {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return decorate();
+      }
+      try {
+        const view = await shell.sendMessageWithAI(trimmed);
+        telemetry.record("message.sent", { length: trimmed.length });
+        telemetry.record("message.ai-replied");
+        onboarding = onboardingState(false);
+        return view;
+      } catch {
+        telemetry.record("error.invalid-event", { source: "sendMessageWithAI" });
+        telemetry.record("error.fallback-triggered", { source: "sendMessageWithAI" });
+        prepareAlphaRuntime(runtime, false);
+        onboarding = onboardingState(false);
+        return decorate();
+      }
+    },
     snapshot: shell.snapshot,
     view: decorate,
     onboarding: () => onboarding,

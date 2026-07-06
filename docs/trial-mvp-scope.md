@@ -46,8 +46,8 @@ Trial MVP principle: build a usable app skeleton with stable product architectur
 
 ## Next Implementation Order
 
-1. v0.13 AI Provider Bridge: added as a safe bridge, not connected to chat sending yet.
-2. v0.14 Real Chat Runtime
+1. v0.13 AI Provider Bridge: added as a safe bridge.
+2. v0.14 Real Chat Runtime: active private/group chat sends now call AI Provider Bridge with one group responder and no memory/rules/files injection.
 3. v0.15 Minimal World Memory
 4. v0.16 Local Trial Session
 5. v0.17 Trial UI Pass

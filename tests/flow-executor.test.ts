@@ -36,6 +36,47 @@ describe("FlowExecutor", () => {
     assert.equal(state.inputDraft, "");
   });
 
+  it("executes SUBMIT_MESSAGE through the async AI chat runtime path", async () => {
+    const calls: string[] = [];
+    const nextView = createView("chat-after-ai-send");
+    const shell = createShell(
+      () => createView("legacy-send-unused"),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      async (text) => {
+        calls.push(text);
+        return nextView;
+      }
+    );
+    const state = createState(createView("chat-before-ai-send"));
+    const registry = createBehaviorRegistry();
+    const executor = createFlowExecutor();
+
+    const transition = registry.execute({ type: "SUBMIT_MESSAGE", text: "  hello ai  " }, state);
+    const flow = await executor.runAsync({ type: "SUBMIT_MESSAGE", text: "  hello ai  " }, { shell, state });
+
+    assert.equal(transition.shouldRender, true);
+    assert.deepEqual(calls, ["hello ai"]);
+    assert.equal(flow.executedFlow, "SEND_MESSAGE");
+    assert.equal(flow.shouldRender, true);
+    assert.equal(state.view, nextView);
+    assert.equal(state.activeChatId, "chat-after-ai-send");
+    assert.equal(state.activeView, "CHAT_VIEW");
+    assert.equal(state.inputDraft, "");
+  });
+
   it("keeps TEXT_INPUT renderless and without runtime effects", () => {
     const calls: string[] = [];
     const shell = createShell((text) => {
@@ -1552,7 +1593,8 @@ function createShell(
   saveGroupRules: MinimalProductShellRuntime["saveGroupRules"] = () => createView("initial"),
   addGroupMember: MinimalProductShellRuntime["addGroupMember"] = () => createView("initial"),
   removeGroupMember: MinimalProductShellRuntime["removeGroupMember"] = () => createView("initial"),
-  saveGroupFileMetadata: MinimalProductShellRuntime["saveGroupFileMetadata"] = () => createView("initial")
+  saveGroupFileMetadata: MinimalProductShellRuntime["saveGroupFileMetadata"] = () => createView("initial"),
+  sendMessageWithAI: MinimalProductShellRuntime["sendMessageWithAI"] = async (text) => sendMessage(text)
 ): MinimalProductShellRuntime {
   const view = createView("initial");
   return {
@@ -1572,6 +1614,7 @@ function createShell(
     removeWorldMember,
     createGroupChat,
     sendMessage,
+    sendMessageWithAI,
     snapshot: () => view.product.snapshot,
     view: () => view
   };

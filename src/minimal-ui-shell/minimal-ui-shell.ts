@@ -6,6 +6,7 @@ import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 import { renderMinimalProductView } from "./views.js";
 import type {
   CreateWorldDraftInput,
+  MinimalProductShellOptions,
   MinimalProductScreen,
   MinimalProductShellRuntime,
   MinimalProductShellView
@@ -20,12 +21,13 @@ import { deleteFriendInCurrentWorld } from "./contact-detail-delete-service.js";
 import { saveChatAppearanceSettings } from "./chat-settings-service.js";
 import { saveGroupRules } from "./group-rules-service.js";
 import { saveGroupFileMetadata } from "./group-files-service.js";
+import { sendMessageThroughRealChatRuntime } from "./real-chat-runtime.js";
 
 export const MinimalUiShell = Object.freeze({
   init
 });
 
-function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly WorldId[] }> = {}): MinimalProductShellRuntime {
+function init(app: AppRuntime, options: MinimalProductShellOptions = {}): MinimalProductShellRuntime {
   const worldIds: WorldId[] = uniqueWorldIds([
     app.defaultState.world.id,
     app.realityState.world.id,
@@ -208,6 +210,27 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     return view();
   };
 
+  const sendMessageWithAI = async (text: string): Promise<MinimalProductShellView> => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      return view();
+    }
+
+    entryWorldId = null;
+    await sendMessageThroughRealChatRuntime({
+      app,
+      worldId: activeWorldId,
+      text: trimmed,
+      ...(options.aiProviderBridge ? { bridge: options.aiProviderBridge } : {}),
+      nextSequence: () => {
+        sequence += 1;
+        return sequence;
+      }
+    });
+    screen = "chat";
+    return view();
+  };
+
   return Object.freeze({
     openScreen,
     switchWorld,
@@ -225,6 +248,7 @@ function init(app: AppRuntime, options: Readonly<{ readonly worldIds?: readonly 
     removeWorldMember: removeMember,
     createGroupChat: createGroup,
     sendMessage,
+    sendMessageWithAI,
     snapshot,
     view
   });

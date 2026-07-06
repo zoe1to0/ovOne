@@ -50,6 +50,7 @@ export type FlowExecutorResult = Readonly<{
 
 export type FlowExecutor = Readonly<{
   readonly run: (action: InteractionAction, context: FlowExecutorContext) => FlowExecutorResult;
+  readonly runAsync: (action: InteractionAction, context: FlowExecutorContext) => Promise<FlowExecutorResult>;
 }>;
 
 const NO_FLOW: FlowExecutorResult = Object.freeze({ shouldRender: false });
@@ -495,5 +496,20 @@ export function createFlowExecutor(): FlowExecutor {
     return Object.freeze({ shouldRender: true, executedFlow: "SEND_MESSAGE" });
   };
 
-  return Object.freeze({ run });
+  const runAsync = async (action: InteractionAction, context: FlowExecutorContext): Promise<FlowExecutorResult> => {
+    if (action.type !== "SUBMIT_MESSAGE") {
+      return run(action, context);
+    }
+    const text = action.text.trim();
+    if (!text) {
+      return NO_FLOW;
+    }
+    context.state.view = await context.shell.sendMessageWithAI(text);
+    context.state.currentWorldId = context.state.view.product.snapshot.worldMeta.id;
+    context.state.activeChatId = context.state.view.product.snapshot.chatState.activeChatId;
+    context.state.activeView = "CHAT_VIEW";
+    return Object.freeze({ shouldRender: true, executedFlow: "SEND_MESSAGE" });
+  };
+
+  return Object.freeze({ run, runAsync });
 }

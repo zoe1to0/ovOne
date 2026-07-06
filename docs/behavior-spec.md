@@ -37,7 +37,7 @@ UI event
   -> InteractionController.dispatch(action)
   -> BehaviorRegistry.execute(action, state)
   -> local SemanticMobileState transition
-  -> FlowExecutor.run(action, context)
+  -> FlowExecutor.run(action, context) or FlowExecutor.runAsync(...) for SUBMIT_MESSAGE
   -> optional runtime effect for SUBMIT_MESSAGE / SWITCH_WORLD / Create World confirmation / SAVE_WORLD_EDITOR / SAVE_CONTACT_DETAIL_PREFERENCES / SAVE_CHAT_SETTINGS / CONFIRM_DELETE_FRIEND / ADD_WORLD_MEMBER / CONFIRM_REMOVE_WORLD_MEMBER
   -> ViewRouter.resolve(state.activeView)
   -> renderShellPage(routeState, ...)
@@ -150,11 +150,13 @@ UI event
 - Atomic executor `disabled` mode records no operations, `simulate` mode records ordered preflight operations and rollback steps, and `execute` mode is rejected/unavailable.
 - Atomic simulation is read-only and must preserve group history while keeping group membership and provider connection mutation deferred.
 - Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
-- AI Provider Bridge v1 is available as a non-chat-runtime boundary.
+- AI Provider Bridge v1 is connected to Real Chat Runtime v1 for active chat sends.
 - Mock provider returns deterministic local/test responses.
 - OpenAI-compatible provider calls are normalized through `callAIProviderChat(...)`; missing API keys return `provider-not-configured`.
 - Provider API keys are read only from local/server env-style config and are not exposed in client-visible state.
-- Chat send does not call the provider bridge yet; Real Chat Runtime is the next step.
+- `SUBMIT_MESSAGE` uses `shell.sendMessageWithAI(...)` in the interactive path: private chats append a user message and one AI response in the same private chat; group chats append a user message and one response from the first available current-world AI member in `actorIds`.
+- Real Chat Runtime v1 prompt context uses recent messages from the selected chat plus basic identity only. Memory, group rules, group files, world files, other chats, and other worlds are not injected.
+- Provider failure appends a clear provider-error message to the same active chat.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.
@@ -364,7 +366,7 @@ UI event
 | Toggle composer mode | `TOGGLE_COMPOSER_MODE` | Uses composer mode state machine to rotate the current mode for the given composer kind. |
 | Set composer mode | `SET_COMPOSER_MODE` | Sets the requested mode only when it is valid for the given composer kind. |
 | Text input | `TEXT_INPUT` | Updates `inputDraft` and skips render. |
-| Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the send-message runtime effect. |
+| Send message | `SUBMIT_MESSAGE` | Behavior Registry trims text and clears draft/overlay; Flow Executor runs the async real-chat runtime effect, calls AI Provider Bridge, and writes the user message plus one assistant/error response only to the active chat in the current world. |
 | Open settings | `OPEN_SETTINGS` | Sets `settingsOpen`, closes overlay. |
 | Close settings | `CLOSE_SETTINGS` | Clears `settingsOpen`, closes overlay. |
 | Open linked AI disconnect confirmation | `OPEN_LINKED_AI_DISCONNECT_CONFIRMATION` | Validates a connected Global AI Link and stores local Me Settings disconnect confirmation warning plus read-only dry-run preview. |
@@ -426,7 +428,7 @@ These actions are named and routed but intentionally do not implement product be
 - Unknown `activeView` resolves to `{ route: "CHAT_LIST", fallbackApplied: true, issue }`.
 - The unknown `activeView` fallback is owned by ViewRouter/Behavior Registry route resolution.
 - `renderShellPage(...)` consumes the resolved route object and does not own unknown-route fallback.
-- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `SAVE_CHAT_SETTINGS`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor.
+- `SUBMIT_MESSAGE`, `SWITCH_WORLD`, `SAVE_WORLD_EDITOR`, `SAVE_CONTACT_DETAIL_PREFERENCES`, `SAVE_CHAT_SETTINGS`, `CONFIRM_DELETE_FRIEND`, `ADD_WORLD_MEMBER`, and `CONFIRM_REMOVE_WORLD_MEMBER` are currently handled by Flow Executor. `SUBMIT_MESSAGE` uses the async Flow Executor path in the interactive controller.
 - `CONFIRM_CREATE_WORLD_DRAFT` is handled by Flow Executor only for valid `random-role` creation.
 - `CONFIRM_CREATE_WORLD_DETAIL` is handled by Flow Executor for valid detailed edit creation.
 - Emoji and file picker panel items remain decorative after the overlay opens.

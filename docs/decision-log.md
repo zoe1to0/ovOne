@@ -11,7 +11,7 @@ Rules:
 - Missing real-provider API keys return `provider-not-configured`.
 - API keys must remain local/server-side and must not appear in frontend/browser-visible state, committed docs, or committed config.
 - `.env` and `.env.*` are ignored; `.env.example` contains placeholders only.
-- The provider bridge is not connected to chat sending yet.
+- Real Chat Runtime v1 now uses the provider bridge for active private/group chat sends; memory, group rules, group files, and streaming remain future work.
 
 ## 2026-07-06: Trial MVP scope locked
 
@@ -1029,6 +1029,20 @@ Rules:
 - `Memory` is per-world.
 - World switching lands on Chats list.
 - Me is global.
+
+## 2026-07-06: Real Chat Runtime v1 connects chat sending to AI Provider Bridge
+
+Decision: `SUBMIT_MESSAGE` in the interactive controller path now calls the AI Provider Bridge through Real Chat Runtime v1.
+
+Rules:
+
+- The runtime appends the user message to the active chat in the current world.
+- Private chats receive one AI response in the same private chat.
+- Group chats receive one AI response from the first available current-world AI member in the group member list.
+- Provider failures append a clear provider-error message to the same active chat.
+- Prompt context is limited to recent messages from the selected chat plus basic identity.
+- Memory, group rules, group files, world files, other chats, and other worlds are not included in v1 provider prompts.
+- API keys remain outside client-visible state and committed files.
 
 ## Maintenance Rule
 

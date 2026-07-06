@@ -29,4 +29,4 @@ OVONE_AI_MODEL=<provider model id>
 - `.env` and `.env.*` are ignored by Git.
 - `.env.example` must contain placeholders only.
 - The bridge exposes provider/model/configured state to client-visible code, never the API key.
-- The bridge is not connected to chat sending yet. Real Chat Runtime is the next milestone.
+- Real Chat Runtime v1 uses the bridge for active private/group chat sends. It does not stream, inject memory, inject group rules, inject group files, or expose API keys in client-visible state.

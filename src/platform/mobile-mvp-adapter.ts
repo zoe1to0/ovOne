@@ -124,8 +124,21 @@ function createInteractionController(
   const flowExecutor = createFlowExecutor();
 
   const dispatch = (action: InteractionAction): void => {
+    if (action.type === "SUBMIT_MESSAGE") {
+      void dispatchSubmitMessage(action);
+      return;
+    }
     const stateTransition = registry.execute(action, state);
     const flowResult = flowExecutor.run(action, { shell, state });
+    if (!stateTransition.shouldRender && !flowResult.shouldRender) {
+      return;
+    }
+    commitStateTransition(state, render);
+  };
+
+  const dispatchSubmitMessage = async (action: InteractionAction): Promise<void> => {
+    const stateTransition = registry.execute(action, state);
+    const flowResult = await flowExecutor.runAsync(action, { shell, state });
     if (!stateTransition.shouldRender && !flowResult.shouldRender) {
       return;
     }

@@ -1,5 +1,5 @@
 import type { ChatId } from "../chat-kernel/index.js";
-import type { ChatSettingsPatch, ContactDetailPreferencePatch, DeleteFriendCommand, GroupAddMemberCommand, GroupFileUploadCommand, GroupRemoveMemberCommand, GroupRulesPatch, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
+import type { AIProviderBridge, ChatSettingsPatch, ContactDetailPreferencePatch, DeleteFriendCommand, GroupAddMemberCommand, GroupFileUploadCommand, GroupRemoveMemberCommand, GroupRulesPatch, WorldAddMemberCommand, WorldEditorPatch, WorldRemoveMemberCommand, WorldRoleEditorPatch, WorldScopedSnapshot } from "../domain/index.js";
 import type { WorldId, WorldSnapshot } from "../world-domain/index.js";
 
 export type MinimalProductScreen = "reality" | "worlds" | "chat" | "world";
@@ -148,6 +148,12 @@ export type MinimalProductShellRuntime = Readonly<{
     readonly selectedWorldContactIds: readonly string[];
   }>) => MinimalProductShellView;
   readonly sendMessage: (text: string) => MinimalProductShellView;
+  readonly sendMessageWithAI: (text: string) => Promise<MinimalProductShellView>;
   readonly snapshot: () => WorldSnapshot;
   readonly view: () => MinimalProductShellView;
+}>;
+
+export type MinimalProductShellOptions = Readonly<{
+  readonly worldIds?: readonly WorldId[];
+  readonly aiProviderBridge?: AIProviderBridge;
 }>;
