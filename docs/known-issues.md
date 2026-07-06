@@ -5,7 +5,7 @@ Last audited: 2026-06-29.
 ## Current Known Engineering Issues
 
 - Disabled explicit actions exist for creation/chat menu flows but do not implement product behavior yet.
-- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, but the current runtime is not yet Trial MVP complete because real AI provider responses, minimal world memory behavior, and local trial session flow still need implementation.
+- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, but the current runtime is not yet Trial MVP complete because the AI Provider Bridge is not connected to chat sending, minimal world memory behavior is not implemented, and local trial session flow still needs implementation.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
@@ -29,7 +29,7 @@ Last audited: 2026-06-29.
 - ovO world menu supports read-only world switching and a World Editor page scaffold.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Real memory engine integration is not implemented; `WorldMemoryScope` is a foundation placeholder.
-- Real AI provider integration is not implemented; `GlobalAIModel` and `GlobalAILink` are foundation types.
+- AI Provider Bridge v1 exists with mock and OpenAI-compatible call normalization, but Real Chat Runtime is not implemented and chat sending does not call the bridge yet.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` now renders Contacts Detail preference/delete content; preference saving and confirmed current-world Delete Friend are implemented.

@@ -17,6 +17,22 @@ export {
 } from "./world-scope-resolver.js";
 export type { ResolvableWorldSnapshot } from "./world-scope-resolver.js";
 export {
+  callAIProviderChat,
+  createAIProviderBridge,
+  validateAIProviderConfig
+} from "./ai-provider-bridge.js";
+export type {
+  AIProviderBridge,
+  AIProviderChatRequest,
+  AIProviderChatResponse,
+  AIProviderClientVisibleState,
+  AIProviderConfig,
+  AIProviderConfigValidation,
+  AIProviderError,
+  AIProviderMessage,
+  AIProviderName
+} from "./ai-provider-bridge.js";
+export {
   isBootstrapItemExecutable,
   isBootstrapItemFinal,
   markBootstrapItemStubGenerated,

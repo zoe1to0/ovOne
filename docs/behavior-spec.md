@@ -150,6 +150,11 @@ UI event
 - Atomic executor `disabled` mode records no operations, `simulate` mode records ordered preflight operations and rollback steps, and `execute` mode is rejected/unavailable.
 - Atomic simulation is read-only and must preserve group history while keeping group membership and provider connection mutation deferred.
 - Confirming linked-AI disconnect does not run real execution; it only passes or fails the guarded execution scaffold.
+- AI Provider Bridge v1 is available as a non-chat-runtime boundary.
+- Mock provider returns deterministic local/test responses.
+- OpenAI-compatible provider calls are normalized through `callAIProviderChat(...)`; missing API keys return `provider-not-configured`.
+- Provider API keys are read only from local/server env-style config and are not exposed in client-visible state.
+- Chat send does not call the provider bridge yet; Real Chat Runtime is the next step.
 - ovO control overlay still exists as a read-only world switching scaffold, but it is no longer the direct ovO click path.
 - World edit actions inside ovO remain later explicit actions.
 - Behavior Registry owns UI action -> state transition only. Runtime effects and autosave are out of scope.

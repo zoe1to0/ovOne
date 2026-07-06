@@ -2,5 +2,8 @@ node_modules/
 dist/
 outputs/
 work/
+.env
+.env.*
+!.env.example
 .agents/
 .codex/

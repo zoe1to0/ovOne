@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-06: AI Provider Bridge v1 added
+
+Decision: ovOne now has a safe AI Provider Bridge v1 boundary before Real Chat Runtime.
+
+Rules:
+
+- Provider config uses `OVONE_AI_PROVIDER`, `OVONE_AI_BASE_URL`, `OVONE_AI_API_KEY`, and `OVONE_AI_MODEL`.
+- The bridge supports deterministic `mock` responses and an OpenAI-compatible normalized chat-call adapter.
+- Missing real-provider API keys return `provider-not-configured`.
+- API keys must remain local/server-side and must not appear in frontend/browser-visible state, committed docs, or committed config.
+- `.env` and `.env.*` are ignored; `.env.example` contains placeholders only.
+- The provider bridge is not connected to chat sending yet.
+
 ## 2026-07-06: Trial MVP scope locked
 
 Decision: Trial MVP scope is frozen in `docs/trial-mvp-scope.md`.

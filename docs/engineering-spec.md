@@ -178,6 +178,11 @@ UI action
 - Atomic simulation preserves group history, keeps group membership removal deferred, keeps provider connection mutation deferred, and must not mutate `GlobalAILink`, provider connections, worlds, contacts, chats, memory, or groups.
 - Guarded Linked AI disconnect confirmation validates preflight readiness but still records only dry-run state.
 - `CONFIRM_LINKED_AI_DISCONNECT` routes through the guarded executor scaffold but remains no-runtime-mutation; it does not run through Flow Executor yet.
+- AI Provider Bridge v1 lives in `src/domain/ai-provider-bridge.ts`.
+- `AIProviderConfig` reads provider settings from local/server environment-style values: `OVONE_AI_PROVIDER`, `OVONE_AI_BASE_URL`, `OVONE_AI_API_KEY`, and `OVONE_AI_MODEL`.
+- `createAIProviderBridge(...)` exposes provider/model/configured client-visible state only; API keys stay in the server/local bridge closure and must not enter browser-visible state.
+- `callAIProviderChat(...)` supports deterministic `mock` responses and an OpenAI-compatible adapter response normalization path, but it is not connected to chat sending yet.
+- Missing real-provider API keys return `provider-not-configured`; raw provider payloads are normalized before they can reach UI-facing state.
 - Blank `你认为他是怎样的人？` may default from world role/worldview in custom worlds; in Reality it starts from an unfamiliar/new friend relationship.
 - Me Settings owns global product-authorized context access such as weather/time.
 - Weather/time access is not per-contact; after user authorization, connected AI models can read it by default until the user revokes it in Me -> Settings.
