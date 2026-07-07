@@ -130,19 +130,24 @@ function mountResolvedChatShell(
     view: initialView
   };
 
-  const render = (): void => {
-    mountRoot.replaceChildren(state.splashVisible ? createSplash() : createChatShell(shell, state, render));
-  };
-
-  render();
-  window.setTimeout(() => {
+  const finishSplash = (): void => {
+    if (!state.splashVisible) {
+      return;
+    }
     state.splashVisible = false;
     state.activeView = "CHAT_LIST";
     state.view = refreshView(shell);
     state.currentWorldId = state.view.product.snapshot.worldMeta.id;
     state.activeChatId = null;
     commitStateTransition(state, render);
-  }, 900);
+  };
+
+  const render = (): void => {
+    mountRoot.replaceChildren(state.splashVisible ? createSplash(finishSplash) : createChatShell(shell, state, render));
+  };
+
+  render();
+  window.setTimeout(finishSplash, 1600);
 
   return Object.freeze({
     render,
@@ -233,20 +238,23 @@ function commitStateTransition(state: SemanticMobileState, render: () => void): 
   render();
 }
 
-function createSplash(): HTMLElement {
+function createSplash(onSkip: () => void): HTMLElement {
   const screen = document.createElement("main");
   screen.className = "mvp-splash";
+  screen.addEventListener("click", onSkip);
+
+  const poster = document.createElement("section");
+  poster.className = "mvp-splash-poster";
 
   const title = document.createElement("h1");
   title.textContent = "ovOne";
 
-  const first = document.createElement("p");
-  first.textContent = "一个 AI。";
+  const mark = document.createElement("p");
+  mark.className = "mvp-splash-mark";
+  mark.textContent = "one over AI, one over world";
 
-  const second = document.createElement("p");
-  second.textContent = "一个入口。";
-
-  screen.append(title, first, second);
+  poster.append(title, mark);
+  screen.append(poster);
   return screen;
 }
 
@@ -355,7 +363,7 @@ function createChatList(
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-list-screen";
 
-  screen.append(createHomeHeader(snapshot, controller));
+  screen.append(createHomeHeader(state.view.availableWorlds.length, controller));
 
   const list = document.createElement("ol");
   list.className = "mvp-chat-list";
@@ -747,7 +755,7 @@ function createOvoIndicator(snapshot: WorldSnapshot): HTMLElement {
   return indicator;
 }
 
-function createHomeHeader(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
+function createHomeHeader(worldLinkedCount: number, controller: InteractionController): HTMLElement {
   const header = document.createElement("header");
   header.className = "mvp-home-header";
 
@@ -757,6 +765,9 @@ function createHomeHeader(snapshot: WorldSnapshot, controller: InteractionContro
   brand.setAttribute("aria-label", "ovO");
   bindControllerAction(brand, controller, { type: "OPEN_OVO_CHAT" });
 
+  const mark = document.createElement("span");
+  mark.className = "mvp-home-wordmark";
+
   const title = document.createElement("h1");
   title.textContent = "ovO";
 
@@ -764,11 +775,13 @@ function createHomeHeader(snapshot: WorldSnapshot, controller: InteractionContro
   dot.className = "mvp-notification-dot";
   dot.setAttribute("aria-label", "有新动态");
 
-  const world = document.createElement("span");
-  world.className = "mvp-current-world";
-  world.textContent = `当前世界：${snapshot.worldMeta.title}`;
+  mark.append(title, dot);
 
-  brand.append(title, dot, world);
+  const world = document.createElement("span");
+  world.className = "mvp-world-linked-count";
+  world.textContent = `${worldLinkedCount} World Linked`;
+
+  brand.append(mark, world);
 
   const add = document.createElement("button");
   add.type = "button";
@@ -2292,17 +2305,14 @@ function createChatListText(title: string, preview: string, label: string): HTML
   const block = document.createElement("span");
   block.className = "mvp-chat-copy";
 
-  const badge = document.createElement("em");
-  badge.className = "mvp-chat-kind";
-  badge.textContent = label;
-
   const name = document.createElement("strong");
   name.textContent = title;
 
   const last = document.createElement("span");
-  last.textContent = preview;
+  last.className = "mvp-chat-subtitle";
+  last.textContent = `${label} · ${preview}`;
 
-  block.append(badge, name, last);
+  block.append(name, last);
   return block;
 }
 

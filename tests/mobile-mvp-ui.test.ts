@@ -16,13 +16,16 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("WorldDomain.create"), false);
   });
 
-  it("shows Chinese splash copy before entering chats", () => {
+  it("shows a skippable poster splash before entering chats", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /title\.textContent = "ovOne"/);
-    assert.match(adapter, /first\.textContent = "一个 AI。"/);
-    assert.match(adapter, /second\.textContent = "一个入口。"/);
+    assert.match(adapter, /mark\.textContent = "one over AI, one over world"/);
+    assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
+    assert.match(adapter, /window\.setTimeout\(finishSplash, 1600\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
+    assert.match(html, /\.mvp-splash-poster \{/);
   });
 
   it("gates the browser app behind a local Trial Entry screen", () => {
@@ -125,9 +128,10 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /screen\.append\(createHomeHeader\(snapshot, controller\)\)/);
-    assert.match(adapter, /function createHomeHeader\(snapshot: WorldSnapshot, controller: InteractionController\)/);
-    assert.match(adapter, /world\.textContent = `当前世界：\$\{snapshot\.worldMeta\.title\}`/);
+    assert.match(adapter, /screen\.append\(createHomeHeader\(state\.view\.availableWorlds\.length, controller\)\)/);
+    assert.match(adapter, /function createHomeHeader\(worldLinkedCount: number, controller: InteractionController\)/);
+    assert.match(adapter, /world\.textContent = `\$\{worldLinkedCount\} World Linked`/);
+    assert.match(adapter, /mark\.className = "mvp-home-wordmark"/);
     assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
     assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "OPEN_ADD_MENU" \}\)/);
     assert.match(adapter, /function createAddMenu/);
@@ -135,16 +139,22 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\), chatKindLabel\(snapshot, chat\)\)/);
+    assert.match(adapter, /last\.textContent = `\$\{label\} · \$\{preview\}`/);
+    assert.doesNotMatch(adapter, /badge\.className = "mvp-chat-kind"/);
     assert.doesNotMatch(adapter, /createChatListText\(chatHeaderTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
     assert.match(adapter, /empty\.textContent = "暂无聊天。点击右上角 \+ 创建群聊，或在联系人里打开私聊。"/);
     assert.match(registry, /openOverlay\(state, "ovo-world-menu"\)/);
     assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
-    assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 42px minmax\(0, 1fr\) 42px;/);
+    assert.match(html, /body \{[\s\S]*background: #dceef8;/);
+    assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;[\s\S]*box-shadow:/);
+    assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 44px minmax\(0, 1fr\) 44px;/);
     assert.match(html, /\.mvp-home-brand \{[\s\S]*justify-self: center;/);
-    assert.match(html, /\.mvp-current-world \{/);
-    assert.match(html, /\.mvp-chat-kind \{/);
+    assert.match(html, /\.mvp-notification-dot \{[\s\S]*position: absolute;[\s\S]*right: -9px;/);
+    assert.match(html, /\.mvp-world-linked-count \{/);
+    assert.match(html, /\.mvp-chat-list li \+ li \{/);
+    assert.match(html, /\.mvp-chat-subtitle \{/);
     assert.match(html, /\.mvp-empty-state,/);
   });
 
@@ -533,7 +543,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createMenuButton\("创建群聊", controller, \{ type: "OPEN_CREATE_GROUP_DRAFT" \}\)/);
     assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "OPEN_CREATE_WORLD_DRAFT" \}\)/);
     assert.equal(adapter.includes("MENU_ACTION"), false);
-    assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 1);
+    assert.equal((adapter.match(/addEventListener\("click"/g) ?? []).length, 2);
+    assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.equal((adapter.match(/addEventListener\("submit"/g) ?? []).length, 1);
     assert.equal((adapter.match(/addEventListener\("input"/g) ?? []).length, 13);
     assert.doesNotMatch(adapter, /addEventListener\("click", \(\) => \{\s*state\./);

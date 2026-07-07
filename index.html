@@ -12,7 +12,7 @@
 
       body {
         margin: 0;
-        background: #fbfbf8;
+        background: #dceef8;
         color: #1f2528;
       }
 
@@ -29,21 +29,39 @@
         min-height: 100vh;
         display: grid;
         place-content: center;
-        gap: 8px;
         padding: 24px;
         text-align: center;
-        background: #fbfbf8;
+        background: #fbf5e8;
+        cursor: pointer;
+      }
+
+      .mvp-splash-poster {
+        width: min(72vw, 260px);
+        min-height: 360px;
+        display: grid;
+        place-content: center;
+        gap: 18px;
+        padding: 28px 22px;
+        box-sizing: border-box;
+        border: 1px solid rgba(158, 139, 111, 0.24);
+        border-radius: 18px;
+        background: #fffaf0;
+        box-shadow: 0 22px 58px rgba(78, 105, 116, 0.16);
       }
 
       .mvp-splash h1 {
-        margin: 0 0 10px;
-        font-size: 2.2rem;
+        margin: 0;
+        font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
+        font-size: 2.7rem;
+        font-weight: 700;
+        letter-spacing: 0;
       }
 
       .mvp-splash p {
         margin: 0;
-        color: #4f5d58;
-        font-size: 1rem;
+        color: #6a746f;
+        font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
+        font-size: 0.98rem;
       }
 
       .mvp-trial-entry {
@@ -81,15 +99,19 @@
 
       .mvp-shell {
         min-height: 100vh;
-        max-width: 480px;
+        max-width: 430px;
         margin: 0 auto;
-        background: #fbfbf8;
+        border-right: 1px solid rgba(93, 129, 144, 0.18);
+        border-left: 1px solid rgba(93, 129, 144, 0.18);
+        background: #fffaf0;
+        box-shadow: 0 18px 70px rgba(70, 116, 139, 0.22);
       }
 
       .mvp-viewport {
         min-height: 100vh;
         padding: 14px 16px 86px;
         box-sizing: border-box;
+        background: #fffaf0;
       }
 
       .mvp-page {
@@ -114,10 +136,10 @@
 
       .mvp-home-header {
         display: grid;
-        grid-template-columns: 42px minmax(0, 1fr) 42px;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
         gap: 12px;
         align-items: center;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
       }
 
       .mvp-home-brand {
@@ -135,35 +157,46 @@
 
       .mvp-home-brand h1 {
         margin: 0;
-        font-size: 1.55rem;
+        font-size: 1.72rem;
+        letter-spacing: 0;
+      }
+
+      .mvp-home-wordmark {
+        position: relative;
+        display: inline-block;
+        line-height: 1;
       }
 
       .mvp-notification-dot {
+        position: absolute;
+        top: 1px;
+        right: -9px;
         width: 8px;
         height: 8px;
         border-radius: 999px;
         background: #d94b3d;
       }
 
-      .mvp-current-world {
+      .mvp-world-linked-count {
         max-width: 180px;
         overflow: hidden;
-        color: #4f7d72;
+        color: #6a746f;
         font-size: 0.78rem;
-        font-weight: 700;
+        font-weight: 600;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
 
       .mvp-add-button {
         grid-column: 3;
-        width: 40px;
-        height: 40px;
-        border: 1px solid #d8ddd9;
+        width: 38px;
+        height: 38px;
+        border: 1px solid #cfe1ea;
         border-radius: 999px;
-        background: #ffffff;
+        background: #eef7fb;
         color: #1f2528;
         cursor: pointer;
+        font-size: 1.15rem;
       }
 
       .mvp-header h1 {
@@ -179,12 +212,12 @@
         z-index: 5;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        max-width: 480px;
+        max-width: 430px;
         margin: 0 auto;
         padding: 8px 14px 12px;
         box-sizing: border-box;
         border-top: 1px solid #e2e5e0;
-        background: rgba(251, 251, 248, 0.96);
+        background: rgba(255, 250, 240, 0.96);
         backdrop-filter: blur(14px);
       }
 
@@ -194,7 +227,7 @@
         bottom: 124px;
         left: 0;
         z-index: 7;
-        max-width: 480px;
+        max-width: 430px;
         margin: 0 auto;
         padding: 0 16px;
         box-sizing: border-box;
@@ -224,7 +257,7 @@
         top: 86px;
         left: 0;
         z-index: 8;
-        max-width: 480px;
+        max-width: 430px;
         margin: 0 auto;
         padding: 0 18px;
         box-sizing: border-box;
@@ -455,6 +488,18 @@
         list-style: none;
       }
 
+      .mvp-chat-list {
+        gap: 0;
+        overflow: hidden;
+        border: 1px solid rgba(190, 215, 226, 0.65);
+        border-radius: 20px;
+        background: #fffdf7;
+      }
+
+      .mvp-chat-list li + li {
+        border-top: 1px solid #e3eef3;
+      }
+
       .mvp-ovo-indicator {
         display: inline-flex;
         align-items: center;
@@ -474,7 +519,7 @@
         grid-template-columns: 48px minmax(0, 1fr) auto;
         align-items: center;
         gap: 10px;
-        padding: 10px 0;
+        padding: 12px 2px;
         border: 0;
         background: transparent;
         color: inherit;
@@ -491,8 +536,8 @@
         height: 42px;
         display: grid;
         place-items: center;
-        border-radius: 14px;
-        background: #e8f0ed;
+        border-radius: 15px;
+        background: #e8f4f9;
         color: #26322e;
         font-weight: 800;
       }
@@ -515,7 +560,7 @@
       .mvp-chat-copy {
         min-width: 0;
         display: grid;
-        gap: 4px;
+        gap: 5px;
       }
 
       .mvp-chat-kind {
@@ -542,6 +587,11 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+
+      .mvp-chat-subtitle {
+        color: #687982;
+        font-size: 0.84rem;
       }
 
       .mvp-chat-copy span,
@@ -727,7 +777,7 @@
         bottom: 64px;
         left: 0;
         z-index: 6;
-        max-width: 480px;
+        max-width: 430px;
         margin: 0 auto;
         display: flex;
         align-items: center;
@@ -735,7 +785,7 @@
         gap: 8px;
         padding: 8px 16px 10px;
         box-sizing: border-box;
-        background: rgba(251, 251, 248, 0.96);
+        background: rgba(255, 250, 240, 0.96);
         backdrop-filter: blur(14px);
       }
 
