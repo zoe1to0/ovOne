@@ -26,7 +26,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /viewport\.className = "mvp-splash-viewport"/);
     assert.match(adapter, /document\.createElement\("img"\)/);
     assert.match(adapter, /artwork\.className = "mvp-splash-artwork"/);
-    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-prototype\.jpg"/);
+    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-artwork\.png"/);
     assert.match(adapter, /viewport\.append\(artwork\)/);
     assert.match(adapter, /shell\.append\(viewport\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
@@ -47,7 +47,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*overflow: hidden;/);
     assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
     assert.doesNotMatch(html, /clip-path: polygon/);
-    assert.equal(existsSync("public/assets/splash/ovone-splash-prototype.jpg"), true);
+    assert.equal(existsSync("public/assets/splash/ovone-splash-artwork.png"), true);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {

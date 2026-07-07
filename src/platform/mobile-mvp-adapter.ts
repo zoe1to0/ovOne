@@ -279,7 +279,7 @@ function createSplash(onSkip: () => void): HTMLElement {
 
   const artwork = document.createElement("img");
   artwork.className = "mvp-splash-artwork";
-  artwork.src = "public/assets/splash/ovone-splash-prototype.jpg";
+  artwork.src = "public/assets/splash/ovone-splash-artwork.png";
   artwork.alt = "one over AI, one over world";
   artwork.decoding = "async";
 
