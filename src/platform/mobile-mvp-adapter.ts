@@ -277,35 +277,37 @@ function createSplash(onSkip: () => void): HTMLElement {
   const viewport = document.createElement("section");
   viewport.className = "mvp-splash-viewport";
 
-  const brush = document.createElement("span");
-  brush.className = "mvp-splash-brush";
-  brush.setAttribute("aria-hidden", "true");
+  const mark = createSplashMarkSvg();
 
-  const logo = document.createElement("span");
-  logo.className = "mvp-splash-logo";
-
-  const logoSmallO = document.createElement("span");
-  logoSmallO.className = "mvp-splash-logo-letter mvp-splash-logo-small-o";
-  logoSmallO.textContent = "o";
-
-  const logoV = document.createElement("span");
-  logoV.className = "mvp-splash-logo-letter mvp-splash-logo-v";
-  logoV.textContent = "v";
-
-  const logoBigO = document.createElement("span");
-  logoBigO.className = "mvp-splash-logo-letter mvp-splash-logo-big-o";
-  logoBigO.textContent = "O";
-
-  logo.append(logoSmallO, logoV, logoBigO);
-
-  const mark = document.createElement("p");
-  mark.className = "mvp-splash-mark";
-  mark.textContent = "one over AI, one over world";
-
-  viewport.append(brush, logo, mark);
+  viewport.append(mark);
   shell.append(viewport);
   screen.append(shell);
   return screen;
+}
+
+function createSplashMarkSvg(): SVGSVGElement {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("mvp-splash-mark-svg");
+  svg.setAttribute("viewBox", "0 0 260 260");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "ovO, one over AI, one over world");
+  svg.innerHTML = `
+    <g class="mvp-splash-svg-brush" opacity="0.9">
+      <path d="M70 106 C71 79 99 57 127 58 C151 58 177 70 187 91 C202 123 190 151 163 162 C136 174 114 166 91 169 C70 172 49 160 44 139 C41 126 51 116 70 106 Z" fill="#d8fbf7" opacity="0.74" />
+      <path d="M56 124 C64 97 93 82 124 76 C153 70 181 83 192 106 C201 128 189 151 163 158 C137 166 108 156 84 163 C61 169 44 151 56 124 Z" fill="#cff5f3" opacity="0.5" />
+      <path d="M82 90 C101 70 131 54 158 66 C180 76 187 100 179 121 C170 143 145 152 119 150 C93 148 68 137 65 116 C63 106 70 98 82 90 Z" fill="#e2fffb" opacity="0.46" />
+      <path d="M67 143 C85 126 117 124 141 131 C164 138 176 153 164 165 C150 181 119 178 92 172 C70 167 54 156 67 143 Z" fill="#d6faf6" opacity="0.42" />
+      <path d="M46 137 C62 126 75 124 83 128" stroke="#d4faf7" stroke-width="18" stroke-linecap="round" opacity="0.48" />
+      <path d="M179 90 C190 102 196 117 195 130" stroke="#d2f7f5" stroke-width="16" stroke-linecap="round" opacity="0.42" />
+    </g>
+    <g class="mvp-splash-svg-face">
+      <path d="M83 111 C82 104 87 99 94 99 C101 99 106 103 106 110 C106 117 101 122 94 122 C87 122 83 118 83 111 Z" fill="#101314" />
+      <path d="M157 109 C156 101 162 96 170 97 C177 98 182 103 181 111 C181 119 176 124 168 124 C160 123 156 117 157 109 Z" fill="#101314" />
+      <path d="M119 110 C124 123 130 129 135 129 C140 129 145 119 149 109" fill="none" stroke="#101314" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+    <text class="mvp-splash-svg-tagline" x="130" y="205" text-anchor="middle">one over AI, one over world</text>
+  `;
+  return svg;
 }
 
 function createChatShell(

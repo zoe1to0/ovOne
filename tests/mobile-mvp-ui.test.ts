@@ -22,32 +22,29 @@ describe("Mobile MVP Product Shell", () => {
     const splashBody = adapter.match(/function createSplash[\s\S]*?function createChatShell/)?.[0] ?? "";
 
     assert.match(adapter, /const SPLASH_DWELL_MS = 1800/);
-    assert.match(adapter, /logoSmallO\.textContent = "o"/);
-    assert.match(adapter, /logoV\.textContent = "v"/);
-    assert.match(adapter, /logoBigO\.textContent = "O"/);
-    assert.match(adapter, /logo\.append\(logoSmallO, logoV, logoBigO\)/);
-    assert.match(adapter, /mark\.textContent = "one over AI, one over world"/);
+    assert.match(adapter, /function createSplashMarkSvg\(\): SVGSVGElement/);
+    assert.match(adapter, /document\.createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", "svg"\)/);
+    assert.match(adapter, /svg\.classList\.add\("mvp-splash-mark-svg"\)/);
+    assert.match(adapter, /<text class="mvp-splash-svg-tagline"[\s\S]*one over AI, one over world<\/text>/);
     assert.match(adapter, /shell\.className = "mvp-shell mvp-splash-shell"/);
     assert.match(adapter, /viewport\.className = "mvp-splash-viewport"/);
-    assert.match(adapter, /viewport\.append\(brush, logo, mark\)/);
+    assert.match(adapter, /viewport\.append\(mark\)/);
     assert.match(adapter, /shell\.append\(viewport\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
     assert.doesNotMatch(splashBody, /ovOne/);
+    assert.doesNotMatch(splashBody, /jpg|jpeg|png|splash-prototype/);
     assert.doesNotMatch(html, /\.mvp-splash-poster \{/);
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
     assert.match(html, /\.mvp-splash \{[\s\S]*background: #f8fbf7;/);
     assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;/);
     assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;/);
-    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*grid-template-rows: 1fr auto 32px auto 1fr;[\s\S]*padding: 14px 16px;[\s\S]*background: #fffaf0;/);
-    assert.match(html, /\.mvp-splash-brush \{[\s\S]*radial-gradient\(ellipse/);
-    assert.doesNotMatch(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
-    assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.2em;/);
-    assert.match(html, /\.mvp-splash-mark \{[\s\S]*grid-row: 4;/);
-    assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 900;/);
-    assert.match(html, /\.mvp-splash-logo-big-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 800;/);
-    assert.match(html, /\.mvp-splash-logo-small-o::before,[\s\S]*\.mvp-splash-logo-big-o::before \{[\s\S]*background: #101314;/);
+    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*grid-template-rows: 1fr auto 1fr;[\s\S]*padding: 14px 16px;[\s\S]*background: #fffaf0;/);
+    assert.match(html, /\.mvp-splash-mark-svg \{[\s\S]*width: min\(82%, 320px\);/);
+    assert.match(html, /\.mvp-splash-svg-tagline \{[\s\S]*font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;/);
+    assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
+    assert.doesNotMatch(html, /clip-path: polygon/);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {
