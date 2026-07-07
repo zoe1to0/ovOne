@@ -271,8 +271,11 @@ function createSplash(onSkip: () => void): HTMLElement {
   screen.className = "mvp-splash";
   screen.addEventListener("click", onSkip);
 
-  const phoneFrame = document.createElement("section");
-  phoneFrame.className = "mvp-splash-phone-frame";
+  const shell = document.createElement("section");
+  shell.className = "mvp-shell mvp-splash-shell";
+
+  const viewport = document.createElement("section");
+  viewport.className = "mvp-splash-viewport";
 
   const brush = document.createElement("span");
   brush.className = "mvp-splash-brush";
@@ -299,8 +302,9 @@ function createSplash(onSkip: () => void): HTMLElement {
   mark.className = "mvp-splash-mark";
   mark.textContent = "one over AI, one over world";
 
-  phoneFrame.append(brush, logo, mark);
-  screen.append(phoneFrame);
+  viewport.append(brush, logo, mark);
+  shell.append(viewport);
+  screen.append(shell);
   return screen;
 }
 

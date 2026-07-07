@@ -28,27 +28,28 @@
       .mvp-splash {
         min-height: 100vh;
         display: grid;
-        place-content: center;
-        padding: 24px;
+        padding: 0;
         box-sizing: border-box;
         text-align: center;
-        background: #faf9f4;
+        background: #dceef8;
         cursor: pointer;
       }
 
-      .mvp-splash-phone-frame {
-        width: min(62vw, 264px);
-        height: min(66vh, 470px);
-        min-height: 390px;
+      .mvp-splash-shell {
+        width: 100%;
+        cursor: pointer;
+      }
+
+      .mvp-splash-viewport {
+        min-height: 100vh;
         display: grid;
         position: relative;
-        grid-template-rows: 1fr auto 18px auto 1.35fr;
+        grid-template-rows: 0.9fr auto 18px auto 1.35fr;
         align-items: center;
         justify-items: center;
         box-sizing: border-box;
-        border: 2.5px solid #151817;
-        border-radius: 7px;
-        background: #fffef9;
+        padding: 14px 16px 86px;
+        background: #fffaf0;
       }
 
       .mvp-splash-brush {
