@@ -292,19 +292,25 @@ function createSplashMarkSvg(): SVGSVGElement {
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "ovO, one over AI, one over world");
   svg.innerHTML = `
-    <g class="mvp-splash-svg-brush" opacity="0.86">
-      <path d="M107 230 C105 197 134 171 166 158 C198 145 230 153 249 177 C270 204 268 240 245 269 C221 298 181 302 147 291 C117 282 93 260 107 230 Z" fill="#dcfcf8" opacity="0.66" />
-      <path d="M73 275 C82 236 118 207 158 193 C199 179 245 189 262 221 C279 253 259 290 217 305 C179 319 139 300 104 312 C76 321 57 300 73 275 Z" fill="#cff4f2" opacity="0.48" />
-      <path d="M126 192 C153 164 198 142 230 162 C257 179 263 213 244 243 C225 273 185 281 149 269 C114 257 94 232 106 211 C110 203 117 197 126 192 Z" fill="#e5fffb" opacity="0.38" />
-      <path d="M93 315 C120 288 166 285 203 297 C232 307 242 329 222 346 C199 366 151 356 116 344 C86 334 72 324 93 315 Z" fill="#d6faf5" opacity="0.38" />
-      <path d="M54 284 C74 271 91 268 110 273" stroke="#d2f8f5" stroke-width="28" stroke-linecap="round" opacity="0.36" />
-      <path d="M234 170 C257 186 271 215 268 244" stroke="#d5faf7" stroke-width="22" stroke-linecap="round" opacity="0.32" />
-      <path d="M103 333 C129 342 164 345 199 337" stroke="#d5fbf7" stroke-width="18" stroke-linecap="round" opacity="0.24" />
+    <defs>
+      <filter id="mvp-splash-crayon" x="-12%" y="-12%" width="124%" height="124%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.042" numOctaves="2" seed="9" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </defs>
+    <g class="mvp-splash-svg-brush" filter="url(#mvp-splash-crayon)" opacity="0.86">
+      <path d="M105 226 C110 197 134 172 166 158 C196 145 224 151 244 170 C270 195 269 234 248 264 C223 300 181 308 144 291 C113 277 95 254 105 226 Z" fill="#dffdf9" opacity="0.62" />
+      <path d="M72 277 C82 236 116 209 158 192 C202 175 242 188 261 220 C280 252 260 289 216 305 C179 318 139 300 105 313 C76 324 55 302 72 277 Z" fill="#cff4f2" opacity="0.5" />
+      <path d="M120 195 C149 164 195 144 229 162 C257 177 264 211 245 242 C226 273 188 282 149 270 C114 259 94 233 104 213 C108 205 113 200 120 195 Z" fill="#e8fffb" opacity="0.4" />
+      <path d="M90 315 C119 286 165 284 203 296 C233 306 244 328 223 346 C200 366 151 356 116 344 C85 333 70 324 90 315 Z" fill="#d4faf5" opacity="0.4" />
+      <path d="M51 282 C73 267 94 267 113 274" stroke="#d3f8f5" stroke-width="30" stroke-linecap="round" opacity="0.36" />
+      <path d="M236 169 C259 186 273 216 268 245" stroke="#d6faf7" stroke-width="22" stroke-linecap="round" opacity="0.31" />
+      <path d="M105 335 C131 344 166 346 199 337" stroke="#d5fbf7" stroke-width="18" stroke-linecap="round" opacity="0.24" />
     </g>
     <g class="mvp-splash-svg-face">
-      <path d="M117 263 C116 257 121 253 128 254 C135 254 139 259 138 266 C137 272 132 276 125 275 C119 274 116 269 117 263 Z" fill="#101314" />
-      <path d="M224 262 C223 255 229 251 237 252 C244 253 249 258 248 265 C247 272 241 276 234 275 C227 274 223 269 224 262 Z" fill="#101314" />
-      <path d="M166 259 L181 278 L196 259" fill="none" stroke="#101314" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M118 264 C117 258 122 254 129 255 C135 255 139 259 138 266 C137 272 132 276 125 275 C120 274 117 269 118 264 Z" fill="#101314" />
+      <path d="M220 262 C219 252 226 246 238 248 C249 249 255 256 254 266 C253 277 244 282 232 279 C224 277 219 270 220 262 Z" fill="#101314" />
+      <path d="M166 258 L180 276 L194 258" fill="none" stroke="#101314" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round" />
     </g>
     <text class="mvp-splash-svg-tagline" x="180" y="430" text-anchor="middle">one over AI, one over world</text>
   `;

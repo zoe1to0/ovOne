@@ -44,9 +44,10 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-splash-mark-svg \{[\s\S]*width: min\(94%, 390px\);[\s\S]*max-height: 86vh;/);
     assert.match(html, /\.mvp-splash-svg-tagline \{[\s\S]*font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;/);
     assert.match(adapter, /svg\.setAttribute\("viewBox", "0 0 360 620"\)/);
-    assert.match(adapter, /<path d="M117 263[\s\S]*fill="#101314" \/>/);
-    assert.match(adapter, /<path d="M224 262[\s\S]*fill="#101314" \/>/);
-    assert.match(adapter, /<path d="M166 259 L181 278 L196 259"/);
+    assert.match(adapter, /<filter id="mvp-splash-crayon"[\s\S]*<feTurbulence/);
+    assert.match(adapter, /<path d="M118 264[\s\S]*fill="#101314" \/>/);
+    assert.match(adapter, /<path d="M220 262[\s\S]*fill="#101314" \/>/);
+    assert.match(adapter, /<path d="M166 258 L180 276 L194 258"/);
     assert.match(html, /\.mvp-splash \{[\s\S]*overflow: hidden;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*overflow: hidden;/);
     assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
