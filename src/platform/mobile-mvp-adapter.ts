@@ -51,6 +51,8 @@ type InteractionController = Readonly<{
   readonly dispatch: (action: InteractionAction) => void;
 }>;
 
+const SPLASH_DWELL_MS = 1800;
+
 export type ChatShellMount = Readonly<{
   readonly render: () => void;
   readonly unmount: () => void;
@@ -68,13 +70,14 @@ export function mountChatShell(
   const sessionStorage = window.localStorage;
   let activeMount: ChatShellMount | null = null;
 
-  const enterMainApp = (touchSession: boolean): void => {
+  const enterMainApp = (touchSession: boolean, showSplash = true): void => {
     if (touchSession) {
       touchLocalTrialSession(sessionStorage);
     }
     activeMount = mountResolvedChatShell(
       createOnboardedProductRuntime({ storage: createBrowserWorldStorage(sessionStorage) }).shell,
-      mountRoot
+      mountRoot,
+      { showSplash }
     );
   };
 
@@ -82,14 +85,27 @@ export function mountChatShell(
     activeMount = null;
     mountRoot.replaceChildren(createTrialEntryScreen(() => {
       createLocalTrialSession(sessionStorage);
-      enterMainApp(false);
+      enterMainApp(false, false);
     }));
+  };
+
+  const renderTrialEntryAfterSplash = (): void => {
+    let splashVisible = true;
+    const finishSplash = (): void => {
+      if (!splashVisible) {
+        return;
+      }
+      splashVisible = false;
+      renderTrialEntry();
+    };
+    mountRoot.replaceChildren(createSplash(finishSplash));
+    window.setTimeout(finishSplash, SPLASH_DWELL_MS);
   };
 
   if (loadLocalTrialSession(sessionStorage)) {
     enterMainApp(true);
   } else {
-    renderTrialEntry();
+    renderTrialEntryAfterSplash();
   }
 
   return Object.freeze({
@@ -103,9 +119,11 @@ export function mountChatShell(
 
 function mountResolvedChatShell(
   shell: MinimalProductShellRuntime,
-  mountRoot: HTMLElement
+  mountRoot: HTMLElement,
+  options: Readonly<{ showSplash?: boolean }> = {}
 ): ChatShellMount {
   const initialView = enterRealityContext(shell);
+  const showSplash = options.showSplash ?? true;
   const state: SemanticMobileState = {
     activeView: "CHAT_LIST",
     currentWorldId: initialView.product.snapshot.worldMeta.id,
@@ -126,7 +144,7 @@ function mountResolvedChatShell(
     worldCreationTransition: null,
     isAwaitingAIResponse: false,
     memoryNoticeMessage: null,
-    splashVisible: true,
+    splashVisible: showSplash,
     view: initialView
   };
 
@@ -147,7 +165,9 @@ function mountResolvedChatShell(
   };
 
   render();
-  window.setTimeout(finishSplash, 1600);
+  if (showSplash) {
+    window.setTimeout(finishSplash, SPLASH_DWELL_MS);
+  }
 
   return Object.freeze({
     render,
@@ -159,11 +179,18 @@ function createTrialEntryScreen(onStart: () => void): HTMLElement {
   const screen = document.createElement("main");
   screen.className = "mvp-trial-entry";
 
+  const card = document.createElement("section");
+  card.className = "mvp-trial-entry-card";
+
+  const brand = document.createElement("span");
+  brand.className = "mvp-trial-entry-brand";
+  brand.textContent = "ovOne";
+
   const title = document.createElement("h1");
-  title.textContent = "ovOne";
+  title.textContent = "开始试用 ovOne";
 
   const copy = document.createElement("p");
-  copy.textContent = "本地试用会保存在这台设备上。";
+  copy.textContent = "这是本地试用体验。你的世界、聊天和记忆会保存在当前设备上。";
 
   const start = document.createElement("button");
   start.type = "button";
@@ -171,7 +198,8 @@ function createTrialEntryScreen(onStart: () => void): HTMLElement {
   start.textContent = "开始试用 ovOne";
   start.onclick = onStart;
 
-  screen.append(title, copy, start);
+  card.append(brand, title, copy, start);
+  screen.append(card);
   return screen;
 }
 
@@ -246,6 +274,19 @@ function createSplash(onSkip: () => void): HTMLElement {
   const poster = document.createElement("section");
   poster.className = "mvp-splash-poster";
 
+  const logoScene = document.createElement("div");
+  logoScene.className = "mvp-splash-logo-scene";
+
+  const brush = document.createElement("span");
+  brush.className = "mvp-splash-brush";
+  brush.setAttribute("aria-hidden", "true");
+
+  const logo = document.createElement("span");
+  logo.className = "mvp-splash-logo";
+  logo.textContent = "ovO";
+
+  logoScene.append(brush, logo);
+
   const title = document.createElement("h1");
   title.textContent = "ovOne";
 
@@ -253,7 +294,7 @@ function createSplash(onSkip: () => void): HTMLElement {
   mark.className = "mvp-splash-mark";
   mark.textContent = "one over AI, one over world";
 
-  poster.append(title, mark);
+  poster.append(logoScene, title, mark);
   screen.append(poster);
   return screen;
 }

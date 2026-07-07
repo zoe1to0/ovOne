@@ -31,70 +31,154 @@
         place-content: center;
         padding: 24px;
         text-align: center;
-        background: #fbf5e8;
+        background: #f8f7f1;
         cursor: pointer;
       }
 
       .mvp-splash-poster {
-        width: min(72vw, 260px);
-        min-height: 360px;
+        width: min(70vw, 248px);
+        min-height: 372px;
         display: grid;
+        align-content: center;
         place-content: center;
-        gap: 18px;
-        padding: 28px 22px;
+        gap: 14px;
+        padding: 34px 22px;
         box-sizing: border-box;
-        border: 1px solid rgba(158, 139, 111, 0.24);
-        border-radius: 18px;
-        background: #fffaf0;
-        box-shadow: 0 22px 58px rgba(78, 105, 116, 0.16);
+        border: 1.5px solid rgba(28, 32, 33, 0.72);
+        border-radius: 14px;
+        background: #fffef8;
+        box-shadow: 0 16px 42px rgba(84, 101, 104, 0.08);
+      }
+
+      .mvp-splash-logo-scene {
+        position: relative;
+        width: 148px;
+        height: 116px;
+        display: grid;
+        place-items: center;
+        justify-self: center;
+      }
+
+      .mvp-splash-brush {
+        position: absolute;
+        inset: 15px 16px 8px 10px;
+        border-radius: 47% 53% 48% 52% / 58% 42% 60% 40%;
+        background: rgba(204, 245, 244, 0.72);
+        filter: blur(0.2px);
+        transform: rotate(-12deg);
+      }
+
+      .mvp-splash-brush::before,
+      .mvp-splash-brush::after {
+        position: absolute;
+        content: "";
+        background: inherit;
+      }
+
+      .mvp-splash-brush::before {
+        width: 72px;
+        height: 42px;
+        left: -10px;
+        top: 25px;
+        border-radius: 55% 45% 62% 38%;
+        transform: rotate(-13deg);
+      }
+
+      .mvp-splash-brush::after {
+        width: 56px;
+        height: 54px;
+        right: 2px;
+        bottom: -9px;
+        border-radius: 41% 59% 46% 54%;
+        transform: rotate(19deg);
+      }
+
+      .mvp-splash-logo {
+        position: relative;
+        z-index: 1;
+        color: #101314;
+        font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
+        font-size: 2.06rem;
+        font-weight: 700;
+        letter-spacing: 0;
       }
 
       .mvp-splash h1 {
         margin: 0;
         font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
-        font-size: 2.7rem;
+        font-size: 2.05rem;
         font-weight: 700;
         letter-spacing: 0;
       }
 
       .mvp-splash p {
         margin: 0;
-        color: #6a746f;
+        color: #525d5c;
         font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
-        font-size: 0.98rem;
+        font-size: 0.9rem;
       }
 
       .mvp-trial-entry {
         min-height: 100vh;
         display: grid;
         place-content: center;
-        gap: 16px;
         padding: 24px;
         box-sizing: border-box;
         text-align: center;
-        background: #fbfbf8;
+        background: #f8f7f1;
+      }
+
+      .mvp-trial-entry-card {
+        width: min(82vw, 330px);
+        display: grid;
+        justify-items: center;
+        gap: 16px;
+        padding: 34px 28px 30px;
+        box-sizing: border-box;
+        border: 1px solid rgba(130, 154, 161, 0.22);
+        border-radius: 24px;
+        background: rgba(255, 254, 248, 0.94);
+        box-shadow: 0 18px 50px rgba(78, 100, 108, 0.1);
+      }
+
+      .mvp-trial-entry-brand {
+        display: inline-grid;
+        place-items: center;
+        min-width: 82px;
+        min-height: 42px;
+        border-radius: 999px;
+        background: rgba(212, 243, 246, 0.78);
+        color: #1d3034;
+        font-family: "Comic Sans MS", "Segoe Print", "Bradley Hand ITC", cursive;
+        font-size: 1.18rem;
+        font-weight: 700;
       }
 
       .mvp-trial-entry h1 {
         margin: 0;
-        font-size: 2.25rem;
+        color: #1f292b;
+        font-size: 1.5rem;
+        letter-spacing: 0;
       }
 
       .mvp-trial-entry p {
         margin: 0;
-        color: #4f5d58;
-        line-height: 1.5;
+        max-width: 240px;
+        color: #657170;
+        font-size: 0.94rem;
+        line-height: 1.7;
       }
 
       .mvp-trial-entry-button {
         min-height: 44px;
-        border: 0;
+        border: 1px solid rgba(132, 185, 196, 0.46);
         border-radius: 999px;
-        padding: 10px 20px;
-        background: #1f2528;
-        color: #fff;
+        padding: 10px 24px;
+        background: #d9f0f6;
+        color: #1e373d;
         cursor: pointer;
-        box-shadow: 0 10px 24px rgba(31, 37, 40, 0.14);
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(73, 126, 138, 0.12);
       }
 
       .mvp-shell {

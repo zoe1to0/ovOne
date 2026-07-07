@@ -20,25 +20,39 @@ describe("Mobile MVP Product Shell", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
+    assert.match(adapter, /const SPLASH_DWELL_MS = 1800/);
+    assert.match(adapter, /logo\.textContent = "ovO"/);
     assert.match(adapter, /title\.textContent = "ovOne"/);
     assert.match(adapter, /mark\.textContent = "one over AI, one over world"/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
-    assert.match(adapter, /window\.setTimeout\(finishSplash, 1600\)/);
+    assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
+    assert.match(html, /\.mvp-splash \{[\s\S]*background: #f8f7f1;/);
     assert.match(html, /\.mvp-splash-poster \{/);
+    assert.match(html, /\.mvp-splash-brush \{/);
+    assert.match(html, /\.mvp-splash-logo \{/);
   });
 
-  it("gates the browser app behind a local Trial Entry screen", () => {
+  it("shows Splash before the local Trial Entry screen", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /loadLocalTrialSession\(sessionStorage\)/);
+    assert.match(adapter, /const renderTrialEntryAfterSplash = \(\): void => \{/);
+    assert.match(adapter, /mountRoot\.replaceChildren\(createSplash\(finishSplash\)\)/);
+    assert.match(adapter, /renderTrialEntryAfterSplash\(\)/);
     assert.match(adapter, /createTrialEntryScreen/);
+    assert.match(adapter, /enterMainApp\(false, false\)/);
     assert.match(adapter, /start\.textContent = "开始试用 ovOne"/);
     assert.match(adapter, /createLocalTrialSession\(sessionStorage\)/);
     assert.match(adapter, /createBrowserWorldStorage\(sessionStorage\)/);
     assert.match(adapter, /touchLocalTrialSession\(sessionStorage\)/);
+    assert.match(adapter, /brand\.textContent = "ovOne"/);
+    assert.match(adapter, /title\.textContent = "开始试用 ovOne"/);
+    assert.match(adapter, /copy\.textContent = "这是本地试用体验。你的世界、聊天和记忆会保存在当前设备上。"/);
     assert.match(html, /\.mvp-trial-entry \{/);
+    assert.match(html, /\.mvp-trial-entry-card \{/);
+    assert.match(html, /\.mvp-trial-entry-brand \{/);
     assert.match(html, /\.mvp-trial-entry-button \{/);
   });
 
