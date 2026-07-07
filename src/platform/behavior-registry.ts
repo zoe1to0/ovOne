@@ -279,6 +279,7 @@ export type SemanticMobileState = {
   contactDetailDraft: ContactDetailDraft | null;
   linkedAIDisconnectConfirmation: LinkedAIDisconnectConfirmation | null;
   worldCreationTransition: WorldCreationTransition | null;
+  isAwaitingAIResponse?: boolean;
   splashVisible: boolean;
   view: MinimalProductShellView;
 };

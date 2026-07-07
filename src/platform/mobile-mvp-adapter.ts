@@ -123,6 +123,7 @@ function mountResolvedChatShell(
     contactDetailDraft: null,
     linkedAIDisconnectConfirmation: null,
     worldCreationTransition: null,
+    isAwaitingAIResponse: false,
     splashVisible: true,
     view: initialView
   };
@@ -204,11 +205,21 @@ function createInteractionController(
 
   const dispatchSubmitMessage = async (action: InteractionAction): Promise<void> => {
     const stateTransition = registry.execute(action, state);
-    const flowResult = await flowExecutor.runAsync(action, { shell, state });
-    if (!stateTransition.shouldRender && !flowResult.shouldRender) {
-      return;
+    if (stateTransition.shouldRender) {
+      state.isAwaitingAIResponse = true;
+      commitStateTransition(state, render);
     }
-    commitStateTransition(state, render);
+    try {
+      const flowResult = await flowExecutor.runAsync(action, { shell, state });
+      state.isAwaitingAIResponse = false;
+      if (!stateTransition.shouldRender && !flowResult.shouldRender) {
+        return;
+      }
+      commitStateTransition(state, render);
+    } catch {
+      state.isAwaitingAIResponse = false;
+      commitStateTransition(state, render);
+    }
   };
 
   return Object.freeze({ dispatch });
@@ -341,12 +352,13 @@ function createChatList(
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-list-screen";
 
-  screen.append(createHomeHeader(controller));
+  screen.append(createHomeHeader(snapshot, controller));
 
   const list = document.createElement("ol");
   list.className = "mvp-chat-list";
 
-  for (const chat of chatsFromSnapshot(snapshot, state.currentWorldId)) {
+  const chats = chatsFromSnapshot(snapshot, state.currentWorldId);
+  for (const chat of chats) {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
@@ -355,11 +367,18 @@ function createChatList(
 
     button.append(
       createAvatarWithStatus(createChatAvatar(snapshot, chat), true),
-      createChatListText(chatTitle(snapshot, chat), chatPreview(chat)),
+      createChatListText(chatTitle(snapshot, chat), chatPreview(chat), chatKindLabel(snapshot, chat)),
       createChatMeta(snapshot, chat)
     );
     item.append(button);
     list.append(item);
+  }
+
+  if (chats.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "mvp-empty-state";
+    empty.textContent = "暂无聊天。点击右上角 + 创建群聊，或在联系人里打开私聊。";
+    screen.append(empty);
   }
 
   screen.append(list);
@@ -374,6 +393,7 @@ function createChatView(
   const isOvoChat = isOvoChatId(state.activeChatId);
   const chat = isOvoChat ? null : chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
   const title = isOvoChat ? "ovO" : chat ? chatHeaderTitle(snapshot, chat) : "聊天";
+  const context = isOvoChat ? "世界入口" : chat ? chatContextLabel(snapshot, chat) : "当前聊天";
 
   const screen = document.createElement("section");
   screen.className = "mvp-screen mvp-chat-view";
@@ -388,7 +408,7 @@ function createChatView(
   heading.className = "mvp-chat-title";
   heading.append(
     createAvatarWithStatus(isOvoChat ? createOvoAvatar() : createChatAvatar(snapshot, chat), true),
-    createNameBlock(title, "在线")
+    createNameBlock(title, context)
   );
 
   const menu = document.createElement("button");
@@ -404,8 +424,15 @@ function createChatView(
 
   const messages = document.createElement("ol");
   messages.className = "mvp-message-stream";
-  for (const message of isOvoChat ? [] : (chat?.messages ?? [])) {
+  const chatMessages = isOvoChat ? [] : (chat?.messages ?? []);
+  if (chatMessages.length === 0) {
+    messages.append(createEmptyMessageHint(chat ? chatKindLabel(snapshot, chat) : "聊天"));
+  }
+  for (const message of chatMessages) {
     messages.append(createMessageItem(snapshot, message));
+  }
+  if (state.isAwaitingAIResponse && chat) {
+    messages.append(createAiLoadingMessage(snapshot));
   }
 
   screen.append(header, messages, createComposer(snapshot, state, controller));
@@ -451,7 +478,7 @@ function createComposer(
     const input = document.createElement("input");
     input.name = "message";
     input.autocomplete = "off";
-    input.placeholder = "输入消息";
+    input.placeholder = composerPlaceholder(snapshot, state);
     bindTextInput(input, controller);
 
     const submit = document.createElement("button");
@@ -473,6 +500,7 @@ function createComposer(
     form.append(modeButton);
   }
 
+  form.append(createMemoryHint());
   return form;
 }
 
@@ -713,7 +741,7 @@ function createOvoIndicator(snapshot: WorldSnapshot): HTMLElement {
   return indicator;
 }
 
-function createHomeHeader(controller: InteractionController): HTMLElement {
+function createHomeHeader(snapshot: WorldSnapshot, controller: InteractionController): HTMLElement {
   const header = document.createElement("header");
   header.className = "mvp-home-header";
 
@@ -730,7 +758,11 @@ function createHomeHeader(controller: InteractionController): HTMLElement {
   dot.className = "mvp-notification-dot";
   dot.setAttribute("aria-label", "有新动态");
 
-  brand.append(title, dot);
+  const world = document.createElement("span");
+  world.className = "mvp-current-world";
+  world.textContent = `当前世界：${snapshot.worldMeta.title}`;
+
+  brand.append(title, dot, world);
 
   const add = document.createElement("button");
   add.type = "button";
@@ -2154,15 +2186,43 @@ function createMessageItem(snapshot: WorldSnapshot, message: WorldChatMessage): 
   const mine = message.authorActorId === snapshot.worldMeta.ownerActorId;
   item.className = mine ? "mvp-message-row is-mine" : "mvp-message-row";
 
+  const messageBlock = document.createElement("span");
+  messageBlock.className = "mvp-message-block";
+
+  if (!mine) {
+    const speaker = document.createElement("strong");
+    speaker.className = "mvp-message-speaker";
+    speaker.textContent = messageAuthorName(snapshot, message.authorActorId);
+    messageBlock.append(speaker);
+  }
+
   const bubble = document.createElement("p");
-  bubble.className = "mvp-message";
-  bubble.textContent = message.text;
+  bubble.className = isProviderFailureMessage(message.text) ? "mvp-message is-error" : "mvp-message";
+  bubble.textContent = readableMessageText(message.text);
+  messageBlock.append(bubble);
 
   if (mine) {
-    item.append(bubble, createAvatarWithStatus(createUserAvatar(), true));
+    item.append(messageBlock, createAvatarWithStatus(createUserAvatar(), true));
   } else {
-    item.append(createAvatarWithStatus(createChatAvatar(snapshot, null), true), bubble);
+    item.append(createAvatarWithStatus(createAvatarForActor(snapshot, message.authorActorId), true), messageBlock);
   }
+  return item;
+}
+
+function createEmptyMessageHint(label: string): HTMLElement {
+  const item = document.createElement("li");
+  item.className = "mvp-message-empty";
+  item.textContent = `${label}还没有消息，发一句话开始试用。`;
+  return item;
+}
+
+function createAiLoadingMessage(snapshot: WorldSnapshot): HTMLElement {
+  const item = document.createElement("li");
+  item.className = "mvp-message-row";
+  const bubble = document.createElement("p");
+  bubble.className = "mvp-message is-loading";
+  bubble.textContent = "AI 回复中…";
+  item.append(createAvatarWithStatus(createChatAvatar(snapshot, null), true), bubble);
   return item;
 }
 
@@ -2184,6 +2244,13 @@ function createChatAvatar(snapshot: WorldSnapshot, chat: WorldChatSession | null
   const avatar = document.createElement("span");
   avatar.className = "mvp-avatar";
   avatar.textContent = chatTitle(snapshot, chat).slice(0, 1);
+  return avatar;
+}
+
+function createAvatarForActor(snapshot: WorldSnapshot, actorId: string): HTMLElement {
+  const avatar = document.createElement("span");
+  avatar.className = "mvp-avatar";
+  avatar.textContent = messageAuthorName(snapshot, actorId).slice(0, 1);
   return avatar;
 }
 
@@ -2215,9 +2282,13 @@ function createAvatarWithStatus(avatar: HTMLElement, online: boolean): HTMLEleme
   return wrap;
 }
 
-function createChatListText(title: string, preview: string): HTMLElement {
+function createChatListText(title: string, preview: string, label: string): HTMLElement {
   const block = document.createElement("span");
   block.className = "mvp-chat-copy";
+
+  const badge = document.createElement("em");
+  badge.className = "mvp-chat-kind";
+  badge.textContent = label;
 
   const name = document.createElement("strong");
   name.textContent = title;
@@ -2225,7 +2296,7 @@ function createChatListText(title: string, preview: string): HTMLElement {
   const last = document.createElement("span");
   last.textContent = preview;
 
-  block.append(name, last);
+  block.append(badge, name, last);
   return block;
 }
 
@@ -2277,8 +2348,45 @@ function chatHeaderTitle(snapshot: WorldSnapshot, chat: WorldChatSession | null)
   return `${chatTitle(snapshot, chat)}（${groupMemberCount(snapshot, chat)}）`;
 }
 
+function chatKindLabel(snapshot: WorldSnapshot, chat: WorldChatSession | null): string {
+  return isGroupChat(snapshot, chat) ? "群聊" : "私聊";
+}
+
+function chatContextLabel(snapshot: WorldSnapshot, chat: WorldChatSession | null): string {
+  return isGroupChat(snapshot, chat)
+    ? `群聊 · 当前世界：${snapshot.worldMeta.title}`
+    : `私聊 · 当前世界：${snapshot.worldMeta.title}`;
+}
+
 function chatPreview(chat: WorldChatSession): string {
   return chat.messages.at(-1)?.text ?? "开始聊天";
+}
+
+function composerPlaceholder(snapshot: WorldSnapshot, state: SemanticMobileState): string {
+  const chat = chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
+  return isGroupChat(snapshot, chat) ? "在群聊中发送消息" : "给 AI 发送消息";
+}
+
+function createMemoryHint(): HTMLElement {
+  const hint = document.createElement("p");
+  hint.className = "mvp-memory-hint";
+  hint.textContent = "试用记忆：输入「记住：...」可让当前世界中的对应 AI 记住";
+  return hint;
+}
+
+function messageAuthorName(snapshot: WorldSnapshot, actorId: string): string {
+  if (actorId === snapshot.worldMeta.ownerActorId) {
+    return "你";
+  }
+  return contactByActorId(snapshot, actorId)?.displayName ?? "AI";
+}
+
+function isProviderFailureMessage(text: string): boolean {
+  return /^AI [a-z]+ error:/i.test(text);
+}
+
+function readableMessageText(text: string): string {
+  return text.replace(/^AI [a-z]+ error:\s*/i, "AI 回复失败：");
 }
 
 function contactsFromSnapshot(snapshot: WorldSnapshot, worldId = snapshot.worldMeta.id): WorldContact[] {

@@ -5,7 +5,7 @@ Last audited: 2026-06-29.
 ## Current Known Engineering Issues
 
 - Disabled explicit actions exist for creation/chat menu flows but do not implement product behavior yet.
-- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, and local trial session entry is implemented. The current runtime is not yet Trial MVP complete because the Trial UI pass still needs implementation.
+- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, and local trial session entry plus the first Trial UI usability pass are implemented. Further visual polish can continue, but v0.17 intentionally did not change runtime/provider/memory architecture.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.

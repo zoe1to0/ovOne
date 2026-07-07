@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-07: Trial UI Pass v1 added
+
+Decision: Trial MVP now has a focused usability pass for external testing without changing provider, memory, or runtime architecture.
+
+Rules:
+
+- Trial Entry remains the local-only trial entry screen and now has a more presentable product/action layout.
+- The main chat list shows the current world and keeps the ovO/world entry visible.
+- Chat list rows label private chats and group chats separately and show an empty-state guide.
+- Chat pages show private/group context, clearer composer placeholders, lightweight memory-command guidance, pending AI response text, readable AI error text, and AI responder names for non-user messages.
+- Group multi-AI burst, provider bridge, and AI-scoped memory behavior remain unchanged.
+- No account login, file upload, group rules injection, provider secret exposure, or new settings complexity was added.
+
 ## 2026-07-07: Local Trial Session v1 added
 
 Decision: Browser entry now requires a local active trial session before entering the main ovOne app shell.

@@ -50,4 +50,4 @@ Trial MVP principle: build a usable app skeleton with stable product architectur
 2. v0.14 Real Chat Runtime: active private/group chat sends now call AI Provider Bridge; private chats receive one AI response and group chats use a bounded 1-3 AI burst.
 3. v0.15 Minimal World Memory: explicit `记住：` / `记住:` / `remember:` commands create AI-scoped memories keyed by `worldId + ownerWorldContactId`; prompts read at most 10 active memories for the responding AI only.
 4. v0.16 Local Trial Session: browser entry now creates/loads a local-only active trial session before mounting the main app; worlds/chats/memory and provider secrets remain outside the session.
-5. v0.17 Trial UI Pass
+5. v0.17 Trial UI Pass: current-world visibility, chat type labels, chat context labels, readable send/loading/error states, group responder names, memory hint, and empty-state guidance make the app usable enough for external trial without changing runtime logic.

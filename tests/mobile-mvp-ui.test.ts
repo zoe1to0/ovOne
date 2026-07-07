@@ -125,22 +125,27 @@ describe("Mobile MVP Product Shell", () => {
     const registry = readFileSync("src/platform/behavior-registry.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
 
-    assert.match(adapter, /screen\.append\(createHomeHeader\(controller\)\)/);
-    assert.match(adapter, /function createHomeHeader\(controller: InteractionController\)/);
+    assert.match(adapter, /screen\.append\(createHomeHeader\(snapshot, controller\)\)/);
+    assert.match(adapter, /function createHomeHeader\(snapshot: WorldSnapshot, controller: InteractionController\)/);
+    assert.match(adapter, /world\.textContent = `当前世界：\$\{snapshot\.worldMeta\.title\}`/);
     assert.match(adapter, /bindControllerAction\(brand, controller, \{ type: "OPEN_OVO_CHAT" \}\)/);
     assert.match(adapter, /bindControllerAction\(add, controller, \{ type: "OPEN_ADD_MENU" \}\)/);
     assert.match(adapter, /function createAddMenu/);
     assert.match(adapter, /createMenuButton\("创建世界", controller, \{ type: "OPEN_CREATE_WORLD_DRAFT" \}\)/);
     assert.match(adapter, /function createOverlayLayer/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
-    assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
+    assert.match(adapter, /createChatListText\(chatTitle\(snapshot, chat\), chatPreview\(chat\), chatKindLabel\(snapshot, chat\)\)/);
     assert.doesNotMatch(adapter, /createChatListText\(chatHeaderTitle\(snapshot, chat\), chatPreview\(chat\)\)/);
+    assert.match(adapter, /empty\.textContent = "暂无聊天。点击右上角 \+ 创建群聊，或在联系人里打开私聊。"/);
     assert.match(registry, /openOverlay\(state, "ovo-world-menu"\)/);
     assert.match(adapter, /function createOvoWorldMenu\(controller: InteractionController\)/);
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
     assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 42px minmax\(0, 1fr\) 42px;/);
     assert.match(html, /\.mvp-home-brand \{[\s\S]*justify-self: center;/);
+    assert.match(html, /\.mvp-current-world \{/);
+    assert.match(html, /\.mvp-chat-kind \{/);
+    assert.match(html, /\.mvp-empty-state,/);
   });
 
   it("renders chat pages with back, name, menu, scroll messages, fixed input, and message avatars", () => {
@@ -158,11 +163,22 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /createAvatarWithStatus\(createUserAvatar\(\), true\)/);
     assert.match(adapter, /createAvatarWithStatus\(createChatAvatar\(snapshot, chat\), true\)/);
     assert.match(adapter, /const title = isOvoChat \? "ovO" : chat \? chatHeaderTitle\(snapshot, chat\) : "聊天"/);
+    assert.match(adapter, /const context = isOvoChat \? "世界入口" : chat \? chatContextLabel\(snapshot, chat\) : "当前聊天"/);
+    assert.match(adapter, /createNameBlock\(title, context\)/);
     assert.match(adapter, /function chatHeaderTitle\(snapshot: WorldSnapshot, chat: WorldChatSession \| null\): string \{[\s\S]*return `\$\{chatTitle\(snapshot, chat\)\}（\$\{groupMemberCount\(snapshot, chat\)\}）`;/);
     assert.match(adapter, /function groupMemberCount\(snapshot: WorldSnapshot, chat: WorldChatSession \| null\): number \{[\s\S]*return group \? group\.actorIds\.length \+ 1 : 0;/);
+    assert.match(adapter, /input\.placeholder = composerPlaceholder\(snapshot, state\)/);
+    assert.match(adapter, /hint\.textContent = "试用记忆：输入「记住：\.\.\.」可让当前世界中的对应 AI 记住"/);
+    assert.match(adapter, /bubble\.textContent = "AI 回复中…"/);
+    assert.match(adapter, /speaker\.textContent = messageAuthorName\(snapshot, message\.authorActorId\)/);
+    assert.match(adapter, /AI 回复失败：/);
     assert.match(html, /\.mvp-message-stream \{[\s\S]*grid-auto-flow: row;[\s\S]*overflow-y: auto;[\s\S]*overscroll-behavior: contain;/);
     assert.match(html, /\.mvp-composer \{[\s\S]*position: fixed;[\s\S]*bottom: 64px;/);
     assert.match(html, /\.mvp-avatar-wrap \.mvp-presence-dot \{[\s\S]*position: absolute;/);
+    assert.match(html, /\.mvp-message-speaker \{/);
+    assert.match(html, /\.mvp-message\.is-error \{/);
+    assert.match(html, /\.mvp-message\.is-loading \{/);
+    assert.match(html, /\.mvp-memory-hint \{/);
     assert.equal(html.includes("column-reverse"), false);
     assert.equal(html.includes("row-reverse"), false);
   });
@@ -334,7 +350,8 @@ describe("Mobile MVP Product Shell", () => {
 
     assert.match(adapter, /function chatsFromSnapshot\(snapshot: WorldSnapshot, worldId = snapshot\.worldMeta\.id\)/);
     assert.match(adapter, /return resolveWorldChats\(worldId, snapshot\) as WorldChatSession\[\]/);
-    assert.match(adapter, /for \(const chat of chatsFromSnapshot\(snapshot, state\.currentWorldId\)\)/);
+    assert.match(adapter, /const chats = chatsFromSnapshot\(snapshot, state\.currentWorldId\)/);
+    assert.match(adapter, /for \(const chat of chats\)/);
     assert.equal(adapter.includes("contactIds: ["), false);
     assert.equal(adapter.includes("conversations:"), false);
     assert.equal(adapter.includes("messages: ["), false);
