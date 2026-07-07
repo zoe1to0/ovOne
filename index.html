@@ -31,7 +31,7 @@
         padding: 0;
         box-sizing: border-box;
         text-align: center;
-        background: #dceef8;
+        background: #f8fbf7;
         cursor: pointer;
       }
 
@@ -54,48 +54,50 @@
 
       .mvp-splash-brush {
         position: relative;
-        width: 158px;
-        height: 118px;
+        width: 166px;
+        height: 124px;
         display: grid;
         grid-row: 2;
         grid-column: 1;
-        clip-path: polygon(12% 38%, 26% 20%, 45% 11%, 58% 18%, 74% 13%, 83% 28%, 91% 46%, 86% 66%, 73% 78%, 56% 91%, 39% 82%, 22% 88%, 13% 70%, 5% 56%);
-        border-radius: 42% 58% 45% 55% / 53% 43% 57% 47%;
+        overflow: hidden;
+        border-radius: 51% 49% 47% 53% / 44% 53% 47% 56%;
         background:
-          linear-gradient(155deg, rgba(219, 251, 249, 0) 0 15%, rgba(207, 245, 244, 0.68) 16% 38%, rgba(216, 250, 249, 0.46) 39% 54%, rgba(202, 241, 241, 0.64) 55% 76%, rgba(219, 251, 249, 0) 77%),
-          radial-gradient(circle at 34% 36%, rgba(219, 252, 249, 0.78), rgba(202, 242, 242, 0.55) 48%, rgba(207, 245, 244, 0.28) 76%);
-        filter: blur(0.1px);
-        opacity: 0.92;
-        transform: rotate(-10deg);
+          radial-gradient(ellipse at 31% 36%, rgba(215, 251, 248, 0.86) 0 34%, rgba(215, 251, 248, 0) 58%),
+          radial-gradient(ellipse at 63% 32%, rgba(205, 243, 244, 0.72) 0 31%, rgba(205, 243, 244, 0) 57%),
+          radial-gradient(ellipse at 52% 67%, rgba(213, 250, 247, 0.74) 0 38%, rgba(213, 250, 247, 0) 63%),
+          radial-gradient(ellipse at 23% 64%, rgba(201, 240, 243, 0.56) 0 26%, rgba(201, 240, 243, 0) 54%),
+          linear-gradient(158deg, rgba(218, 252, 249, 0) 8%, rgba(207, 244, 244, 0.58) 26% 72%, rgba(218, 252, 249, 0) 90%);
+        filter: blur(0.35px);
+        opacity: 0.9;
+        transform: rotate(-8deg);
       }
 
       .mvp-splash-brush::before,
       .mvp-splash-brush::after {
         position: absolute;
         content: "";
-        background: inherit;
+        border-radius: 999px;
+        background: rgba(209, 247, 246, 0.5);
       }
 
       .mvp-splash-brush::before {
-        width: 132px;
-        height: 42px;
-        left: -3px;
-        top: 27px;
-        clip-path: polygon(0 42%, 19% 20%, 43% 13%, 70% 21%, 100% 9%, 92% 61%, 68% 76%, 39% 69%, 17% 89%);
-        border-radius: 56% 44% 62% 38% / 52% 46% 54% 48%;
-        opacity: 0.64;
-        transform: rotate(-21deg);
+        width: 128px;
+        height: 28px;
+        left: 6px;
+        top: 35px;
+        opacity: 0.48;
+        filter: blur(4px);
+        transform: rotate(-19deg) skewX(-10deg);
       }
 
       .mvp-splash-brush::after {
         width: 118px;
-        height: 46px;
-        right: -5px;
-        bottom: 21px;
-        clip-path: polygon(4% 25%, 28% 8%, 51% 20%, 76% 4%, 100% 31%, 88% 70%, 62% 64%, 37% 87%, 10% 73%);
-        border-radius: 42% 58% 44% 56% / 48% 55% 45% 52%;
-        opacity: 0.58;
-        transform: rotate(18deg);
+        height: 30px;
+        right: 5px;
+        bottom: 32px;
+        opacity: 0.42;
+        filter: blur(5px);
+        transform: rotate(17deg) skewX(12deg);
       }
 
       .mvp-splash-logo {
@@ -105,7 +107,7 @@
         grid-column: 1;
         display: inline-flex;
         align-items: center;
-        gap: 0.17em;
+        gap: 0.2em;
         color: #101314;
         font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;
         font-size: 2.28rem;
@@ -130,7 +132,9 @@
       }
 
       .mvp-splash-logo-v {
-        transform: rotate(4deg) translateY(2px);
+        font-size: 0.78em;
+        font-weight: 800;
+        transform: rotate(4deg) translateY(4px);
       }
 
       .mvp-splash-logo-big-o {
@@ -152,21 +156,21 @@
       }
 
       .mvp-splash-logo-small-o::before {
-        width: 0.38em;
-        height: 0.42em;
-        left: 0.09em;
-        top: 0.17em;
+        width: 0.36em;
+        height: 0.39em;
+        left: 0.1em;
+        top: 0.19em;
         border-radius: 58% 42% 55% 45% / 46% 54% 43% 57%;
         transform: rotate(13deg);
       }
 
       .mvp-splash-logo-big-o::before {
-        width: 0.54em;
-        height: 0.64em;
-        left: 0.05em;
-        top: 0.04em;
-        border-radius: 47% 53% 43% 57% / 55% 45% 58% 42%;
-        transform: rotate(-5deg);
+        width: 0.47em;
+        height: 0.52em;
+        left: 0.1em;
+        top: 0.1em;
+        border-radius: 49% 51% 45% 55% / 54% 46% 57% 43%;
+        transform: rotate(-7deg);
       }
 
       .mvp-splash-mark {

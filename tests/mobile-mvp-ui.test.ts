@@ -37,12 +37,13 @@ describe("Mobile MVP Product Shell", () => {
     assert.doesNotMatch(splashBody, /ovOne/);
     assert.doesNotMatch(html, /\.mvp-splash-poster \{/);
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
-    assert.match(html, /\.mvp-splash \{[\s\S]*background: #dceef8;/);
+    assert.match(html, /\.mvp-splash \{[\s\S]*background: #f8fbf7;/);
     assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;/);
     assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*grid-template-rows: 1fr auto 32px auto 1fr;[\s\S]*padding: 14px 16px;[\s\S]*background: #fffaf0;/);
-    assert.match(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
-    assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.17em;/);
+    assert.match(html, /\.mvp-splash-brush \{[\s\S]*radial-gradient\(ellipse/);
+    assert.doesNotMatch(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
+    assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.2em;/);
     assert.match(html, /\.mvp-splash-mark \{[\s\S]*grid-row: 4;/);
     assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 900;/);
     assert.match(html, /\.mvp-splash-logo-big-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 800;/);
