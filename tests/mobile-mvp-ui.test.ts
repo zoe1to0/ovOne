@@ -44,7 +44,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
     assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.17em;/);
     assert.match(html, /\.mvp-splash-mark \{[\s\S]*grid-row: 4;/);
-    assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*font-weight: 900;/);
+    assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 900;/);
+    assert.match(html, /\.mvp-splash-logo-big-o \{[\s\S]*color: transparent;[\s\S]*font-weight: 800;/);
+    assert.match(html, /\.mvp-splash-logo-small-o::before,[\s\S]*\.mvp-splash-logo-big-o::before \{[\s\S]*background: #101314;/);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {

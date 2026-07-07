@@ -121,9 +121,12 @@
       }
 
       .mvp-splash-logo-small-o {
+        position: relative;
+        width: 0.54em;
+        height: 0.62em;
+        color: transparent;
         font-weight: 900;
         transform: rotate(-8deg) translateY(1px);
-        text-shadow: 0.025em 0 #101314, -0.012em 0 #101314;
       }
 
       .mvp-splash-logo-v {
@@ -131,8 +134,39 @@
       }
 
       .mvp-splash-logo-big-o {
+        position: relative;
+        width: 0.64em;
+        height: 0.72em;
+        color: transparent;
         font-weight: 800;
         transform: rotate(-3deg);
+      }
+
+      .mvp-splash-logo-small-o::before,
+      .mvp-splash-logo-big-o::before {
+        position: absolute;
+        content: "";
+        display: block;
+        background: #101314;
+        box-shadow: 0.012em 0.018em 0 rgba(16, 19, 20, 0.22);
+      }
+
+      .mvp-splash-logo-small-o::before {
+        width: 0.38em;
+        height: 0.42em;
+        left: 0.09em;
+        top: 0.17em;
+        border-radius: 58% 42% 55% 45% / 46% 54% 43% 57%;
+        transform: rotate(13deg);
+      }
+
+      .mvp-splash-logo-big-o::before {
+        width: 0.54em;
+        height: 0.64em;
+        left: 0.05em;
+        top: 0.04em;
+        border-radius: 47% 53% 43% 57% / 55% 45% 58% 42%;
+        transform: rotate(-5deg);
       }
 
       .mvp-splash-mark {
