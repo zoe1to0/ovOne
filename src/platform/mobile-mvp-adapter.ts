@@ -271,8 +271,8 @@ function createSplash(onSkip: () => void): HTMLElement {
   screen.className = "mvp-splash";
   screen.addEventListener("click", onSkip);
 
-  const composition = document.createElement("section");
-  composition.className = "mvp-splash-composition";
+  const phoneFrame = document.createElement("section");
+  phoneFrame.className = "mvp-splash-phone-frame";
 
   const brush = document.createElement("span");
   brush.className = "mvp-splash-brush";
@@ -299,8 +299,8 @@ function createSplash(onSkip: () => void): HTMLElement {
   mark.className = "mvp-splash-mark";
   mark.textContent = "one over AI, one over world";
 
-  composition.append(brush, logo, mark);
-  screen.append(composition);
+  phoneFrame.append(brush, logo, mark);
+  screen.append(phoneFrame);
   return screen;
 }
 

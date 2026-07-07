@@ -16,7 +16,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("WorldDomain.create"), false);
   });
 
-  it("shows a skippable full-viewport splash before entering chats", () => {
+  it("shows a skippable phone-frame splash before entering chats", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
     const splashBody = adapter.match(/function createSplash[\s\S]*?function createChatShell/)?.[0] ?? "";
@@ -27,6 +27,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /logoBigO\.textContent = "O"/);
     assert.match(adapter, /logo\.append\(logoSmallO, logoV, logoBigO\)/);
     assert.match(adapter, /mark\.textContent = "one over AI, one over world"/);
+    assert.match(adapter, /phoneFrame\.className = "mvp-splash-phone-frame"/);
+    assert.match(adapter, /phoneFrame\.append\(brush, logo, mark\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
@@ -34,9 +36,10 @@ describe("Mobile MVP Product Shell", () => {
     assert.doesNotMatch(html, /\.mvp-splash-poster \{/);
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
     assert.match(html, /\.mvp-splash \{[\s\S]*background: #faf9f4;/);
-    assert.match(html, /\.mvp-splash-composition \{/);
+    assert.match(html, /\.mvp-splash-phone-frame \{[\s\S]*height: min\(66vh, 470px\);[\s\S]*border: 2\.5px solid #151817;/);
     assert.match(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
     assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.17em;/);
+    assert.match(html, /\.mvp-splash-mark \{[\s\S]*grid-row: 4;/);
     assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*font-weight: 900;/);
   });
 
