@@ -1,6 +1,6 @@
 ﻿import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolveView } from "../src/platform/behavior-registry.js";
 
 describe("Mobile MVP Product Shell", () => {
@@ -16,42 +16,38 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("WorldDomain.create"), false);
   });
 
-  it("shows a skippable phone-frame splash before entering chats", () => {
+  it("shows a skippable prototype image splash before entering chats", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
     const splashBody = adapter.match(/function createSplash[\s\S]*?function createChatShell/)?.[0] ?? "";
 
     assert.match(adapter, /const SPLASH_DWELL_MS = 1800/);
-    assert.match(adapter, /function createSplashMarkSvg\(\): SVGSVGElement/);
-    assert.match(adapter, /document\.createElementNS\("http:\/\/www\.w3\.org\/2000\/svg", "svg"\)/);
-    assert.match(adapter, /svg\.classList\.add\("mvp-splash-mark-svg"\)/);
-    assert.match(adapter, /<text class="mvp-splash-svg-tagline"[\s\S]*one over AI, one over world<\/text>/);
     assert.match(adapter, /shell\.className = "mvp-shell mvp-splash-shell"/);
     assert.match(adapter, /viewport\.className = "mvp-splash-viewport"/);
-    assert.match(adapter, /viewport\.append\(mark\)/);
+    assert.match(adapter, /document\.createElement\("img"\)/);
+    assert.match(adapter, /artwork\.className = "mvp-splash-artwork"/);
+    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-prototype\.jpg"/);
+    assert.match(adapter, /viewport\.append\(artwork\)/);
     assert.match(adapter, /shell\.append\(viewport\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
     assert.doesNotMatch(splashBody, /ovOne/);
-    assert.doesNotMatch(splashBody, /jpg|jpeg|png|splash-prototype/);
+    assert.doesNotMatch(splashBody, /createElementNS|SVGSVGElement|mvp-splash-mark-svg|mvp-splash-svg-tagline|mvp-splash-crayon/);
     assert.doesNotMatch(html, /\.mvp-splash-poster \{/);
+    assert.doesNotMatch(html, /\.mvp-splash-mark-svg \{/);
+    assert.doesNotMatch(html, /\.mvp-splash-svg-tagline \{/);
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
     assert.match(html, /\.mvp-splash \{[\s\S]*background: #fbfcf8;/);
     assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;/);
     assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;/);
-    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*grid-template-rows: 1fr auto 1fr;[\s\S]*padding: 14px 16px;[\s\S]*background: #fffdf7;/);
-    assert.match(html, /\.mvp-splash-mark-svg \{[\s\S]*width: min\(94%, 390px\);[\s\S]*max-height: 86vh;/);
-    assert.match(html, /\.mvp-splash-svg-tagline \{[\s\S]*font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;/);
-    assert.match(adapter, /svg\.setAttribute\("viewBox", "0 0 360 620"\)/);
-    assert.match(adapter, /<filter id="mvp-splash-crayon"[\s\S]*<feTurbulence/);
-    assert.match(adapter, /<path d="M118 264[\s\S]*fill="#101314" \/>/);
-    assert.match(adapter, /<path d="M220 262[\s\S]*fill="#101314" \/>/);
-    assert.match(adapter, /<path d="M166 258 L180 276 L194 258"/);
+    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*place-items: center;[\s\S]*padding: 0;[\s\S]*background: #fffdf7;/);
+    assert.match(html, /\.mvp-splash-artwork \{[\s\S]*width: 100%;[\s\S]*height: 100vh;[\s\S]*object-fit: contain;[\s\S]*object-position: center;/);
     assert.match(html, /\.mvp-splash \{[\s\S]*overflow: hidden;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*overflow: hidden;/);
     assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
     assert.doesNotMatch(html, /clip-path: polygon/);
+    assert.equal(existsSync("public/assets/splash/ovone-splash-prototype.jpg"), true);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {

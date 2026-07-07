@@ -277,44 +277,16 @@ function createSplash(onSkip: () => void): HTMLElement {
   const viewport = document.createElement("section");
   viewport.className = "mvp-splash-viewport";
 
-  const mark = createSplashMarkSvg();
+  const artwork = document.createElement("img");
+  artwork.className = "mvp-splash-artwork";
+  artwork.src = "public/assets/splash/ovone-splash-prototype.jpg";
+  artwork.alt = "one over AI, one over world";
+  artwork.decoding = "async";
 
-  viewport.append(mark);
+  viewport.append(artwork);
   shell.append(viewport);
   screen.append(shell);
   return screen;
-}
-
-function createSplashMarkSvg(): SVGSVGElement {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.classList.add("mvp-splash-mark-svg");
-  svg.setAttribute("viewBox", "0 0 360 620");
-  svg.setAttribute("role", "img");
-  svg.setAttribute("aria-label", "ovO, one over AI, one over world");
-  svg.innerHTML = `
-    <defs>
-      <filter id="mvp-splash-crayon" x="-12%" y="-12%" width="124%" height="124%">
-        <feTurbulence type="fractalNoise" baseFrequency="0.042" numOctaves="2" seed="9" result="noise" />
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </defs>
-    <g class="mvp-splash-svg-brush" filter="url(#mvp-splash-crayon)" opacity="0.86">
-      <path d="M105 226 C110 197 134 172 166 158 C196 145 224 151 244 170 C270 195 269 234 248 264 C223 300 181 308 144 291 C113 277 95 254 105 226 Z" fill="#dffdf9" opacity="0.62" />
-      <path d="M72 277 C82 236 116 209 158 192 C202 175 242 188 261 220 C280 252 260 289 216 305 C179 318 139 300 105 313 C76 324 55 302 72 277 Z" fill="#cff4f2" opacity="0.5" />
-      <path d="M120 195 C149 164 195 144 229 162 C257 177 264 211 245 242 C226 273 188 282 149 270 C114 259 94 233 104 213 C108 205 113 200 120 195 Z" fill="#e8fffb" opacity="0.4" />
-      <path d="M90 315 C119 286 165 284 203 296 C233 306 244 328 223 346 C200 366 151 356 116 344 C85 333 70 324 90 315 Z" fill="#d4faf5" opacity="0.4" />
-      <path d="M51 282 C73 267 94 267 113 274" stroke="#d3f8f5" stroke-width="30" stroke-linecap="round" opacity="0.36" />
-      <path d="M236 169 C259 186 273 216 268 245" stroke="#d6faf7" stroke-width="22" stroke-linecap="round" opacity="0.31" />
-      <path d="M105 335 C131 344 166 346 199 337" stroke="#d5fbf7" stroke-width="18" stroke-linecap="round" opacity="0.24" />
-    </g>
-    <g class="mvp-splash-svg-face">
-      <path d="M118 264 C117 258 122 254 129 255 C135 255 139 259 138 266 C137 272 132 276 125 275 C120 274 117 269 118 264 Z" fill="#101314" />
-      <path d="M220 262 C219 252 226 246 238 248 C249 249 255 256 254 266 C253 277 244 282 232 279 C224 277 219 270 220 262 Z" fill="#101314" />
-      <path d="M166 258 L180 276 L194 258" fill="none" stroke="#101314" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round" />
-    </g>
-    <text class="mvp-splash-svg-tagline" x="180" y="430" text-anchor="middle">one over AI, one over world</text>
-  `;
-  return svg;
 }
 
 function createChatShell(
