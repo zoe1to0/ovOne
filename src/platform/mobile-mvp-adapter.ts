@@ -12,6 +12,7 @@ import {
   WORLD_EDITOR_LARGE_WORLDVIEW_CHANGE_WARNING,
   WORLD_MEMBER_REALITY_LOCKED_MESSAGE,
   WORLD_MEMBER_REMOVE_REALITY_LOCKED_MESSAGE,
+  parseExplicitMemoryCommand,
   resolveGroupAddMemberCandidates,
   resolveWorldChats,
   resolveWorldContacts
@@ -124,6 +125,7 @@ function mountResolvedChatShell(
     linkedAIDisconnectConfirmation: null,
     worldCreationTransition: null,
     isAwaitingAIResponse: false,
+    memoryNoticeMessage: null,
     splashVisible: true,
     view: initialView
   };
@@ -203,7 +205,7 @@ function createInteractionController(
     commitStateTransition(state, render);
   };
 
-  const dispatchSubmitMessage = async (action: InteractionAction): Promise<void> => {
+  const dispatchSubmitMessage = async (action: Extract<InteractionAction, { readonly type: "SUBMIT_MESSAGE" }>): Promise<void> => {
     const stateTransition = registry.execute(action, state);
     if (stateTransition.shouldRender) {
       state.isAwaitingAIResponse = true;
@@ -212,6 +214,7 @@ function createInteractionController(
     try {
       const flowResult = await flowExecutor.runAsync(action, { shell, state });
       state.isAwaitingAIResponse = false;
+      state.memoryNoticeMessage = parseExplicitMemoryCommand(action.text) ? "已记住" : null;
       if (!stateTransition.shouldRender && !flowResult.shouldRender) {
         return;
       }
@@ -501,6 +504,9 @@ function createComposer(
   }
 
   form.append(createMemoryHint());
+  if (state.memoryNoticeMessage) {
+    form.append(createMemoryNotice(state.memoryNoticeMessage));
+  }
   return form;
 }
 
@@ -2372,6 +2378,13 @@ function createMemoryHint(): HTMLElement {
   hint.className = "mvp-memory-hint";
   hint.textContent = "试用记忆：输入「记住：...」可让当前世界中的对应 AI 记住";
   return hint;
+}
+
+function createMemoryNotice(message: string): HTMLElement {
+  const notice = document.createElement("p");
+  notice.className = "mvp-memory-notice";
+  notice.textContent = message;
+  return notice;
 }
 
 function messageAuthorName(snapshot: WorldSnapshot, actorId: string): string {

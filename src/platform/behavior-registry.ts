@@ -280,6 +280,7 @@ export type SemanticMobileState = {
   linkedAIDisconnectConfirmation: LinkedAIDisconnectConfirmation | null;
   worldCreationTransition: WorldCreationTransition | null;
   isAwaitingAIResponse?: boolean;
+  memoryNoticeMessage?: string | null;
   splashVisible: boolean;
   view: MinimalProductShellView;
 };

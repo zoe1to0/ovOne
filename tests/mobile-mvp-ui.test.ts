@@ -169,6 +169,8 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /function groupMemberCount\(snapshot: WorldSnapshot, chat: WorldChatSession \| null\): number \{[\s\S]*return group \? group\.actorIds\.length \+ 1 : 0;/);
     assert.match(adapter, /input\.placeholder = composerPlaceholder\(snapshot, state\)/);
     assert.match(adapter, /hint\.textContent = "试用记忆：输入「记住：\.\.\.」可让当前世界中的对应 AI 记住"/);
+    assert.match(adapter, /state\.memoryNoticeMessage = parseExplicitMemoryCommand\(action\.text\) \? "已记住" : null;/);
+    assert.match(adapter, /notice\.className = "mvp-memory-notice"/);
     assert.match(adapter, /bubble\.textContent = "AI 回复中…"/);
     assert.match(adapter, /speaker\.textContent = messageAuthorName\(snapshot, message\.authorActorId\)/);
     assert.match(adapter, /AI 回复失败：/);
@@ -179,6 +181,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-message\.is-error \{/);
     assert.match(html, /\.mvp-message\.is-loading \{/);
     assert.match(html, /\.mvp-memory-hint \{/);
+    assert.match(html, /\.mvp-memory-notice \{/);
     assert.equal(html.includes("column-reverse"), false);
     assert.equal(html.includes("row-reverse"), false);
   });
