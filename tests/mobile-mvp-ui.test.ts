@@ -22,7 +22,10 @@ describe("Mobile MVP Product Shell", () => {
     const splashBody = adapter.match(/function createSplash[\s\S]*?function createChatShell/)?.[0] ?? "";
 
     assert.match(adapter, /const SPLASH_DWELL_MS = 1800/);
-    assert.match(adapter, /logo\.textContent = "ovO"/);
+    assert.match(adapter, /logoSmallO\.textContent = "o"/);
+    assert.match(adapter, /logoV\.textContent = "v"/);
+    assert.match(adapter, /logoBigO\.textContent = "O"/);
+    assert.match(adapter, /logo\.append\(logoSmallO, logoV, logoBigO\)/);
     assert.match(adapter, /mark\.textContent = "one over AI, one over world"/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
@@ -32,8 +35,9 @@ describe("Mobile MVP Product Shell", () => {
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
     assert.match(html, /\.mvp-splash \{[\s\S]*background: #faf9f4;/);
     assert.match(html, /\.mvp-splash-composition \{/);
-    assert.match(html, /\.mvp-splash-brush \{/);
-    assert.match(html, /\.mvp-splash-logo \{/);
+    assert.match(html, /\.mvp-splash-brush \{[\s\S]*clip-path: polygon/);
+    assert.match(html, /\.mvp-splash-logo \{[\s\S]*gap: 0\.17em;/);
+    assert.match(html, /\.mvp-splash-logo-small-o \{[\s\S]*font-weight: 900;/);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {

@@ -280,7 +280,20 @@ function createSplash(onSkip: () => void): HTMLElement {
 
   const logo = document.createElement("span");
   logo.className = "mvp-splash-logo";
-  logo.textContent = "ovO";
+
+  const logoSmallO = document.createElement("span");
+  logoSmallO.className = "mvp-splash-logo-letter mvp-splash-logo-small-o";
+  logoSmallO.textContent = "o";
+
+  const logoV = document.createElement("span");
+  logoV.className = "mvp-splash-logo-letter mvp-splash-logo-v";
+  logoV.textContent = "v";
+
+  const logoBigO = document.createElement("span");
+  logoBigO.className = "mvp-splash-logo-letter mvp-splash-logo-big-o";
+  logoBigO.textContent = "O";
+
+  logo.append(logoSmallO, logoV, logoBigO);
 
   const mark = document.createElement("p");
   mark.className = "mvp-splash-mark";
