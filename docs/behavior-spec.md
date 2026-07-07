@@ -51,6 +51,10 @@ UI event
 - Emoji and file picker follow-up item actions remain disabled/no-op for now.
 - `TEXT_INPUT` updates `inputDraft` but does not re-render yet.
 - Unknown `activeView` falls back to `CHAT_LIST`. This is a temporary fallback, not a final invariant.
+- First browser launch without a local trial session renders the Trial Entry screen.
+- Trial Entry shows `开始试用 ovOne`; clicking it creates a local active trial session and then enters the existing ovOne app shell.
+- Refresh/reopen with an existing local trial session enters the main app directly and updates `lastActiveAt`.
+- The local trial session is stored separately from worlds, chats, memory, provider config, and API keys.
 - ovO click opens the special ovO chat with stable `activeChatId = "ovo"`.
 - ovO chat uses the same `CHAT_VIEW` structure as other chats.
 - ovO chat composer kind is `ovo` and defaults to `world-button`.

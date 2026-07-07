@@ -1,5 +1,18 @@
 # ovOne Decision Log
 
+## 2026-07-07: Local Trial Session v1 added
+
+Decision: Browser entry now requires a local active trial session before entering the main ovOne app shell.
+
+Rules:
+
+- First launch without a local trial session renders the Trial Entry screen with `开始试用 ovOne`.
+- Starting trial creates a local-only session with `userId`, `mode = trial`, `displayName = Trial User`, timestamps, schema version, and active status.
+- Existing sessions are loaded on refresh/reopen and update `lastActiveAt`.
+- The session is stored separately from worlds, chats, memory, AI Provider Bridge config, and provider secrets.
+- Creating or touching the local trial session must not reset or delete existing local world data.
+- The local trial session is replaceable by future account login; login/password/OAuth, cloud sync, subscription, and payment remain future work.
+
 ## 2026-07-07: Minimal AI-Scoped World Memory v1 added
 
 Decision: Trial MVP memory is now scoped to a specific AI contact inside a specific world, keyed by `worldId + ownerWorldContactId`.

@@ -32,6 +32,9 @@
 - ovO cannot be customized.
 - ovO is the entry for world switching and world editing.
 - Add/create actions include add AI friend, create group, create world.
+- Trial users can enter through a local-only trial session.
+- The local trial session stores only trial identity metadata and must not store API keys, provider secrets, worlds, chats, or memory.
+- Full account login, OAuth, cloud sync, subscription, and payment remain future work.
 - Current known engineering issue: Create World supports minimal Random Role direct creation and a Detailed Edit scaffold route with role-slot metadata, but real random role generation, real generated/fixed role behavior, document parsing, real AI initial messages, and auto group creation are not implemented yet.
 - Current bootstrap scaffold: non-empty role worlds create placeholder initial private messages per selected AI; Empty Role worlds create zero active initial messages and zero bootstrap groups. No real text generation or automatic group creation is implemented yet.
 - Create Group creates a current-world group chat from selected current-world AI contacts in Reality or custom worlds.

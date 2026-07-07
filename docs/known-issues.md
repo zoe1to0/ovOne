@@ -5,7 +5,7 @@ Last audited: 2026-06-29.
 ## Current Known Engineering Issues
 
 - Disabled explicit actions exist for creation/chat menu flows but do not implement product behavior yet.
-- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, but the current runtime is not yet Trial MVP complete because local trial session flow and Trial UI pass still need implementation.
+- Trial MVP scope is locked in `docs/trial-mvp-scope.md`, and local trial session entry is implemented. The current runtime is not yet Trial MVP complete because the Trial UI pass still needs implementation.
 - Some visible buttons are unbound or decorative only.
 - `TEXT_INPUT` updates `inputDraft` but input is not truly controlled.
 - `TEXT_INPUT` returns before `commitStateTransition`, so typing state is not re-rendered.
@@ -30,6 +30,7 @@ Last audited: 2026-06-29.
 - The current world resolver reads current sample/runtime snapshots only; it is not a persistence schema migration.
 - Minimal AI-scoped world memory is implemented only for explicit `记住：`, `记住:`, and `remember:` commands. Automatic memory extraction, summarization, editing/deletion, advanced memory pools, and memory UI are not implemented.
 - Real Chat Runtime v1 connects active private/group chat sending to AI Provider Bridge with mock-provider support, but it is non-streaming, uses only a bounded 1-3 response group burst without advanced turn policy/background autonomous chat, and does not include group rules, group files, retrieval, or multi-provider routing.
+- Local Trial Session v1 is local-only and replaceable by a future account system. Login/password/OAuth, cloud sync, subscription/payment, account migration, and server identity are not implemented.
 - View helpers contain business/presentation derivation.
 - Chat/contact mapping uses heuristic inference.
 - `CONTACT_DETAIL` now renders Contacts Detail preference/delete content; preference saving and confirmed current-world Delete Friend are implemented.

@@ -42,6 +42,9 @@ Chats and Contacts are scoped to the active world. Me is global and never change
 - ovO cannot be customized.
 - ovO is the entry for world switching and world editing.
 - Add/create actions include add AI friend, create group, create world.
+- Browser entry is gated by a local trial session.
+- Local trial sessions are device-local only and are stored separately from worlds/chats/memory/provider config.
+- Local trial sessions must not contain provider API keys or block future account login replacement.
 
 ## Current Real Architecture
 
@@ -50,6 +53,9 @@ Browser
   -> src/main.ts
   -> src/platform/index.ts
   -> mountChatShell(document.body)
+  -> load local trial session from localStorage
+  -> render Trial Entry if missing
+  -> create/touch local trial session
   -> createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell
   -> enterRealityContext(shell)
   -> local SemanticMobileState closure

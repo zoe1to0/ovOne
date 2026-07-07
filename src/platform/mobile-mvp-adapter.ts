@@ -1,6 +1,11 @@
 ﻿import { createOnboardedProductRuntime } from "../onboarding/index.js";
 import { createBrowserWorldStorage } from "../persistence/index.js";
 import {
+  createLocalTrialSession,
+  loadLocalTrialSession,
+  touchLocalTrialSession
+} from "../trial-session/index.js";
+import {
   GROUP_FILES_EMPTY_MESSAGE,
   GROUP_FILES_UPLOAD_UNAVAILABLE_MESSAGE,
   WORLD_EDITOR_EMPTY_WORLDVIEW_WARNING,
@@ -54,10 +59,51 @@ export function mountChatShell(
   shellOrRoot: MinimalProductShellRuntime | HTMLElement = document.body,
   root?: HTMLElement
 ): ChatShellMount {
-  const shell = isShellRuntime(shellOrRoot)
-    ? shellOrRoot
-    : createOnboardedProductRuntime({ storage: createBrowserWorldStorage() }).shell;
-  const mountRoot = isShellRuntime(shellOrRoot) ? root ?? document.body : shellOrRoot;
+  if (isShellRuntime(shellOrRoot)) {
+    return mountResolvedChatShell(shellOrRoot, root ?? document.body);
+  }
+
+  const mountRoot = shellOrRoot;
+  const sessionStorage = window.localStorage;
+  let activeMount: ChatShellMount | null = null;
+
+  const enterMainApp = (touchSession: boolean): void => {
+    if (touchSession) {
+      touchLocalTrialSession(sessionStorage);
+    }
+    activeMount = mountResolvedChatShell(
+      createOnboardedProductRuntime({ storage: createBrowserWorldStorage(sessionStorage) }).shell,
+      mountRoot
+    );
+  };
+
+  const renderTrialEntry = (): void => {
+    activeMount = null;
+    mountRoot.replaceChildren(createTrialEntryScreen(() => {
+      createLocalTrialSession(sessionStorage);
+      enterMainApp(false);
+    }));
+  };
+
+  if (loadLocalTrialSession(sessionStorage)) {
+    enterMainApp(true);
+  } else {
+    renderTrialEntry();
+  }
+
+  return Object.freeze({
+    render: () => activeMount?.render() ?? renderTrialEntry(),
+    unmount: () => {
+      activeMount?.unmount();
+      mountRoot.replaceChildren();
+    }
+  });
+}
+
+function mountResolvedChatShell(
+  shell: MinimalProductShellRuntime,
+  mountRoot: HTMLElement
+): ChatShellMount {
   const initialView = enterRealityContext(shell);
   const state: SemanticMobileState = {
     activeView: "CHAT_LIST",
@@ -99,6 +145,26 @@ export function mountChatShell(
     render,
     unmount: () => mountRoot.replaceChildren()
   });
+}
+
+function createTrialEntryScreen(onStart: () => void): HTMLElement {
+  const screen = document.createElement("main");
+  screen.className = "mvp-trial-entry";
+
+  const title = document.createElement("h1");
+  title.textContent = "ovOne";
+
+  const copy = document.createElement("p");
+  copy.textContent = "本地试用会保存在这台设备上。";
+
+  const start = document.createElement("button");
+  start.type = "button";
+  start.className = "mvp-trial-entry-button";
+  start.textContent = "开始试用 ovOne";
+  start.onclick = onStart;
+
+  screen.append(title, copy, start);
+  return screen;
 }
 
 function isShellRuntime(value: MinimalProductShellRuntime | HTMLElement): value is MinimalProductShellRuntime {

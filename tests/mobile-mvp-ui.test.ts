@@ -25,6 +25,20 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
   });
 
+  it("gates the browser app behind a local Trial Entry screen", () => {
+    const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
+
+    assert.match(adapter, /loadLocalTrialSession\(sessionStorage\)/);
+    assert.match(adapter, /createTrialEntryScreen/);
+    assert.match(adapter, /start\.textContent = "开始试用 ovOne"/);
+    assert.match(adapter, /createLocalTrialSession\(sessionStorage\)/);
+    assert.match(adapter, /createBrowserWorldStorage\(sessionStorage\)/);
+    assert.match(adapter, /touchLocalTrialSession\(sessionStorage\)/);
+    assert.match(html, /\.mvp-trial-entry \{/);
+    assert.match(html, /\.mvp-trial-entry-button \{/);
+  });
+
   it("uses fixed Chinese chat-app navigation with chats as default primary surface", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
