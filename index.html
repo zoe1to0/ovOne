@@ -60,12 +60,62 @@
       }
 
       .mvp-splash-artwork {
-        width: min(62%, 264px);
-        height: auto;
-        max-height: 72vh;
-        object-fit: contain;
-        object-position: center 44%;
+        display: grid;
+        justify-items: center;
+        gap: 28px;
+        width: min(70%, 292px);
+        transform: translateY(-5vh);
+        color: #151716;
+        font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;
+        user-select: none;
+      }
+
+      .mvp-splash-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(18px, 6vw, 34px);
+        line-height: 0.9;
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      .mvp-splash-logo-o {
+        font-size: clamp(3.2rem, 18vw, 5.2rem);
+        transform: rotate(-8deg) translateY(0.08em);
+      }
+
+      .mvp-splash-logo-v {
+        font-size: clamp(2.5rem, 13vw, 3.7rem);
+        transform: rotate(4deg) translateY(0.1em);
+      }
+
+      .mvp-splash-logo-big-o {
+        font-size: clamp(4.3rem, 22vw, 6.7rem);
+        transform: rotate(7deg);
+      }
+
+      .mvp-splash-tagline {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        color: #202524;
+        font-size: clamp(1rem, 4.4vw, 1.26rem);
+        font-weight: 700;
+        line-height: 1.22;
+        letter-spacing: 0;
+      }
+
+      .mvp-splash-tagline span {
         display: block;
+      }
+
+      .mvp-splash-tagline span:first-child {
+        transform: translateX(-0.65em) rotate(-1deg);
+      }
+
+      .mvp-splash-tagline span:last-child {
+        transform: translateX(0.8em) rotate(1deg);
       }
 
       .mvp-trial-entry {

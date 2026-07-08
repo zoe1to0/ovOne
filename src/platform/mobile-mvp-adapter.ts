@@ -277,12 +277,39 @@ function createSplash(onSkip: () => void): HTMLElement {
   const viewport = document.createElement("section");
   viewport.className = "mvp-splash-viewport";
 
-  const artwork = document.createElement("img");
+  const artwork = document.createElement("section");
   artwork.className = "mvp-splash-artwork";
-  artwork.src = "public/assets/splash/ovone-splash-artwork.svg";
-  artwork.alt = "one over AI, one over world";
-  artwork.decoding = "async";
+  artwork.setAttribute("aria-label", "o v O, one over AI, one over world");
 
+  const logo = document.createElement("div");
+  logo.className = "mvp-splash-logo";
+  logo.setAttribute("aria-hidden", "true");
+
+  const leftO = document.createElement("span");
+  leftO.className = "mvp-splash-logo-o";
+  leftO.textContent = "o";
+
+  const mouth = document.createElement("span");
+  mouth.className = "mvp-splash-logo-v";
+  mouth.textContent = "v";
+
+  const rightO = document.createElement("span");
+  rightO.className = "mvp-splash-logo-big-o";
+  rightO.textContent = "O";
+
+  logo.append(leftO, mouth, rightO);
+
+  const tagline = document.createElement("p");
+  tagline.className = "mvp-splash-tagline";
+
+  const firstLine = document.createElement("span");
+  firstLine.textContent = "one over AI,";
+
+  const secondLine = document.createElement("span");
+  secondLine.textContent = "one over world";
+
+  tagline.append(firstLine, secondLine);
+  artwork.append(logo, tagline);
   viewport.append(artwork);
   shell.append(viewport);
   screen.append(shell);

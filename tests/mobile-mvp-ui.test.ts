@@ -1,6 +1,6 @@
 ﻿import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { resolveView } from "../src/platform/behavior-registry.js";
 
 describe("Mobile MVP Product Shell", () => {
@@ -16,7 +16,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("WorldDomain.create"), false);
   });
 
-  it("shows a skippable prototype image splash before entering chats", () => {
+  it("shows a skippable handwritten text splash before entering chats", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
     const html = readFileSync("index.html", "utf8");
     const splashBody = adapter.match(/function createSplash[\s\S]*?function createChatShell/)?.[0] ?? "";
@@ -24,16 +24,21 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /const SPLASH_DWELL_MS = 1800/);
     assert.match(adapter, /shell\.className = "mvp-shell mvp-splash-shell"/);
     assert.match(adapter, /viewport\.className = "mvp-splash-viewport"/);
-    assert.match(adapter, /document\.createElement\("img"\)/);
+    assert.doesNotMatch(splashBody, /document\.createElement\("img"\)/);
     assert.match(adapter, /artwork\.className = "mvp-splash-artwork"/);
-    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-artwork\.svg"/);
+    assert.match(adapter, /logo\.className = "mvp-splash-logo"/);
+    assert.match(adapter, /leftO\.textContent = "o"/);
+    assert.match(adapter, /mouth\.textContent = "v"/);
+    assert.match(adapter, /rightO\.textContent = "O"/);
+    assert.match(adapter, /firstLine\.textContent = "one over AI,"/);
+    assert.match(adapter, /secondLine\.textContent = "one over world"/);
     assert.match(adapter, /viewport\.append\(artwork\)/);
     assert.match(adapter, /shell\.append\(viewport\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
     assert.match(adapter, /window\.setTimeout\(finishSplash, SPLASH_DWELL_MS\)/);
     assert.match(adapter, /state\.activeView = "CHAT_LIST"/);
     assert.doesNotMatch(splashBody, /ovOne/);
-    assert.doesNotMatch(splashBody, /createElementNS|SVGSVGElement|mvp-splash-mark-svg|mvp-splash-svg-tagline|mvp-splash-crayon/);
+    assert.doesNotMatch(splashBody, /src =|jpg|jpeg|png|svg|createElementNS|SVGSVGElement|mvp-splash-mark-svg|mvp-splash-svg-tagline|mvp-splash-crayon/);
     assert.doesNotMatch(html, /\.mvp-splash-poster \{/);
     assert.doesNotMatch(html, /\.mvp-splash-mark-svg \{/);
     assert.doesNotMatch(html, /\.mvp-splash-svg-tagline \{/);
@@ -42,12 +47,15 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;/);
     assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*border: 0;[\s\S]*box-shadow: none;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*place-items: center;[\s\S]*padding: 0;[\s\S]*background: #fbfaf3;/);
-    assert.match(html, /\.mvp-splash-artwork \{[\s\S]*width: min\(62%, 264px\);[\s\S]*height: auto;[\s\S]*max-height: 72vh;[\s\S]*object-fit: contain;[\s\S]*object-position: center 44%;/);
+    assert.match(html, /\.mvp-splash-artwork \{[\s\S]*display: grid;[\s\S]*gap: 28px;[\s\S]*width: min\(70%, 292px\);[\s\S]*font-family: "Segoe Print", "Comic Sans MS", "Bradley Hand ITC", cursive;/);
+    assert.match(html, /\.mvp-splash-logo \{[\s\S]*display: inline-flex;[\s\S]*gap: clamp\(18px, 6vw, 34px\);/);
+    assert.match(html, /\.mvp-splash-logo-o \{[\s\S]*font-size: clamp\(3\.2rem, 18vw, 5\.2rem\);/);
+    assert.match(html, /\.mvp-splash-logo-big-o \{[\s\S]*font-size: clamp\(4\.3rem, 22vw, 6\.7rem\);/);
+    assert.match(html, /\.mvp-splash-tagline \{[\s\S]*font-size: clamp\(1rem, 4\.4vw, 1\.26rem\);/);
     assert.match(html, /\.mvp-splash \{[\s\S]*overflow: hidden;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*overflow: hidden;/);
     assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
     assert.doesNotMatch(html, /clip-path: polygon/);
-    assert.equal(existsSync("public/assets/splash/ovone-splash-artwork.svg"), true);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {
