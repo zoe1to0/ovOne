@@ -26,7 +26,7 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /viewport\.className = "mvp-splash-viewport"/);
     assert.match(adapter, /document\.createElement\("img"\)/);
     assert.match(adapter, /artwork\.className = "mvp-splash-artwork"/);
-    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-artwork\.png"/);
+    assert.match(adapter, /artwork\.src = "public\/assets\/splash\/ovone-splash-artwork\.svg"/);
     assert.match(adapter, /viewport\.append\(artwork\)/);
     assert.match(adapter, /shell\.append\(viewport\)/);
     assert.match(adapter, /screen\.addEventListener\("click", onSkip\)/);
@@ -38,16 +38,16 @@ describe("Mobile MVP Product Shell", () => {
     assert.doesNotMatch(html, /\.mvp-splash-mark-svg \{/);
     assert.doesNotMatch(html, /\.mvp-splash-svg-tagline \{/);
     assert.doesNotMatch(html, /\.mvp-splash h1 \{/);
-    assert.match(html, /\.mvp-splash \{[\s\S]*background: #fbfcf8;/);
+    assert.match(html, /\.mvp-splash \{[\s\S]*background: #fbfaf3;/);
     assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;/);
-    assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;/);
-    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*place-items: center;[\s\S]*padding: 0;[\s\S]*background: #fffdf7;/);
-    assert.match(html, /\.mvp-splash-artwork \{[\s\S]*width: 100%;[\s\S]*height: 100vh;[\s\S]*object-fit: contain;[\s\S]*object-position: center;/);
+    assert.match(html, /\.mvp-splash-shell \{[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*border: 0;[\s\S]*box-shadow: none;/);
+    assert.match(html, /\.mvp-splash-viewport \{[\s\S]*place-items: center;[\s\S]*padding: 0;[\s\S]*background: #fbfaf3;/);
+    assert.match(html, /\.mvp-splash-artwork \{[\s\S]*width: min\(62%, 264px\);[\s\S]*height: auto;[\s\S]*max-height: 72vh;[\s\S]*object-fit: contain;[\s\S]*object-position: center 44%;/);
     assert.match(html, /\.mvp-splash \{[\s\S]*overflow: hidden;/);
     assert.match(html, /\.mvp-splash-viewport \{[\s\S]*overflow: hidden;/);
     assert.doesNotMatch(html, /\.mvp-splash-brush \{/);
     assert.doesNotMatch(html, /clip-path: polygon/);
-    assert.equal(existsSync("public/assets/splash/ovone-splash-artwork.png"), true);
+    assert.equal(existsSync("public/assets/splash/ovone-splash-artwork.svg"), true);
   });
 
   it("shows Splash before the local Trial Entry screen", () => {

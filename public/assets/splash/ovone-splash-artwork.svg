@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920" role="img" aria-labelledby="title desc">
+  <title id="title">one over AI, one over world</title>
+  <desc id="desc">Hand-drawn splash mark with a pale blue crayon patch, two black eyes, a small v mouth, and a handwritten slogan.</desc>
+  <defs>
+    <filter id="crayon-edge" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.018 0.032" numOctaves="3" seed="17" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="12" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+    <filter id="soft-paper" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="grain" />
+      <feColorMatrix in="grain" type="saturate" values="0" result="mono" />
+      <feComponentTransfer in="mono" result="softGrain">
+        <feFuncA type="table" tableValues="0 0.035" />
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" in2="softGrain" mode="multiply" />
+    </filter>
+    <filter id="ink-roughen" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="31" result="inkNoise" />
+      <feDisplacementMap in="SourceGraphic" in2="inkNoise" scale="3.6" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+
+  <rect width="1080" height="1920" fill="#fbfaf3" />
+  <rect width="1080" height="1920" fill="#fbfaf3" filter="url(#soft-paper)" opacity="0.52" />
+
+  <g filter="url(#crayon-edge)" opacity="0.92">
+    <path d="M302 724 C330 613 438 526 558 490 C681 454 773 491 813 580 C856 677 785 793 644 848 C512 899 371 869 319 790 C303 766 296 744 302 724 Z" fill="#dbfbf7" opacity="0.74" />
+    <path d="M218 800 C250 680 383 598 530 559 C682 518 817 561 873 664 C930 769 844 887 680 934 C552 971 425 908 305 956 C201 997 153 885 218 800 Z" fill="#d9fbf7" opacity="0.62" />
+    <path d="M338 629 C445 508 646 443 754 521 C849 590 826 733 714 815 C600 900 443 880 351 791 C298 739 295 679 338 629 Z" fill="#e4fffc" opacity="0.47" />
+    <path d="M324 926 C416 871 593 872 710 920 C787 952 786 1034 698 1077 C590 1130 421 1080 320 1025 C255 990 259 965 324 926 Z" fill="#d8fbf7" opacity="0.5" />
+    <path d="M136 870 C211 815 276 815 341 843" fill="none" stroke="#d9fbf7" stroke-width="78" stroke-linecap="round" opacity="0.5" />
+    <path d="M761 558 C846 613 902 710 891 812" fill="none" stroke="#dcfbf8" stroke-width="70" stroke-linecap="round" opacity="0.42" />
+    <path d="M346 1090 C451 1134 609 1135 723 1086" fill="none" stroke="#dcfbf8" stroke-width="58" stroke-linecap="round" opacity="0.34" />
+  </g>
+
+  <g fill="#101112" filter="url(#ink-roughen)">
+    <ellipse cx="335" cy="854" rx="46" ry="34" transform="rotate(-5 335 854)" />
+    <ellipse cx="330" cy="850" rx="38" ry="29" transform="rotate(8 330 850)" opacity="0.86" />
+    <ellipse cx="677" cy="840" rx="54" ry="68" transform="rotate(4 677 840)" />
+    <ellipse cx="684" cy="835" rx="42" ry="56" transform="rotate(-8 684 835)" opacity="0.88" />
+  </g>
+
+  <path d="M470 827 C492 870 508 898 526 899 C544 899 563 860 589 821" fill="none" stroke="#101112" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" filter="url(#ink-roughen)" />
+
+  <text x="540" y="1242" text-anchor="middle"
+    fill="#111213"
+    font-family="Segoe Print, Comic Sans MS, Bradley Hand ITC, Chalkboard SE, cursive"
+    font-size="72"
+    font-weight="700"
+    letter-spacing="1.2"
+    filter="url(#ink-roughen)">one over AI, one over world</text>
+</svg>

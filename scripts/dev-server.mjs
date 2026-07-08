@@ -68,6 +68,8 @@ function contentType(filePath) {
       return "application/json; charset=utf-8";
     case ".map":
       return "application/json; charset=utf-8";
+    case ".svg":
+      return "image/svg+xml; charset=utf-8";
     default:
       return "application/octet-stream";
   }
