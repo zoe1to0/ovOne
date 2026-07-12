@@ -187,13 +187,19 @@ describe("Mobile MVP Product Shell", () => {
     assert.equal(adapter.includes("mvp-connection-status"), false);
     assert.equal(html.includes(".mvp-connection-status"), false);
     assert.match(html, /body \{[\s\S]*background: #dceef8;/);
-    assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;[\s\S]*box-shadow:/);
+    assert.match(html, /\.mvp-shell \{[\s\S]*max-width: 430px;[\s\S]*background: #fbfaf3;[\s\S]*box-shadow:/);
     assert.match(html, /\.mvp-home-header \{[\s\S]*grid-template-columns: 44px minmax\(0, 1fr\) 44px;/);
     assert.match(html, /\.mvp-home-brand \{[\s\S]*justify-self: center;/);
-    assert.match(html, /\.mvp-notification-dot \{[\s\S]*position: absolute;[\s\S]*right: -9px;/);
+    assert.match(html, /\.mvp-notification-dot \{[\s\S]*position: absolute;[\s\S]*top: -1px;[\s\S]*right: -8px;/);
     assert.match(html, /\.mvp-world-linked-count \{/);
+    assert.match(html, /\.mvp-add-button \{[\s\S]*border-radius: 999px;[\s\S]*background: #edf8fa;/);
+    assert.match(html, /\.mvp-chat-list \{[\s\S]*border: 0;[\s\S]*border-radius: 0;[\s\S]*background: transparent;/);
     assert.match(html, /\.mvp-chat-list li \+ li \{/);
+    assert.match(html, /\.mvp-chat-row \{[\s\S]*min-height: 68px;[\s\S]*padding: 12px 0;/);
+    assert.match(html, /\.mvp-chat-row \.mvp-avatar \{[\s\S]*border-radius: 50%;/);
     assert.match(html, /\.mvp-chat-subtitle \{/);
+    assert.match(html, /\.mvp-bottom-nav \{[\s\S]*background: rgba\(251, 250, 243, 0\.95\);/);
+    assert.match(html, /\.mvp-nav-item\.is-active \{[\s\S]*background: #e8f5f7;/);
     assert.match(html, /\.mvp-empty-state,/);
   });
 

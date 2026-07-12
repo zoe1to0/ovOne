@@ -185,17 +185,17 @@
         min-height: 100vh;
         max-width: 430px;
         margin: 0 auto;
-        border-right: 1px solid rgba(93, 129, 144, 0.18);
-        border-left: 1px solid rgba(93, 129, 144, 0.18);
-        background: #fffaf0;
-        box-shadow: 0 18px 70px rgba(70, 116, 139, 0.22);
+        border-right: 1px solid rgba(154, 190, 203, 0.2);
+        border-left: 1px solid rgba(154, 190, 203, 0.2);
+        background: #fbfaf3;
+        box-shadow: 0 18px 58px rgba(78, 132, 157, 0.16);
       }
 
       .mvp-viewport {
         min-height: 100vh;
-        padding: 14px 16px 86px;
+        padding: 12px 18px 86px;
         box-sizing: border-box;
-        background: #fffaf0;
+        background: #fbfaf3;
       }
 
       .mvp-page {
@@ -221,9 +221,10 @@
       .mvp-home-header {
         display: grid;
         grid-template-columns: 44px minmax(0, 1fr) 44px;
-        gap: 12px;
+        gap: 10px;
         align-items: center;
-        margin-bottom: 16px;
+        min-height: 70px;
+        margin-bottom: 8px;
       }
 
       .mvp-home-brand {
@@ -241,8 +242,10 @@
 
       .mvp-home-brand h1 {
         margin: 0;
-        font-size: 1.72rem;
+        color: #222b2d;
+        font-size: 1.58rem;
         letter-spacing: 0;
+        line-height: 1;
       }
 
       .mvp-home-wordmark {
@@ -253,19 +256,19 @@
 
       .mvp-notification-dot {
         position: absolute;
-        top: 1px;
-        right: -9px;
-        width: 8px;
-        height: 8px;
+        top: -1px;
+        right: -8px;
+        width: 7px;
+        height: 7px;
         border-radius: 999px;
-        background: #d94b3d;
+        background: #d8665c;
       }
 
       .mvp-world-linked-count {
         max-width: 180px;
         overflow: hidden;
-        color: #6a746f;
-        font-size: 0.78rem;
+        color: #758b8d;
+        font-size: 0.74rem;
         font-weight: 600;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -273,14 +276,15 @@
 
       .mvp-add-button {
         grid-column: 3;
-        width: 38px;
-        height: 38px;
-        border: 1px solid #cfe1ea;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #d4e7ec;
         border-radius: 999px;
-        background: #eef7fb;
-        color: #1f2528;
+        background: #edf8fa;
+        color: #2b464c;
         cursor: pointer;
-        font-size: 1.15rem;
+        font-size: 1.12rem;
+        box-shadow: 0 6px 16px rgba(94, 143, 155, 0.1);
       }
 
       .mvp-header h1 {
@@ -298,11 +302,11 @@
         grid-template-columns: repeat(3, 1fr);
         max-width: 430px;
         margin: 0 auto;
-        padding: 8px 14px 12px;
+        padding: 7px 16px 11px;
         box-sizing: border-box;
-        border-top: 1px solid #e2e5e0;
-        background: rgba(255, 250, 240, 0.96);
-        backdrop-filter: blur(14px);
+        border-top: 1px solid #e0eaec;
+        background: rgba(251, 250, 243, 0.95);
+        backdrop-filter: blur(16px);
       }
 
       .mvp-overlay-layer {
@@ -551,14 +555,15 @@
       .mvp-nav-item {
         min-height: 42px;
         border: 0;
-        border-radius: 8px;
+        border-radius: 999px;
         background: transparent;
-        color: #69736e;
+        color: #738586;
         cursor: pointer;
       }
 
       .mvp-nav-item.is-active {
-        color: #1f2528;
+        background: #e8f5f7;
+        color: #24383d;
         font-weight: 700;
       }
 
@@ -575,13 +580,13 @@
       .mvp-chat-list {
         gap: 0;
         overflow: hidden;
-        border: 1px solid rgba(190, 215, 226, 0.65);
-        border-radius: 20px;
-        background: #fffdf7;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
       }
 
       .mvp-chat-list li + li {
-        border-top: 1px solid #e3eef3;
+        border-top: 1px solid #e5edef;
       }
 
       .mvp-ovo-indicator {
@@ -611,6 +616,12 @@
         cursor: pointer;
       }
 
+      .mvp-chat-row {
+        gap: 12px;
+        min-height: 68px;
+        padding: 12px 0;
+      }
+
       .mvp-contact-row {
         grid-template-columns: 44px minmax(0, 1fr);
       }
@@ -624,6 +635,12 @@
         background: #e8f4f9;
         color: #26322e;
         font-weight: 800;
+      }
+
+      .mvp-chat-row .mvp-avatar {
+        border-radius: 50%;
+        background: #e6f4f7;
+        color: #263b40;
       }
 
       .mvp-avatar-wrap {
@@ -644,7 +661,7 @@
       .mvp-chat-copy {
         min-width: 0;
         display: grid;
-        gap: 5px;
+        gap: 4px;
       }
 
       .mvp-chat-kind {
@@ -673,9 +690,15 @@
         white-space: nowrap;
       }
 
+      .mvp-chat-copy strong {
+        color: #202729;
+        font-size: 0.98rem;
+        font-weight: 700;
+      }
+
       .mvp-chat-subtitle {
-        color: #687982;
-        font-size: 0.84rem;
+        color: #708789;
+        font-size: 0.82rem;
       }
 
       .mvp-chat-copy span,
@@ -687,11 +710,11 @@
       .mvp-empty-state,
       .mvp-message-empty {
         margin: 16px 0;
-        padding: 12px;
-        border: 1px solid #e2e5e0;
-        border-radius: 10px;
-        background: #ffffff;
-        color: #68736f;
+        padding: 18px 14px;
+        border: 1px solid #e2ecee;
+        border-radius: 14px;
+        background: rgba(255, 253, 247, 0.72);
+        color: #708789;
         line-height: 1.45;
       }
 
@@ -732,20 +755,20 @@
       .mvp-chat-meta {
         display: grid;
         justify-items: end;
-        gap: 5px;
-        color: #8a938f;
-        font-size: 0.8rem;
+        gap: 6px;
+        color: #91a0a1;
+        font-size: 0.76rem;
       }
 
       .mvp-chat-meta strong {
-        min-width: 18px;
-        height: 18px;
+        min-width: 17px;
+        height: 17px;
         display: grid;
         place-items: center;
         border-radius: 999px;
-        background: #d94b3d;
+        background: #d8665c;
         color: #ffffff;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
       }
 
       .mvp-chat-view {
