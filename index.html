@@ -623,7 +623,50 @@
       }
 
       .mvp-contact-row {
-        grid-template-columns: 44px minmax(0, 1fr);
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        gap: 12px;
+        min-height: 66px;
+        padding: 12px 0;
+      }
+
+      .mvp-contact-list {
+        gap: 0;
+      }
+
+      .mvp-contact-list li + li {
+        border-top: 1px solid #e5edef;
+      }
+
+      .mvp-contact-row .mvp-avatar {
+        border-radius: 50%;
+        background: #e6f4f7;
+        color: #263b40;
+      }
+
+      .mvp-contact-enter {
+        color: #9aaeb0;
+        font-size: 1.35rem;
+        line-height: 1;
+      }
+
+      .mvp-contacts-screen,
+      .mvp-me-screen,
+      .mvp-contact-detail {
+        background: #fbfaf3;
+      }
+
+      .mvp-contacts-screen .mvp-header,
+      .mvp-me-screen .mvp-header {
+        min-height: 58px;
+        justify-content: center;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #e5edef;
+      }
+
+      .mvp-contacts-screen .mvp-header h1,
+      .mvp-me-screen .mvp-header h1 {
+        color: #202729;
+        font-size: 1.16rem;
       }
 
       .mvp-avatar {
@@ -1013,16 +1056,17 @@
         grid-template-columns: 58px minmax(0, 1fr);
         gap: 12px;
         align-items: center;
-        padding: 14px 0 18px;
+        padding: 16px 0 20px;
+        border-bottom: 1px solid #e5edef;
       }
 
       .mvp-profile-avatar {
         width: 56px;
         height: 56px;
-        border: 0;
-        border-radius: 18px;
-        background: #1f2528;
-        color: #ffffff;
+        border: 1px solid #d4e7ec;
+        border-radius: 50%;
+        background: #e6f4f7;
+        color: #263b40;
         font-weight: 800;
         cursor: pointer;
       }
@@ -1039,20 +1083,25 @@
         max-width: 100%;
         border: 0;
         background: transparent;
-        color: #1f2528;
+        color: #202729;
         text-align: right;
         cursor: pointer;
       }
 
+      .mvp-profile-user-id {
+        font-size: 1.08rem;
+        font-weight: 800;
+      }
+
       .mvp-profile-binding {
-        color: #68736f;
-        font-size: 0.9rem;
+        color: #7a8f91;
+        font-size: 0.84rem;
       }
 
       .mvp-feature-menu {
         display: grid;
         gap: 0;
-        border-top: 1px solid #eef0ec;
+        border-top: 0;
       }
 
       .mvp-feature-row {
@@ -1063,18 +1112,19 @@
         min-height: 48px;
         padding: 12px 0;
         border: 0;
-        border-bottom: 1px solid #eef0ec;
+        border-bottom: 1px solid #e5edef;
         background: transparent;
         color: inherit;
         text-align: left;
       }
 
       .mvp-feature-row span {
-        color: #1f2528;
+        color: #202729;
+        font-weight: 700;
       }
 
       .mvp-feature-row strong {
-        color: #68736f;
+        color: #7a8f91;
         font-weight: 500;
         text-align: right;
       }
@@ -1090,22 +1140,24 @@
         justify-content: space-between;
         gap: 12px;
         padding: 12px 0;
-        border-bottom: 1px solid #eef0ec;
+        border-bottom: 1px solid #e5edef;
       }
 
       .mvp-danger-light,
       .mvp-settings-button,
       .mvp-connected-list button {
         min-height: 42px;
-        border: 1px solid #d8ddd9;
-        border-radius: 8px;
-        background: #ffffff;
-        color: #1f2528;
+        border: 1px solid #d4e7ec;
+        border-radius: 999px;
+        background: #edf8fa;
+        color: #2b464c;
         cursor: pointer;
       }
 
       .mvp-danger-light {
-        color: #9b3d35;
+        border-color: #f0cfca;
+        background: #fff8f5;
+        color: #97483f;
       }
 
       .mvp-connected-list button:disabled {
@@ -1116,7 +1168,7 @@
       .mvp-rule-note,
       .mvp-language-panel p {
         margin: 0;
-        color: #68736f;
+        color: #7a8f91;
         font-size: 0.9rem;
         line-height: 1.45;
       }
@@ -1130,6 +1182,94 @@
       .mvp-language-panel h2 {
         margin: 0;
         font-size: 1rem;
+      }
+
+      .mvp-contact-detail {
+        display: grid;
+        align-content: start;
+        gap: 12px;
+      }
+
+      .mvp-contact-detail > .mvp-back-button {
+        justify-self: start;
+      }
+
+      .mvp-contact-detail > strong {
+        color: #202729;
+        font-size: 1.24rem;
+      }
+
+      .mvp-contact-detail > span {
+        color: #7a8f91;
+        font-size: 0.86rem;
+      }
+
+      .mvp-detail-form,
+      .mvp-contact-detail .mvp-danger-section,
+      .mvp-settings-panel .mvp-danger-section,
+      .mvp-settings-panel {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mvp-contact-detail .mvp-create-world-stage,
+      .mvp-contact-detail .mvp-danger-section,
+      .mvp-settings-panel .mvp-danger-section,
+      .mvp-language-panel {
+        padding: 12px 0;
+        border-top: 1px solid #e5edef;
+      }
+
+      .mvp-contact-detail .mvp-create-world-stage h2,
+      .mvp-settings-panel h2 {
+        color: #202729;
+        font-size: 0.92rem;
+      }
+
+      .mvp-contact-detail input,
+      .mvp-contact-detail textarea,
+      .mvp-contact-detail select {
+        width: 100%;
+        min-height: 40px;
+        padding: 0 12px;
+        box-sizing: border-box;
+        border: 1px solid #d9e8eb;
+        border-radius: 12px;
+        background: #fffdf7;
+        color: #202729;
+      }
+
+      .mvp-contact-detail textarea {
+        min-height: 84px;
+        padding-top: 10px;
+        resize: vertical;
+      }
+
+      .mvp-contact-detail input[type="checkbox"] {
+        width: auto;
+        min-height: auto;
+      }
+
+      .mvp-contact-detail label {
+        color: #58787c;
+        font-size: 0.9rem;
+      }
+
+      .mvp-contact-detail .mvp-detail-form > button,
+      .mvp-settings-panel > button {
+        min-height: 42px;
+        border: 1px solid #d4e7ec;
+        border-radius: 999px;
+        background: #edf8fa;
+        color: #2b464c;
+        cursor: pointer;
+        font-weight: 700;
+      }
+
+      .mvp-contact-detail .mvp-danger-section button {
+        border-color: #f0cfca;
+        background: #fff8f5;
+        color: #97483f;
       }
 
     </style>

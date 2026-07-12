@@ -582,21 +582,32 @@ function createContactsView(
   controller: InteractionController
 ): HTMLElement {
   const screen = document.createElement("section");
-  screen.className = "mvp-screen";
+  screen.className = "mvp-screen mvp-contacts-screen";
   screen.append(createScreenHeader("联系人", null), createOvoIndicator(snapshot));
 
   const list = document.createElement("ol");
   list.className = "mvp-contact-list";
 
-  for (const contact of contactsFromSnapshot(snapshot, state.currentWorldId)) {
+  const contacts = contactsFromSnapshot(snapshot, state.currentWorldId);
+  for (const contact of contacts) {
     const item = document.createElement("li");
     const button = document.createElement("button");
     button.type = "button";
     button.className = "mvp-contact-row";
-    button.append(createContactAvatar(contact), createRelationshipText(snapshot, contact));
+    const arrow = document.createElement("span");
+    arrow.className = "mvp-contact-enter";
+    arrow.textContent = "›";
+    button.append(createContactAvatar(contact), createRelationshipText(snapshot, contact), arrow);
     bindControllerAction(button, controller, { type: "OPEN_CONTACT", actorId: contact.actorId });
     item.append(button);
     list.append(item);
+  }
+
+  if (contacts.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "mvp-empty-state";
+    empty.textContent = "暂无联系人。可以添加 AI 朋友，或进入 Reality 添加。";
+    screen.append(empty);
   }
 
   screen.append(list);
@@ -609,7 +620,7 @@ function createMeView(
   controller: InteractionController
 ): HTMLElement {
   const screen = document.createElement("section");
-  screen.className = "mvp-screen";
+  screen.className = "mvp-screen mvp-me-screen";
   screen.append(createScreenHeader("我的", null));
 
   if (state.settingsOpen) {
@@ -742,14 +753,14 @@ function createProfileHeader(): HTMLElement {
   const userId = document.createElement("button");
   userId.type = "button";
   userId.className = "mvp-profile-user-id";
-  userId.textContent = "用户 ID：one-0001";
-  userId.setAttribute("aria-label", "编辑用户 ID");
+  userId.textContent = "Trial User";
+  userId.setAttribute("aria-label", "本地试用身份");
 
   const binding = document.createElement("button");
   binding.type = "button";
   binding.className = "mvp-profile-binding";
-  binding.textContent = "ovO 账号：已绑定";
-  binding.setAttribute("aria-label", "编辑账号绑定");
+  binding.textContent = "本地试用 · 数据保存在当前设备";
+  binding.setAttribute("aria-label", "本地试用信息");
 
   account.append(userId, binding);
   header.append(avatar, account);
@@ -760,10 +771,9 @@ function createFeatureMenu(snapshot: WorldSnapshot, controller: InteractionContr
   const menu = document.createElement("section");
   menu.className = "mvp-feature-menu";
   menu.append(
-    createFeatureRow("收藏", assistantContacts(snapshot).filter((contact) => !isOvoContact(snapshot, contact)).map(contactDisplayName).join("、") || "暂无"),
-    createFeatureRow("胶囊", "即将开放"),
-    createFeatureRow("聊天容量", "最多 25 个聊天"),
-    createFeatureRow("会员", "未开通"),
+    createFeatureRow("已链接 AI", assistantContacts(snapshot).filter((contact) => !isOvoContact(snapshot, contact)).map(contactDisplayName).join("、") || "暂无"),
+    createFeatureRow("本地试用", "Trial User"),
+    createFeatureRow("本地数据", "当前设备"),
     createSettingsRow(controller)
   );
   return menu;
@@ -787,7 +797,7 @@ function createSettingsRow(controller: InteractionController): HTMLElement {
   const name = document.createElement("span");
   name.textContent = "设置";
   const detail = document.createElement("strong");
-  detail.textContent = "账号与语言";
+  detail.textContent = "已链接 AI 与语言";
   button.append(name, detail);
   bindControllerAction(button, controller, { type: "OPEN_SETTINGS" });
   return button;

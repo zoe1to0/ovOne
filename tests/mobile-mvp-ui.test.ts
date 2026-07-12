@@ -615,10 +615,13 @@ describe("Mobile MVP Product Shell", () => {
 
   it("keeps Contacts as a Chinese list-only view and Me as settings boundary", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /screen\.append\(createScreenHeader\("联系人"/);
     assert.match(adapter, /button\.className = "mvp-contact-row"/);
-    assert.match(adapter, /button\.append\(createContactAvatar\(contact\), createRelationshipText\(snapshot, contact\)\)/);
+    assert.match(adapter, /arrow\.className = "mvp-contact-enter"/);
+    assert.match(adapter, /button\.append\(createContactAvatar\(contact\), createRelationshipText\(snapshot, contact\), arrow\)/);
+    assert.match(adapter, /empty\.textContent = "暂无联系人。可以添加 AI 朋友，或进入 Reality 添加。"/);
     assert.match(adapter, /function contactRelationshipLine\(snapshot: WorldSnapshot, contact: WorldContact\): string/);
     assert.match(adapter, /return `\$\{modeLabel\(contact\)\} · \$\{modelNameForContact\(contact\)\}`/);
     assert.match(adapter, /return contact\.outputMode === "QA" \? "可靠顾问" : "亲近角色"/);
@@ -641,24 +644,35 @@ describe("Mobile MVP Product Shell", () => {
     assert.match(adapter, /在这里断开 AI，会从账号中移除该连接。/);
     assert.match(adapter, /语言设置/);
     assert.match(adapter, /简体中文/);
+    assert.match(html, /\.mvp-contacts-screen,[\s\S]*\.mvp-me-screen,[\s\S]*\.mvp-contact-detail \{[\s\S]*background: #fbfaf3;/);
+    assert.match(html, /\.mvp-contact-row \{[\s\S]*grid-template-columns: 44px minmax\(0, 1fr\) auto;/);
+    assert.match(html, /\.mvp-contact-list li \+ li \{[\s\S]*border-top: 1px solid #e5edef;/);
+    assert.match(html, /\.mvp-contact-enter \{/);
+    assert.match(html, /\.mvp-contact-detail \{[\s\S]*display: grid;/);
+    assert.match(html, /\.mvp-contact-detail input,[\s\S]*\.mvp-contact-detail textarea,[\s\S]*\.mvp-contact-detail select \{[\s\S]*background: #fffdf7;/);
+    assert.match(html, /\.mvp-contact-detail \.mvp-danger-section button \{[\s\S]*background: #fff8f5;/);
   });
 
   it("renders Me as a global account control layer", () => {
     const adapter = readFileSync("src/platform/mobile-mvp-adapter.ts", "utf8");
+    const html = readFileSync("index.html", "utf8");
 
     assert.match(adapter, /function createProfileHeader/);
     assert.match(adapter, /aria-label", "编辑头像"/);
-    assert.match(adapter, /用户 ID：one-0001/);
-    assert.match(adapter, /ovO 账号：已绑定/);
-    assert.match(adapter, /aria-label", "编辑账号绑定"/);
+    assert.match(adapter, /userId\.textContent = "Trial User"/);
+    assert.match(adapter, /binding\.textContent = "本地试用 · 数据保存在当前设备"/);
+    assert.match(adapter, /aria-label", "本地试用信息"/);
     assert.match(adapter, /function createFeatureMenu/);
-    assert.match(adapter, /createFeatureRow\("收藏"/);
-    assert.match(adapter, /createFeatureRow\("收藏", assistantContacts\(snapshot\)\.filter/);
+    assert.match(adapter, /createFeatureRow\("已链接 AI"/);
+    assert.match(adapter, /createFeatureRow\("已链接 AI", assistantContacts\(snapshot\)\.filter/);
     assert.doesNotMatch(adapter, /createFeatureRow\("收藏", contactsFromSnapshot\(snapshot/);
-    assert.match(adapter, /createFeatureRow\("胶囊", "即将开放"\)/);
-    assert.match(adapter, /createFeatureRow\("聊天容量", "最多 25 个聊天"\)/);
-    assert.match(adapter, /createFeatureRow\("会员", "未开通"\)/);
-    assert.match(adapter, /detail\.textContent = "账号与语言"/);
+    assert.match(adapter, /createFeatureRow\("本地试用", "Trial User"\)/);
+    assert.match(adapter, /createFeatureRow\("本地数据", "当前设备"\)/);
+    assert.match(adapter, /detail\.textContent = "已链接 AI 与语言"/);
+    assert.match(html, /\.mvp-profile-header \{[\s\S]*border-bottom: 1px solid #e5edef;/);
+    assert.match(html, /\.mvp-profile-avatar \{[\s\S]*border-radius: 50%;[\s\S]*background: #e6f4f7;/);
+    assert.match(html, /\.mvp-feature-row \{[\s\S]*border-bottom: 1px solid #e5edef;/);
+    assert.doesNotMatch(adapter, /OVONE_AI_API_KEY|API key|apiKey/);
     assert.equal(adapter.includes("worldDomain."), false);
     assert.equal(adapter.includes("applyStructuralPatch"), false);
     assert.equal(adapter.includes("applyPersonaOverlay"), false);
