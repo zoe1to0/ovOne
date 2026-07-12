@@ -775,41 +775,65 @@
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
         min-height: calc(100vh - 16px);
-        padding-bottom: 86px;
+        padding-bottom: 106px;
+        background: #fbfaf3;
       }
 
       .mvp-chat-page-header {
-        min-height: 48px;
+        min-height: 58px;
         display: grid;
-        grid-template-columns: 54px minmax(0, 1fr) 42px;
+        grid-template-columns: 48px minmax(0, 1fr) 40px;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 8px;
+        gap: 10px;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #e5edef;
       }
 
       .mvp-back-button {
         min-height: 34px;
         border: 0;
         background: transparent;
-        color: #4f7d72;
+        color: #58787c;
         cursor: pointer;
+        font-weight: 700;
       }
 
       .mvp-chat-title {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 9px;
         min-width: 0;
         justify-self: center;
       }
 
+      .mvp-chat-title .mvp-avatar {
+        border-radius: 50%;
+        background: #e6f4f7;
+      }
+
+      .mvp-chat-title .mvp-name-block {
+        max-width: 210px;
+        gap: 2px;
+        text-align: center;
+      }
+
+      .mvp-chat-title .mvp-name-block strong {
+        color: #202729;
+        font-size: 0.98rem;
+      }
+
+      .mvp-chat-title .mvp-name-block span {
+        color: #7a8f91;
+        font-size: 0.76rem;
+      }
+
       .mvp-chat-menu-button {
-        width: 40px;
-        height: 40px;
-        border: 0;
+        width: 36px;
+        height: 36px;
+        border: 1px solid #d4e7ec;
         border-radius: 999px;
-        background: transparent;
-        color: #1f2528;
+        background: #edf8fa;
+        color: #2b464c;
         cursor: pointer;
       }
 
@@ -817,9 +841,9 @@
         display: grid;
         grid-auto-flow: row;
         align-content: end;
-        gap: 8px;
+        gap: 10px;
         margin: 0;
-        padding: 8px 0 22px;
+        padding: 12px 0 26px;
         overflow-y: auto;
         overscroll-behavior: contain;
         list-style: none;
@@ -829,49 +853,74 @@
         display: grid;
         grid-template-columns: 44px minmax(0, 1fr);
         align-items: end;
-        gap: 8px;
+        gap: 9px;
       }
 
       .mvp-message-row.is-mine {
         grid-template-columns: minmax(0, 1fr) 44px;
       }
 
+      .mvp-message-row .mvp-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e6f4f7;
+        color: #263b40;
+        font-size: 0.9rem;
+      }
+
+      .mvp-message-row .mvp-avatar-wrap {
+        width: 38px;
+        height: 38px;
+      }
+
       .mvp-message {
-        max-width: 78%;
+        max-width: min(78%, 286px);
         justify-self: start;
         margin: 0;
-        padding: 9px 11px;
-        border-radius: 14px;
-        background: #ffffff;
-        line-height: 1.42;
+        padding: 10px 12px;
+        border: 1px solid #edf0ec;
+        border-radius: 16px 16px 16px 6px;
+        background: #fffdf7;
+        color: #202729;
+        line-height: 1.5;
+        box-shadow: 0 4px 14px rgba(84, 120, 130, 0.06);
       }
 
       .mvp-message-block {
         min-width: 0;
         display: grid;
-        gap: 4px;
+        gap: 5px;
         justify-items: start;
       }
 
       .mvp-message-speaker {
-        color: #68736f;
-        font-size: 0.78rem;
+        color: #668082;
+        font-size: 0.76rem;
+        font-weight: 700;
       }
 
       .mvp-message.is-error {
-        border: 1px solid #f1c6c1;
-        background: #fff6f4;
-        color: #9b3d35;
+        border: 1px solid #f0cfca;
+        background: #fff8f5;
+        color: #97483f;
+        box-shadow: none;
       }
 
       .mvp-message.is-loading {
-        color: #68736f;
+        border-color: #dbeaec;
+        background: #eef8f9;
+        color: #5f7c80;
         font-style: italic;
+        box-shadow: none;
       }
 
       .mvp-message-row.is-mine .mvp-message {
         justify-self: end;
-        background: #dcebe5;
+        border-color: #cfe9ef;
+        border-radius: 16px 16px 6px 16px;
+        background: #dff3f6;
+        color: #1d353b;
       }
 
       .mvp-message-row.is-mine .mvp-message-block {
@@ -890,48 +939,60 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 8px;
-        padding: 8px 16px 10px;
+        padding: 9px 18px 11px;
         box-sizing: border-box;
-        background: rgba(255, 250, 240, 0.96);
-        backdrop-filter: blur(14px);
+        border-top: 1px solid #e0eaec;
+        background: rgba(251, 250, 243, 0.96);
+        backdrop-filter: blur(16px);
       }
 
       .mvp-composer input {
         flex: 1;
         min-width: 0;
         min-height: 42px;
-        padding: 0 13px;
-        border: 1px solid #d8ddd9;
+        padding: 0 14px;
+        border: 1px solid #d9e8eb;
         border-radius: 999px;
-        background: #ffffff;
+        background: #fffdf7;
+        color: #202729;
+        outline: none;
+      }
+
+      .mvp-composer input::placeholder {
+        color: #8ca0a1;
       }
 
       .mvp-composer button,
       .mvp-inline-action {
         min-height: 42px;
         padding: 0 14px;
-        border: 1px solid #d8ddd9;
+        border: 1px solid #d4e7ec;
         border-radius: 999px;
-        background: #ffffff;
-        color: #1f2528;
+        background: #edf8fa;
+        color: #2b464c;
         cursor: pointer;
+        font-weight: 700;
       }
 
       .mvp-memory-hint {
         flex: 1 0 100%;
         order: 2;
-        margin: -2px 0 0 50px;
-        color: #68736f;
-        font-size: 0.78rem;
+        margin: -1px 0 0 50px;
+        color: #7f9393;
+        font-size: 0.74rem;
         line-height: 1.35;
       }
 
       .mvp-memory-notice {
         flex: 1 0 100%;
         order: 3;
-        margin: -6px 0 0 50px;
-        color: #1f6b4f;
-        font-size: 0.78rem;
+        width: fit-content;
+        margin: -4px 0 0 50px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #e7f4ef;
+        color: #3f7867;
+        font-size: 0.74rem;
         font-weight: 700;
         line-height: 1.35;
       }

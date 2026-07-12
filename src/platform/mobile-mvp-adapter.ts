@@ -2437,14 +2437,13 @@ function chatPreview(chat: WorldChatSession): string {
 }
 
 function composerPlaceholder(snapshot: WorldSnapshot, state: SemanticMobileState): string {
-  const chat = chatById(snapshot, state.activeChatId ?? snapshot.chatState.activeChatId);
-  return isGroupChat(snapshot, chat) ? "在群聊中发送消息" : "给 AI 发送消息";
+  return "输入消息…";
 }
 
 function createMemoryHint(): HTMLElement {
   const hint = document.createElement("p");
   hint.className = "mvp-memory-hint";
-  hint.textContent = "试用记忆：输入「记住：...」可让当前世界中的对应 AI 记住";
+  hint.textContent = "试用记忆：输入「记住：...」";
   return hint;
 }
 
